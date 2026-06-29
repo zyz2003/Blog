@@ -1,0 +1,30 @@
+name: Issue Question
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  create-comment:
+    runs-on: ubuntu-latest
+    if: github.event.label.name == 'question' && github.event.sender.type != 'Bot'
+    steps:
+      - name: Create comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
+        run: |
+          set -euo pipefail
+
+          body="$(cat <<EOF
+          Hello @${ISSUE_AUTHOR},  please input issue by template and add detail. Issues labeled by Need More Info will be closed if no activities in 7 days.
+          你好 @${ISSUE_AUTHOR}，请按照issue模板填写, 并详细说明问题和复现步骤等, 60天内未回复issue自动关闭。
+          EOF
+          )"
+          gh issue comment "${ISSUE_NUMBER}" --body "${body}"

@@ -1,0 +1,6 @@
+# 开发环境覆盖：挂载本地构建的二进制，避免每次重建镜像
+# 使用: docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --no-build
+services:
+  anheyu:
+    volumes:
+      - ./anheyu-app:/anheyu/anheyu-app

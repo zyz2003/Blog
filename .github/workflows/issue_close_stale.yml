@@ -1,0 +1,36 @@
+name: Close inactive
+
+on:
+  schedule:
+    - cron: "0 0 */7 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  close-inactive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: close-issues
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          cutoff="$(date -u -d '60 days ago' +%Y-%m-%d)"
+          query="repo:${GH_REPO} is:issue is:open label:\"stale\" updated:<${cutoff}"
+          issues="$(gh api -X GET --paginate search/issues -f "q=${query}" -F per_page=100 --jq '.items[] | [.number, .user.login] | @tsv')"
+
+          if [[ -z "${issues}" ]]; then
+            echo "No stale issues inactive for 60 days."
+            exit 0
+          fi
+
+          while IFS=$'\t' read -r number login; do
+            [[ -n "${number}" ]] || continue
+            body="Hello @${login}, this issue was closed due to inactive more than 60 days. You can reopen or recreate it if you think it should continue. Thank you for your contributions again."
+            gh issue close "${number}" --reason "not planned" --comment "${body}"
+          done <<< "${issues}"

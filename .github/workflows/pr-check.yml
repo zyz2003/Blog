@@ -1,0 +1,124 @@
+name: PR Check
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+on:
+  pull_request_target:
+    types: [opened, reopened]
+
+jobs:
+  pr-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR quality
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = "<!-- anheyu-pr-check -->";
+            const failureLabel = "pr-check-failed";
+            const failureMessage = "感谢你的提交。该 PR 未通过自动初审，可能存在模板填写不完整、缺少人工确认、账号/提交质量信号不足，或包含未经整理的 AI 生成痕迹。请补充清晰的变更摘要、验证方式和人工确认后重新提交或回复说明。";
+            const requiredHeadings = [
+              "变更摘要 / Summary",
+              "验证方式 / Verification",
+              "关联 Issue / Related Issue",
+              "提交前检查项 / Checklist",
+            ];
+            const placeholderTexts = [
+              "请简要说明本次 PR 改了什么、为什么要改。",
+              "请列出你已经运行过的验证命令或手动检查结果。",
+              "请填写关联 issue，例如 `Closes #123`；如果没有，请说明原因。",
+            ];
+            const blockedTerms = [
+              "🤖 Generated with Claude Code",
+            ];
+
+            const pr = context.payload.pull_request;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const issue_number = pr.number;
+            const body = pr.body || "";
+            const failures = [];
+
+            for (const heading of requiredHeadings) {
+              if (!body.includes(heading)) {
+                failures.push(`缺少 PR 模板章节：${heading}`);
+              }
+            }
+
+            const summaryMatch = body.match(/##\s*变更摘要 \/ Summary([\s\S]*?)(?=\n##\s*验证方式 \/ Verification|$)/);
+            const summary = (summaryMatch?.[1] || "").trim();
+            if (!summary || placeholderTexts.some((text) => summary.includes(text))) {
+              failures.push("变更摘要未填写有效内容");
+            }
+
+            const checklistMatch = body.match(/##\s*提交前检查项 \/ Checklist([\s\S]*)$/);
+            const checklist = checklistMatch?.[1] || "";
+            if (!/- \[[xX]\]/.test(checklist)) {
+              failures.push("提交前检查项未勾选");
+            }
+
+            for (const term of blockedTerms) {
+              if (body.includes(term)) {
+                failures.push("PR 内容包含未经整理的 AI 生成标记");
+              }
+            }
+
+            const author = pr.user?.login || "";
+            const user = await github.rest.users.getByUsername({ username: author });
+            const createdAt = new Date(user.data.created_at).getTime();
+            const minAgeMs = 30 * 24 * 60 * 60 * 1000;
+            if (Number.isFinite(createdAt) && Date.now() - createdAt < minAgeMs) {
+              failures.push("提交账号创建时间不足 30 天");
+            }
+
+            if (failures.length === 0) {
+              return;
+            }
+
+            try {
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number,
+                labels: [failureLabel],
+              });
+            } catch (error) {
+              if (error.status !== 404) throw error;
+            }
+
+            const comments = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+            const previous = comments.data.find((comment) => comment.user?.type === "Bot" && comment.body?.includes(marker));
+            const bodyText = `${marker}\n${failureMessage}`;
+
+            if (previous) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: previous.id,
+                body: bodyText,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body: bodyText,
+              });
+            }
+
+            await github.rest.pulls.update({
+              owner,
+              repo,
+              pull_number: issue_number,
+              state: "closed",
+            });
+
+            core.setFailed(`PR did not pass automatic quality checks: ${failures.slice(0, 4).join("; ")}`);

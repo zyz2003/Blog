@@ -1,0 +1,110 @@
+name: Bug report
+description: Create a report to help us improve
+title: "[Bug]: "
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        重要：请依照该模板来提交 
+        Please follow the template to create a new issue
+  - type: dropdown
+    id: edition
+    attributes:
+      label: 使用的版本类型？ | Which edition are you using?
+      description: 请选择你使用的是社区版还是 PRO 版本 | Please select whether you are using Community or PRO edition
+      options:
+        - 社区版 (Community Edition)
+        - PRO 版本 (PRO Edition)
+    validations:
+      required: true
+
+  - type: input
+    id: anzhiyu-ver
+    attributes:
+      label: 使用的 AnHeYu 版本？ | What version of AnHeYu are you use?
+      description: 检视应用的 版本号 | Check the application's version number
+    validations:
+      required: true
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: 使用的浏览器？ || What browse are you using?
+      options:
+        - Chrome
+        - Edge
+        - Safari
+        - Opera
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: DeploymentMethod
+    attributes:
+      label: 部署方式 || What Deployment Method are you using?
+      options:
+        - Docker/Docker Compose
+        - 二进制(Binary)
+        - 开发环境(Development)
+        - 其他(Other)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: architecture
+    attributes:
+      label: 系统架构 || What system architecture are you using?
+      options:
+        - Linux amd64
+        - Linux arm64
+        - macOS amd64 (Intel)
+        - macOS arm64 (Apple Silicon)
+        - Windows amd64
+        - 其他(Other)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: modify
+    attributes:
+      label: 是否修改自定义前端文件？ || Has the FrontEnd files been modified?
+      options:
+        - 不是 (No)
+        - 是 (Yes)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: 使用的系统？ || What operating system are you using?
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Android
+        - iOS
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 问题描述 | Describe the bug
+      description: 请描述你的问题现象 | A clear and concise description of what the bug is.
+      placeholder: 请尽量提供截图来定位你的问题 | If applicable, add screenshots to help explain your problem
+      value:
+    validations:
+      required: true
+
+  - type: input
+    id: website
+    attributes:
+      label: 出现问题的网站 | Website
+      description: 请提供下可复现的网站地址 | Please supply a website url which can reproduce problem.
+      placeholder:
+    validations:
+      required: true

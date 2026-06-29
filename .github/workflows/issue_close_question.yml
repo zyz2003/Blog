@@ -1,0 +1,40 @@
+name: Close need info
+
+on:
+  schedule:
+    - cron: "0 0 */1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  close-need-info:
+    runs-on: ubuntu-latest
+    steps:
+      - name: close-issues
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          cutoff="$(date -u -d '60 days ago' +%Y-%m-%d)"
+          query="repo:${GH_REPO} is:issue is:open label:\"question\" updated:<${cutoff}"
+          issues="$(gh api -X GET --paginate search/issues -f "q=${query}" -F per_page=100 --jq '.items[] | [.number, .user.login] | @tsv')"
+
+          if [[ -z "${issues}" ]]; then
+            echo "No question issues inactive for 60 days."
+            exit 0
+          fi
+
+          while IFS=$'\t' read -r number login; do
+            [[ -n "${number}" ]] || continue
+            body="$(cat <<EOF
+          Hello @${login}, this issue was closed due to no activities in 60 days.
+          你好 @${login}，此issue因超过60天未回复被关闭。
+          EOF
+          )"
+            gh issue close "${number}" --reason "not planned" --comment "${body}"
+          done <<< "${issues}"

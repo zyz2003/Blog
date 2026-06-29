@@ -1,0 +1,305 @@
+# .github/workflows/build.yml
+
+name: Build, Release and Publish with GoReleaser
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  # 开发构建和测试作业（非 tag 推送）
+  test:
+    name: Test and Build (Development)
+    runs-on: ubuntu-latest
+    if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: "recursive"
+          token: ${{ secrets.GH_PAT || github.token }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install and setup GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          install-only: true
+
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+
+      - name: Test GoReleaser configuration
+        run: goreleaser check
+
+      - name: Run GoReleaser in snapshot mode
+        run: goreleaser build --snapshot --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Test version information
+        run: |
+          echo "🔍 Testing version information for multiple architectures..."
+
+          # 创建版本测试程序
+          cat > test_version.go << 'EOF'
+          package main
+          import (
+            "fmt"
+            "github.com/anzhiyu-c/anheyu-app/internal/pkg/version"
+          )
+          func main() {
+            fmt.Printf("Version: %s\n", version.GetVersion())
+            fmt.Printf("Commit: %s\n", version.GetCommit())
+            fmt.Printf("Date: %s\n", version.GetBuildDate())
+            fmt.Printf("Full: %s\n", version.GetVersionString())
+          }
+          EOF
+
+          # 测试版本信息（使用当前源代码）
+          echo "📋 Testing version information with source code..."
+          go run test_version.go
+
+          # 测试 Linux AMD64 构建
+          if [ -f "dist/anheyu-app_linux_amd64_v1/anheyu-app" ]; then
+            echo "✅ Linux AMD64 build found"
+            echo "📋 AMD64 binary info:"
+            file dist/anheyu-app_linux_amd64_v1/anheyu-app
+            ls -lh dist/anheyu-app_linux_amd64_v1/anheyu-app
+          else
+            echo "❌ Linux AMD64 build not found"
+          fi
+
+          # 测试 Linux ARM64 构建
+          if [ -f "dist/anheyu-app_linux_arm64_v8.0/anheyu-app" ]; then
+            echo "✅ Linux ARM64 build found"
+            echo "📋 ARM64 binary info:"
+            file dist/anheyu-app_linux_arm64_v8.0/anheyu-app
+            ls -lh dist/anheyu-app_linux_arm64_v8.0/anheyu-app
+          else
+            echo "❌ Linux ARM64 build not found"
+          fi
+
+          # 测试 Darwin AMD64 构建
+          if [ -f "dist/anheyu-app_darwin_amd64_v1/anheyu-app" ]; then
+            echo "✅ Darwin AMD64 build found"
+            echo "📋 Darwin AMD64 binary info:"
+            file dist/anheyu-app_darwin_amd64_v1/anheyu-app
+            ls -lh dist/anheyu-app_darwin_amd64_v1/anheyu-app
+          else
+            echo "❌ Darwin AMD64 build not found"
+          fi
+
+          # 测试 Darwin ARM64 构建 (Apple Silicon)
+          if [ -f "dist/anheyu-app_darwin_arm64_v8.0/anheyu-app" ]; then
+            echo "✅ Darwin ARM64 (Apple Silicon) build found"
+            echo "📋 Darwin ARM64 binary info:"
+            file dist/anheyu-app_darwin_arm64_v8.0/anheyu-app
+            ls -lh dist/anheyu-app_darwin_arm64_v8.0/anheyu-app
+          else
+            echo "❌ Darwin ARM64 build not found"
+          fi
+
+          # 显示所有构建的目录结构
+          echo "📁 All builds summary:"
+          ls -la dist/
+
+          # 清理测试文件
+          rm -f test_version.go
+
+      - name: Upload snapshot artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapshot-build
+          path: dist/
+        if: always()
+
+  # 生产发布作业（tag 推送）
+  release:
+    name: Release with GoReleaser
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: "recursive"
+          token: ${{ secrets.GH_PAT || github.token }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force
+          df -h /
+
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+
+      - name: Clean frontend node_modules before GoReleaser
+        run: |
+          rm -rf frontend/node_modules
+          echo "✅ Cleaned frontend/node_modules to save disk space for Docker builds"
+
+      - name: Prepare Go version environment
+        run: |
+          echo "GOVERSION=$(go version)" >> $GITHUB_ENV
+
+      - name: Find previous stable tag for changelog
+        id: prev_tag
+        run: |
+          CURRENT_TAG="${GITHUB_REF#refs/tags/}"
+          echo "Current tag: $CURRENT_TAG"
+
+          # 检查当前版本是否是正式版本（不包含 beta/alpha/rc）
+          if [[ "$CURRENT_TAG" != *"beta"* ]] && [[ "$CURRENT_TAG" != *"alpha"* ]] && [[ "$CURRENT_TAG" != *"rc"* ]]; then
+            echo "This is a stable release, finding previous stable tag..."
+            
+            # 获取所有 tag，按版本排序，排除预发布版本，找到上一个正式版本
+            PREV_STABLE_TAG=$(git tag -l 'v*' | grep -v -E '(alpha|beta|rc)' | sort -V | grep -B1 "^${CURRENT_TAG}$" | head -1)
+            
+            if [ -n "$PREV_STABLE_TAG" ] && [ "$PREV_STABLE_TAG" != "$CURRENT_TAG" ]; then
+              echo "Previous stable tag found: $PREV_STABLE_TAG"
+              echo "previous_tag=$PREV_STABLE_TAG" >> $GITHUB_OUTPUT
+              echo "use_previous_tag=true" >> $GITHUB_OUTPUT
+            else
+              echo "No previous stable tag found, using default behavior"
+              echo "use_previous_tag=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "This is a prerelease, using default changelog behavior"
+            echo "use_previous_tag=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DOCKER_CLI_EXPERIMENTAL: enabled
+          GORELEASER_PREVIOUS_TAG: ${{ steps.prev_tag.outputs.use_previous_tag == 'true' && steps.prev_tag.outputs.previous_tag || '' }}
+
+      - name: Update Docker Hub README
+        uses: peter-evans/dockerhub-description@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: anheyu/anheyu-backend
+          readme-filepath: ./README.md
+        continue-on-error: true
+
+      - name: Create release summary
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/}"
+
+          # 检测是否为预发布版本
+          if [[ "$VERSION" == *"beta"* ]] || [[ "$VERSION" == *"alpha"* ]] || [[ "$VERSION" == *"rc"* ]]; then
+            echo "🧪 **预发布版本发布完成！**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "> ⚠️ 这是一个预发布版本，请谨慎在生产环境中使用。" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "🎉 **正式版本发布完成！**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 Release Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: \`${VERSION}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: \`$(git rev-parse --short HEAD)\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Date**: \`$(date -u '+%Y-%m-%d %H:%M:%S')\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔗 Links" >> $GITHUB_STEP_SUMMARY
+          echo "- [📦 GitHub Release](https://github.com/anzhiyu-c/anheyu-app/releases/tag/${GITHUB_REF#refs/tags/})" >> $GITHUB_STEP_SUMMARY
+          echo "- [🐳 Docker Hub](https://hub.docker.com/r/anheyu/anheyu-backend)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🚀 Quick Start" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+
+          # 根据版本类型提供不同的Docker说明
+          if [[ "$VERSION" == *"beta"* ]]; then
+            echo "# Docker - Beta版本 (多架构镜像，自动选择适合的架构)" >> $GITHUB_STEP_SUMMARY
+            echo "docker pull anheyu/anheyu-backend:${VERSION}" >> $GITHUB_STEP_SUMMARY
+            echo "# 或者使用beta标签获取最新的beta版本" >> $GITHUB_STEP_SUMMARY
+            echo "docker pull anheyu/anheyu-backend:beta" >> $GITHUB_STEP_SUMMARY
+          elif [[ "$VERSION" == *"alpha"* ]]; then
+            echo "# Docker - Alpha版本 (多架构镜像，自动选择适合的架构)" >> $GITHUB_STEP_SUMMARY
+            echo "docker pull anheyu/anheyu-backend:${VERSION}" >> $GITHUB_STEP_SUMMARY
+            echo "# 或者使用alpha标签获取最新的alpha版本" >> $GITHUB_STEP_SUMMARY
+            echo "docker pull anheyu/anheyu-backend:alpha" >> $GITHUB_STEP_SUMMARY
+          elif [[ "$VERSION" == *"rc"* ]]; then
+            echo "# Docker - RC版本 (多架构镜像，自动选择适合的架构)" >> $GITHUB_STEP_SUMMARY
+            echo "docker pull anheyu/anheyu-backend:${VERSION}" >> $GITHUB_STEP_SUMMARY
+            echo "# 或者使用rc标签获取最新的rc版本" >> $GITHUB_STEP_SUMMARY
+            echo "docker pull anheyu/anheyu-backend:rc" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "# Docker - 正式版本 (多架构镜像，自动选择适合的架构)" >> $GITHUB_STEP_SUMMARY
+            echo "docker pull anheyu/anheyu-backend:${VERSION}" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# Binary download - Linux AMD64" >> $GITHUB_STEP_SUMMARY
+          echo "wget https://github.com/anzhiyu-c/anheyu-app/releases/download/${GITHUB_REF#refs/tags/}/anheyu-app_${GITHUB_REF#refs/tags/}_linux_amd64.tar.gz" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# Binary download - Linux ARM64" >> $GITHUB_STEP_SUMMARY
+          echo "wget https://github.com/anzhiyu-c/anheyu-app/releases/download/${GITHUB_REF#refs/tags/}/anheyu-app_${GITHUB_REF#refs/tags/}_linux_arm64.tar.gz" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# Binary download - macOS AMD64" >> $GITHUB_STEP_SUMMARY
+          echo "wget https://github.com/anzhiyu-c/anheyu-app/releases/download/${GITHUB_REF#refs/tags/}/anheyu-app_${GITHUB_REF#refs/tags/}_darwin_amd64.tar.gz" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# Binary download - macOS ARM64 (Apple Silicon)" >> $GITHUB_STEP_SUMMARY
+          echo "wget https://github.com/anzhiyu-c/anheyu-app/releases/download/${GITHUB_REF#refs/tags/}/anheyu-app_${GITHUB_REF#refs/tags/}_darwin_arm64.tar.gz" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

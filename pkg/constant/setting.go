@@ -1,0 +1,418 @@
+// internal/constant/setting.go
+/*
+ * @Description:
+ * @Author: 安知鱼
+ * @Date: 2025-06-21 17:18:09
+ * @LastEditTime: 2025-11-23 12:50:55
+ * @LastEditors: 安知鱼
+ */
+package constant
+
+// SettingKey 为所有在应用中使用的配置键定义了类型安全的常量。
+type SettingKey string
+
+// ToString 方便地将 SettingKey 转换为 string 类型。
+func (k SettingKey) String() string {
+	return string(k)
+}
+
+const (
+	// --- 站点基础配置 (可暴露给前端) ---
+	KeyAppName                   SettingKey = "APP_NAME"
+	KeySubTitle                  SettingKey = "SUB_TITLE"
+	KeySiteURL                   SettingKey = "SITE_URL"
+	KeyAppVersion                SettingKey = "APP_VERSION"
+	KeyApiURL                    SettingKey = "API_URL"
+	KeyAboutLink                 SettingKey = "ABOUT_LINK"
+	KeyIcpNumber                 SettingKey = "ICP_NUMBER"
+	KeyPoliceRecordNumber        SettingKey = "POLICE_RECORD_NUMBER"
+	KeyPoliceRecordIcon          SettingKey = "POLICE_RECORD_ICON"
+	KeySiteKeywords              SettingKey = "SITE_KEYWORDS"
+	KeySiteDescription           SettingKey = "SITE_DESCRIPTION"
+	KeyUserAvatar                SettingKey = "USER_AVATAR"
+	KeyLogoURL                   SettingKey = "LOGO_URL"
+	KeyLogoURL192                SettingKey = "LOGO_URL_192x192"
+	KeyLogoURL512                SettingKey = "LOGO_URL_512x512"
+	KeyLogoHorizontalDay         SettingKey = "LOGO_HORIZONTAL_DAY"
+	KeyLogoHorizontalNight       SettingKey = "LOGO_HORIZONTAL_NIGHT"
+	KeyIconURL                   SettingKey = "ICON_URL"
+	KeyDefaultThumbParam         SettingKey = "DEFAULT_THUMB_PARAM"
+	KeyDefaultBigParam           SettingKey = "DEFAULT_BIG_PARAM"
+	KeyGravatarURL               SettingKey = "GRAVATAR_URL"
+	KeyDefaultGravatarType       SettingKey = "DEFAULT_GRAVATAR_TYPE"
+	KeyAppearanceSkin            SettingKey = "APPEARANCE_SKIN"
+	KeyAppearanceTokens          SettingKey = "APPEARANCE_TOKENS"
+	KeySiteAnnouncement          SettingKey = "SITE_ANNOUNCEMENT"
+	KeyCustomHeaderHTML          SettingKey = "CUSTOM_HEADER_HTML"
+	KeyCustomFooterHTML          SettingKey = "CUSTOM_FOOTER_HTML"
+	KeyCustomCSS                 SettingKey = "CUSTOM_CSS"
+	KeyCustomJS                  SettingKey = "CUSTOM_JS"
+	KeyCustomSidebar             SettingKey = "CUSTOM_SIDEBAR"
+	KeyCustomPostTopHTML         SettingKey = "CUSTOM_POST_TOP_HTML"
+	KeyCustomPostBottomHTML      SettingKey = "CUSTOM_POST_BOTTOM_HTML"
+	KeyDefaultThemeMode          SettingKey = "DEFAULT_THEME_MODE"
+	KeyHomeTop                   SettingKey = "HOME_TOP"
+	KeyCreativity                SettingKey = "CREATIVITY"
+	KeyUploadAllowedExtensions   SettingKey = "UPLOAD_ALLOWED_EXTENSIONS"
+	KeyUploadDeniedExtensions    SettingKey = "UPLOAD_DENIED_EXTENSIONS"
+	KeyEnableExternalLinkWarning SettingKey = "ENABLE_EXTERNAL_LINK_WARNING"
+	KeyDisableRightMenu          SettingKey = "DISABLE_RIGHT_MENU"
+	KeyRespectReducedMotion      SettingKey = "RESPECT_REDUCED_MOTION"
+	KeyEnableVipsGenerator       SettingKey = "ENABLE_VIPS_GENERATOR"
+	KeyVipsPath                  SettingKey = "VIPS_PATH"
+	KeyVipsSupportedExts         SettingKey = "VIPS_SUPPORTED_EXTS"
+	KeyVipsMaxFileSize           SettingKey = "VIPS_MAX_FILE_SIZE"
+	// KeyImageStyleCachePath 图片样式缓存根目录
+	KeyImageStyleCachePath SettingKey = "IMAGE_STYLE_CACHE_PATH"
+	// KeyImageStyleCacheMaxMB 图片样式单策略缓存上限（MB）
+	KeyImageStyleCacheMaxMB SettingKey = "IMAGE_STYLE_CACHE_MAX_MB"
+	// KeyImageStyleCacheCleanupInterval 图片样式缓存清理周期（秒）
+	KeyImageStyleCacheCleanupInterval SettingKey = "IMAGE_STYLE_CACHE_CLEANUP_INTERVAL"
+	KeyEnableMusicCoverGenerator      SettingKey = "ENABLE_MUSIC_COVER_GENERATOR"
+	KeyMusicCoverSupportedExts        SettingKey = "MUSIC_COVER_SUPPORTED_EXTS"
+	KeyMusicCoverMaxFileSize          SettingKey = "MUSIC_COVER_MAX_FILE_SIZE"
+	KeyEnableFfmpegGenerator          SettingKey = "ENABLE_FFMPEG_GENERATOR"
+	KeyFfmpegPath                     SettingKey = "FFMPEG_PATH"
+	KeyFfmpegSupportedExts            SettingKey = "FFMPEG_SUPPORTED_EXTS"
+	KeyFfmpegMaxFileSize              SettingKey = "FFMPEG_MAX_FILE_SIZE"
+	KeyFfmpegCaptureTime              SettingKey = "FFMPEG_CAPTURE_TIME"
+	KeyEnableBuiltinGenerator         SettingKey = "ENABLE_BUILTIN_GENERATOR"
+	KeyBuiltinMaxFileSize             SettingKey = "BUILTIN_MAX_FILE_SIZE"
+	KeyBuiltinDirectServeExts         SettingKey = "BUILTIN_DIRECT_SERVE_EXTS"
+
+	KeyFrontDeskSiteOwnerName  SettingKey = "frontDesk.siteOwner.name"
+	KeyFrontDeskSiteOwnerEmail SettingKey = "frontDesk.siteOwner.email"
+
+	KeyFooterOwnerName          SettingKey = "footer.owner.name"
+	KeyFooterOwnerSince         SettingKey = "footer.owner.since"
+	KeyFooterCustomText         SettingKey = "footer.custom_text"
+	KeyFooterRuntimeEnable      SettingKey = "footer.runtime.enable"
+	KeyFooterRuntimeLaunchTime  SettingKey = "footer.runtime.launch_time"
+	KeyFooterRuntimeWorkImg     SettingKey = "footer.runtime.work_img"
+	KeyFooterRuntimeWorkDesc    SettingKey = "footer.runtime.work_description"
+	KeyFooterRuntimeOffDutyImg  SettingKey = "footer.runtime.offduty_img"
+	KeyFooterRuntimeOffDutyDesc SettingKey = "footer.runtime.offduty_description"
+	KeyFooterSocialBarCenterImg SettingKey = "footer.socialBar.centerImg"
+	KeyFooterListRandomFriends  SettingKey = "footer.list.randomFriends"
+	KeyFooterBarAuthorLink      SettingKey = "footer.bar.authorLink"
+	KeyFooterBarCCLink          SettingKey = "footer.bar.cc.link"
+	KeyFooterBadgeEnable        SettingKey = "footer.badge.enable"
+	KeyFooterBadgeList          SettingKey = "footer.badge.list"
+	KeyFooterSocialBarLeft      SettingKey = "footer.socialBar.left"
+	KeyFooterSocialBarRight     SettingKey = "footer.socialBar.right"
+	KeyFooterProjectList        SettingKey = "footer.project.list"
+	KeyFooterBarLinkList        SettingKey = "footer.bar.linkList"
+
+	// --- Uptime Kuma 状态监控配置 ---
+	KeyFooterUptimeKumaEnable  SettingKey = "footer.uptime_kuma.enable"   // 是否启用状态显示
+	KeyFooterUptimeKumaPageURL SettingKey = "footer.uptime_kuma.page_url" // 状态页完整地址
+
+	KeyFriendLinkApplyCondition         SettingKey = "FRIEND_LINK_APPLY_CONDITION"
+	KeyFriendLinkApplyCustomCode        SettingKey = "FRIEND_LINK_APPLY_CUSTOM_CODE"
+	KeyFriendLinkApplyCustomCodeHtml    SettingKey = "FRIEND_LINK_APPLY_CUSTOM_CODE_HTML"
+	KeyFriendLinkDefaultCategory        SettingKey = "FRIEND_LINK_DEFAULTCATEGORY"
+	KeyFriendLinkPlaceholderName        SettingKey = "FRIEND_LINK_PLACEHOLDER_NAME"
+	KeyFriendLinkPlaceholderURL         SettingKey = "FRIEND_LINK_PLACEHOLDER_URL"
+	KeyFriendLinkPlaceholderLogo        SettingKey = "FRIEND_LINK_PLACEHOLDER_LOGO"
+	KeyFriendLinkPlaceholderDescription SettingKey = "FRIEND_LINK_PLACEHOLDER_DESCRIPTION"
+	KeyFriendLinkPlaceholderSiteshot    SettingKey = "FRIEND_LINK_PLACEHOLDER_SITESHOT"
+	KeyFriendLinkNotifyAdmin            SettingKey = "FRIEND_LINK_NOTIFY_ADMIN"
+	KeyFriendLinkPushooChannel          SettingKey = "FRIEND_LINK_PUSHOO_CHANNEL"
+	KeyFriendLinkPushooURL              SettingKey = "FRIEND_LINK_PUSHOO_URL"
+	KeyFriendLinkWebhookRequestBody     SettingKey = "FRIEND_LINK_WEBHOOK_REQUEST_BODY"
+	KeyFriendLinkWebhookHeaders         SettingKey = "FRIEND_LINK_WEBHOOK_HEADERS"
+	KeyFriendLinkMailSubjectAdmin       SettingKey = "FRIEND_LINK_MAIL_SUBJECT_ADMIN"
+	KeyFriendLinkMailTemplateAdmin      SettingKey = "FRIEND_LINK_MAIL_TEMPLATE_ADMIN"
+	KeyFriendLinkScMailNotify           SettingKey = "FRIEND_LINK_SC_MAIL_NOTIFY"
+
+	// 友链审核邮件通知配置
+	KeyFriendLinkReviewMailEnable           SettingKey = "FRIEND_LINK_REVIEW_MAIL_ENABLE"
+	KeyFriendLinkReviewMailSubjectApproved  SettingKey = "FRIEND_LINK_REVIEW_MAIL_SUBJECT_APPROVED"
+	KeyFriendLinkReviewMailTemplateApproved SettingKey = "FRIEND_LINK_REVIEW_MAIL_TEMPLATE_APPROVED"
+	KeyFriendLinkReviewMailSubjectRejected  SettingKey = "FRIEND_LINK_REVIEW_MAIL_SUBJECT_REJECTED"
+	KeyFriendLinkReviewMailTemplateRejected SettingKey = "FRIEND_LINK_REVIEW_MAIL_TEMPLATE_REJECTED"
+
+	// --- 缩略图生成队列配置 ---
+	KeyQueueThumbConcurrency   SettingKey = "QUEUE_THUMB_CONCURRENCY"
+	KeyQueueThumbMaxExecTime   SettingKey = "QUEUE_THUMB_MAX_EXEC_TIME"
+	KeyQueueThumbBackoffFactor SettingKey = "QUEUE_THUMB_BACKOFF_FACTOR"
+	KeyQueueThumbMaxBackoff    SettingKey = "QUEUE_THUMB_MAX_BACKOFF"
+	KeyQueueThumbMaxRetries    SettingKey = "QUEUE_THUMB_MAX_RETRIES"
+	KeyQueueThumbRetryDelay    SettingKey = "QUEUE_THUMB_RETRY_DELAY"
+
+	// --- 媒体信息提取配置 ---
+	KeyEnableExifExtractor  SettingKey = "ENABLE_EXIF_EXTRACTOR"
+	KeyExifMaxSizeLocal     SettingKey = "EXIF_MAX_SIZE_LOCAL"
+	KeyExifMaxSizeRemote    SettingKey = "EXIF_MAX_SIZE_REMOTE"
+	KeyExifUseBruteForce    SettingKey = "EXIF_USE_BRUTE_FORCE"
+	KeyEnableMusicExtractor SettingKey = "ENABLE_MUSIC_EXTRACTOR"
+	KeyMusicMaxSizeLocal    SettingKey = "MUSIC_MAX_SIZE_LOCAL"
+	KeyMusicMaxSizeRemote   SettingKey = "MUSIC_MAX_SIZE_REMOTE"
+
+	// --- LibRaw / DCRaw 缩略图生成器配置 ---
+	KeyEnableLibrawGenerator SettingKey = "ENABLE_LIBRAW_GENERATOR"
+	KeyLibrawPath            SettingKey = "LIBRAW_PATH"
+	KeyLibrawMaxFileSize     SettingKey = "LIBRAW_MAX_FILE_SIZE"
+	KeyLibrawSupportedExts   SettingKey = "LIBRAW_SUPPORTED_EXTS"
+
+	// --- Header/Nav 配置 ---
+	KeyHeaderMenu      SettingKey = "header.menu"
+	KeyHeaderNavTravel SettingKey = "header.nav.travelling"
+	KeyHeaderNavClock  SettingKey = "header.nav.clock"
+	KeyHeaderNavMenu   SettingKey = "header.nav.menu"
+
+	// --- 页面一图流配置 ---
+	KeyPageOneImageConfig SettingKey = "page.one_image.config"
+	KeyHitokotoAPI        SettingKey = "page.one_image.hitokoto_api"
+	KeyTypingSpeed        SettingKey = "page.one_image.typing_speed"
+
+	// 文章相关配置
+	KeyPostDefaultCover                 SettingKey = "post.default.cover"
+	KeyPostDefaultDoubleColumn          SettingKey = "post.default.double_column"
+	KeyPostDefaultPageSize              SettingKey = "post.default.page_size"
+	KeyPostDefaultEnablePrimaryColorTag SettingKey = "post.default.enable_primary_color_tag"
+	KeyPostExpirationTime               SettingKey = "post.expiration_time"
+	Key404PageDefaultImage              SettingKey = "post.page404.default_image"
+	KeyPostRewardEnable                 SettingKey = "post.reward.enable"
+	KeyPostRewardWeChatQR               SettingKey = "post.reward.wechat_qr"
+	KeyPostRewardAlipayQR               SettingKey = "post.reward.alipay_qr"
+	KeyPostRewardWeChatEnable           SettingKey = "post.reward.wechat_enable"
+	KeyPostRewardAlipayEnable           SettingKey = "post.reward.alipay_enable"
+	KeyPostRewardButtonText             SettingKey = "post.reward.button_text"
+	KeyPostRewardTitle                  SettingKey = "post.reward.title"
+	KeyPostRewardWeChatLabel            SettingKey = "post.reward.wechat_label"
+	KeyPostRewardAlipayLabel            SettingKey = "post.reward.alipay_label"
+	KeyPostRewardListButtonText         SettingKey = "post.reward.list_button_text"
+	KeyPostRewardListButtonDesc         SettingKey = "post.reward.list_button_desc"
+	KeyPostCodeBlockCodeMaxLines        SettingKey = "post.code_block.code_max_lines"
+	KeyPostCodeBlockMacStyle            SettingKey = "post.code_block.mac_style"
+
+	// 文章复制版权配置
+	KeyPostCopyEnable            SettingKey = "post.copy.enable"             // 是否允许复制文章内容
+	KeyPostCopyCopyrightEnable   SettingKey = "post.copy.copyright_enable"   // 复制时是否携带版权信息
+	KeyPostCopyCopyrightOriginal SettingKey = "post.copy.copyright_original" // 原创文章版权信息模板
+	KeyPostCopyCopyrightReprint  SettingKey = "post.copy.copyright_reprint"  // 转载文章版权信息模板
+
+	// 文章目录 Hash 更新配置
+	KeyPostTocHashUpdateMode SettingKey = "post.toc.hash_update_mode" // 目录滚动是否更新URL Hash: replace(启用), none(禁用)
+
+	// 文章页面波浪区域配置
+	KeyPostWavesEnable SettingKey = "post.waves.enable" // 是否显示文章页面波浪区域
+
+	// 文章底部版权声明配置
+	KeyPostCopyrightOriginalTemplate          SettingKey = "post.copyright.original_template"            // 原创文章版权声明模板
+	KeyPostCopyrightReprintTemplateWithUrl    SettingKey = "post.copyright.reprint_template_with_url"    // 转载文章版权声明模板（有原文链接）
+	KeyPostCopyrightReprintTemplateWithoutUrl SettingKey = "post.copyright.reprint_template_without_url" // 转载文章版权声明模板（无原文链接）
+
+	// 版权区域按钮全局开关
+	KeyPostCopyrightShowRewardButton    SettingKey = "post.copyright.show_reward_button"    // 是否显示打赏按钮
+	KeyPostCopyrightShowShareButton     SettingKey = "post.copyright.show_share_button"     // 是否显示分享按钮
+	KeyPostCopyrightShowSubscribeButton SettingKey = "post.copyright.show_subscribe_button" // 是否显示订阅按钮
+
+	// 文章订阅配置
+	KeyPostSubscribeEnable       SettingKey = "post.subscribe.enable"        // 是否启用订阅功能
+	KeyPostSubscribeButtonText   SettingKey = "post.subscribe.button_text"   // 订阅按钮文案
+	KeyPostSubscribeDialogTitle  SettingKey = "post.subscribe.dialog_title"  // 订阅弹窗标题
+	KeyPostSubscribeDialogDesc   SettingKey = "post.subscribe.dialog_desc"   // 订阅弹窗描述
+	KeyPostSubscribeMailSubject  SettingKey = "post.subscribe.mail_subject"  // 订阅邮件主题模板
+	KeyPostSubscribeMailTemplate SettingKey = "post.subscribe.mail_template" // 订阅邮件HTML模板
+
+	KeyPostEquipmentBannerBackground  SettingKey = "equipment.banner.background"
+	KeyPostEquipmentBannerTitle       SettingKey = "equipment.banner.title"
+	KeyPostEquipmentBannerDescription SettingKey = "equipment.banner.description"
+	KeyPostEquipmentBannerTip         SettingKey = "equipment.banner.tip"
+	KeyPostEquipmentList              SettingKey = "equipment.list"
+
+	KeyRecentCommentsBannerBackground  SettingKey = "recent_comments.banner.background"
+	KeyRecentCommentsBannerTitle       SettingKey = "recent_comments.banner.title"
+	KeyRecentCommentsBannerDescription SettingKey = "recent_comments.banner.description"
+	KeyRecentCommentsBannerTip         SettingKey = "recent_comments.banner.tip"
+
+	// 评论配置
+	KeyCommentEnable            SettingKey = "comment.enable"
+	KeyCommentBarrageEnable     SettingKey = "comment.barrage_enable"
+	KeyCommentLoginRequired     SettingKey = "comment.login_required"
+	KeyCommentPageSize          SettingKey = "comment.page_size"
+	KeyCommentMasterTag         SettingKey = "comment.master_tag"
+	KeyCommentPlaceholder       SettingKey = "comment.placeholder"
+	KeyCommentEmojiCDN          SettingKey = "comment.emoji_cdn"
+	KeyCommentBloggerEmail      SettingKey = "comment.blogger_email"
+	KeyCommentAnonymousEmail    SettingKey = "comment.anonymous_email"
+	KeyCommentShowUA            SettingKey = "comment.show_ua"
+	KeyCommentShowRegion        SettingKey = "comment.show_region"
+	KeyCommentAllowImageUpload  SettingKey = "comment.allow_image_upload"
+	KeyCommentLimitPerMinute    SettingKey = "comment.limit_per_minute"
+	KeyCommentLimitLength       SettingKey = "comment.limit_length"
+	KeyCommentForbiddenWords    SettingKey = "comment.forbidden_words"
+	KeyCommentAIDetectEnable    SettingKey = "comment.ai_detect_enable"     // 是否启用AI违禁词检测
+	KeyCommentAIDetectAPIURL    SettingKey = "comment.ai_detect_api_url"    // AI违禁词检测API地址
+	KeyCommentAIDetectAction    SettingKey = "comment.ai_detect_action"     // 检测到违禁词时的处理方式: pending(待审), reject(拒绝)
+	KeyCommentAIDetectRiskLevel SettingKey = "comment.ai_detect_risk_level" // 触发处理的风险等级: high(仅高风险), medium(中高风险), low(所有风险)
+	KeyCommentQQAPIURL          SettingKey = "comment.qq_api_url"
+	KeyCommentQQAPIKey          SettingKey = "comment.qq_api_key"
+	KeyCommentNotifyAdmin       SettingKey = "comment.notify_admin"
+	KeyCommentNotifyReply       SettingKey = "comment.notify_reply"
+	KeyPushooChannel            SettingKey = "pushoo.channel"
+	KeyPushooURL                SettingKey = "pushoo.url"
+	KeyWebhookRequestBody       SettingKey = "webhook.request_body"
+	KeyWebhookHeaders           SettingKey = "webhook.headers"
+	KeyScMailNotify             SettingKey = "sc.mail_notify"
+	KeyCommentSmtpSenderName    SettingKey = "comment.smtp_sender_name"
+	KeyCommentSmtpSenderEmail   SettingKey = "comment.smtp_sender_email"
+	KeyCommentSmtpHost          SettingKey = "comment.smtp_host"
+	KeyCommentSmtpPort          SettingKey = "comment.smtp_port"
+	KeyCommentSmtpUser          SettingKey = "comment.smtp_user"
+	KeyCommentSmtpPass          SettingKey = "comment.smtp_pass"
+	KeyCommentSmtpSecure        SettingKey = "comment.smtp_secure"
+	KeyCommentMailSubject       SettingKey = "comment.mail_subject"
+	KeyCommentMailTemplate      SettingKey = "comment.mail_template"
+	KeyCommentMailSubjectAdmin  SettingKey = "comment.mail_subject_admin"
+	KeyCommentMailTemplateAdmin SettingKey = "comment.mail_template_admin"
+
+	// 侧边栏配置 ---
+	KeySidebarAuthorEnable           SettingKey = "sidebar.author.enable"
+	KeySidebarAuthorDescription      SettingKey = "sidebar.author.description"
+	KeySidebarAuthorStatusImg        SettingKey = "sidebar.author.statusImg"
+	KeySidebarAuthorSkills           SettingKey = "sidebar.author.skills"
+	KeySidebarAuthorSocial           SettingKey = "sidebar.author.social"
+	KeySidebarWechatEnable           SettingKey = "sidebar.wechat.enable"
+	KeySidebarWechatFace             SettingKey = "sidebar.wechat.face"
+	KeySidebarWechatBackFace         SettingKey = "sidebar.wechat.backFace"
+	KeySidebarWechatBlurBackground   SettingKey = "sidebar.wechat.blurBackground"
+	KeySidebarWechatLink             SettingKey = "sidebar.wechat.link"
+	KeySidebarTagsEnable             SettingKey = "sidebar.tags.enable"
+	KeySidebarTagsHighlight          SettingKey = "sidebar.tags.highlight"
+	KeySidebarSiteInfoRuntimeEnable  SettingKey = "sidebar.siteinfo.runtimeEnable"
+	KeySidebarSiteInfoTotalPostCount SettingKey = "sidebar.siteinfo.totalPostCount"
+	KeySidebarSiteInfoTotalWordCount SettingKey = "sidebar.siteinfo.totalWordCount"
+	KeySidebarArchiveCount           SettingKey = "sidebar.archive.displayMonths"
+	KeySidebarCustomShowInPost       SettingKey = "sidebar.custom.showInPost"
+	KeySidebarTocCollapseMode        SettingKey = "sidebar.toc.collapseMode"
+	KeySidebarSeriesPostCount        SettingKey = "sidebar.series.postCount"
+	KeySidebarRecentPostEnable       SettingKey = "sidebar.recentPost.enable"
+	KeySidebarRecentPostCount        SettingKey = "sidebar.recentPost.count"
+
+	// --- 站点敏感或内部配置 (不暴露给前端) ---
+	KeyJWTSecret               SettingKey = "JWT_SECRET"
+	KeyResetPasswordSubject    SettingKey = "DEFAULT_RESET_PASSWORD_SUBJECT"
+	KeyResetPasswordTemplate   SettingKey = "DEFAULT_RESET_PASSWORD_TEMPLATE"
+	KeyActivateAccountSubject  SettingKey = "DEFAULT_ACTIVATE_ACCOUNT_SUBJECT"
+	KeyActivateAccountTemplate SettingKey = "DEFAULT_ACTIVATE_ACCOUNT_TEMPLATE"
+	KeyEnableUserActivation    SettingKey = "ENABLE_USER_ACTIVATION"
+	KeyEnableRegistration      SettingKey = "ENABLE_REGISTRATION"
+	KeySmtpHost                SettingKey = "SMTP_HOST"
+	KeySmtpPort                SettingKey = "SMTP_PORT"
+	KeySmtpUsername            SettingKey = "SMTP_USERNAME"
+	KeySmtpPassword            SettingKey = "SMTP_PASSWORD"
+	KeySmtpSenderName          SettingKey = "SMTP_SENDER_NAME"
+	KeySmtpSenderEmail         SettingKey = "SMTP_SENDER_EMAIL"
+	KeySmtpReplyToEmail        SettingKey = "SMTP_REPLY_TO_EMAIL"
+	KeySmtpForceSSL            SettingKey = "SMTP_FORCE_SSL"
+	KeyLocalFileSigningSecret  SettingKey = "LOCAL_FILE_SIGNING_SECRET"
+	KeyIPAPI                   SettingKey = "IP_API"
+	KeyIPAPIToKen              SettingKey = "IP_API_TOKEN"
+
+	// --- 关于页面配置 ---
+	KeyAboutPageName                 SettingKey = "about.page.name"
+	KeyAboutPageDescription          SettingKey = "about.page.description"
+	KeyAboutPageAvatarImg            SettingKey = "about.page.avatar_img"
+	KeyAboutPageSubtitle             SettingKey = "about.page.subtitle"
+	KeyAboutPageAvatarSkillsLeft     SettingKey = "about.page.avatar_skills_left"
+	KeyAboutPageAvatarSkillsRight    SettingKey = "about.page.avatar_skills_right"
+	KeyAboutPageAboutSiteTips        SettingKey = "about.page.about_site_tips"
+	KeyAboutPageMap                  SettingKey = "about.page.map"
+	KeyAboutPageSelfInfo             SettingKey = "about.page.self_info"
+	KeyAboutPagePersonalities        SettingKey = "about.page.personalities"
+	KeyAboutPageMaxim                SettingKey = "about.page.maxim"
+	KeyAboutPageBuff                 SettingKey = "about.page.buff"
+	KeyAboutPageGame                 SettingKey = "about.page.game"
+	KeyAboutPageComic                SettingKey = "about.page.comic"
+	KeyAboutPageLike                 SettingKey = "about.page.like"
+	KeyAboutPageMusic                SettingKey = "about.page.music"
+	KeyAboutPageCareers              SettingKey = "about.page.careers"
+	KeyAboutPageSkillsTips           SettingKey = "about.page.skills_tips"
+	KeyAboutPageStatisticsBackground SettingKey = "about.page.statistics_background"
+	KeyAboutPageCustomCode           SettingKey = "about.page.custom_code"
+	KeyAboutPageCustomCodeHtml       SettingKey = "about.page.custom_code_html"
+
+	// --- 关于页面板块开关配置 ---
+	KeyAboutPageEnableAuthorBox   SettingKey = "about.page.enable.author_box"
+	KeyAboutPageEnablePageContent SettingKey = "about.page.enable.page_content"
+	KeyAboutPageEnableSkills      SettingKey = "about.page.enable.skills"
+	KeyAboutPageEnableCareers     SettingKey = "about.page.enable.careers"
+	KeyAboutPageEnableStatistic   SettingKey = "about.page.enable.statistic"
+	KeyAboutPageEnableMapAndInfo  SettingKey = "about.page.enable.map_and_info"
+	KeyAboutPageEnablePersonality SettingKey = "about.page.enable.personality"
+	KeyAboutPageEnablePhoto       SettingKey = "about.page.enable.photo"
+	KeyAboutPageEnableMaxim       SettingKey = "about.page.enable.maxim"
+	KeyAboutPageEnableBuff        SettingKey = "about.page.enable.buff"
+	KeyAboutPageEnableGame        SettingKey = "about.page.enable.game"
+	KeyAboutPageEnableComic       SettingKey = "about.page.enable.comic"
+	KeyAboutPageEnableLikeTech    SettingKey = "about.page.enable.like_tech"
+	KeyAboutPageEnableMusic       SettingKey = "about.page.enable.music"
+	KeyAboutPageEnableCustomCode  SettingKey = "about.page.enable.custom_code"
+	KeyAboutPageEnableComment     SettingKey = "about.page.enable.comment"
+
+	KeyMusicPlayerEnable          SettingKey = "music.player.enable"
+	KeyMusicPlayerPlaylistID      SettingKey = "music.player.playlist_id"
+	KeyMusicPlayerCustomPlaylist  SettingKey = "music.player.custom_playlist"
+	KeyMusicCapsuleCustomPlaylist SettingKey = "music.capsule.custom_playlist"
+	KeyMusicAPIBaseURL            SettingKey = "music.api.base_url"
+	KeyMusicVinylBackground       SettingKey = "music.vinyl.background"
+	KeyMusicVinylOuter            SettingKey = "music.vinyl.outer"
+	KeyMusicVinylInner            SettingKey = "music.vinyl.inner"
+	KeyMusicVinylNeedle           SettingKey = "music.vinyl.needle"
+	KeyMusicVinylGroove           SettingKey = "music.vinyl.groove"
+
+	// --- CDN缓存清除配置 ---
+	KeyCDNEnable    SettingKey = "cdn.enable"
+	KeyCDNProvider  SettingKey = "cdn.provider"
+	KeyCDNSecretID  SettingKey = "cdn.secret_id"
+	KeyCDNSecretKey SettingKey = "cdn.secret_key"
+	KeyCDNRegion    SettingKey = "cdn.region"
+	KeyCDNDomain    SettingKey = "cdn.domain"
+	KeyCDNZoneID    SettingKey = "cdn.zone_id"
+	KeyCDNBaseURL   SettingKey = "cdn.base_url"
+
+	// --- 相册页面配置 ---
+	KeyAlbumPageBannerBackground     SettingKey = "album.banner.background"
+	KeyAlbumPageBannerTitle          SettingKey = "album.banner.title"
+	KeyAlbumPageBannerDescription    SettingKey = "album.banner.description"
+	KeyAlbumPageBannerTip            SettingKey = "album.banner.tip"
+	KeyAlbumPageLayoutMode           SettingKey = "album.layout_mode"
+	KeyAlbumPageWaterfallColumnCount SettingKey = "album.waterfall.column_count"
+	KeyAlbumPageWaterfallGap         SettingKey = "album.waterfall.gap"
+	KeyAlbumPageSize                 SettingKey = "album.page_size"
+	KeyAlbumPageEnableComment        SettingKey = "album.enable_comment"
+	KeyAlbumPageApiURL               SettingKey = "album.api_url"
+	KeyAlbumPageDefaultThumbParam    SettingKey = "album.default_thumb_param"
+	KeyAlbumPageDefaultBigParam      SettingKey = "album.default_big_param"
+	KeyAlbumPageAboutLink            SettingKey = "album.about_link"
+
+	// --- 人机验证配置 ---
+	KeyCaptchaProvider SettingKey = "captcha.provider" // 人机验证方式：turnstile / geetest / image / none
+
+	// --- 微信分享配置 ---
+	KeyWechatShareEnable    SettingKey = "wechat.share.enable"     // 是否启用微信分享功能
+	KeyWechatShareAppID     SettingKey = "wechat.share.app_id"     // 微信公众号 AppID
+	KeyWechatShareAppSecret SettingKey = "wechat.share.app_secret" // 微信公众号 AppSecret
+
+	// --- Cloudflare Turnstile 人机验证配置 ---
+	KeyTurnstileEnable    SettingKey = "turnstile.enable"     // 是否启用 Turnstile 人机验证（已废弃，使用 captcha.provider）
+	KeyTurnstileSiteKey   SettingKey = "turnstile.site_key"   // Turnstile Site Key（公钥，前端使用）
+	KeyTurnstileSecretKey SettingKey = "turnstile.secret_key" // Turnstile Secret Key（私钥，后端验证使用）
+
+	// --- 极验 GeeTest 4.0 人机验证配置 ---
+	KeyGeetestCaptchaId  SettingKey = "geetest.captcha_id"  // 极验验证 ID（公钥，前端使用）
+	KeyGeetestCaptchaKey SettingKey = "geetest.captcha_key" // 极验验证 Key（私钥，后端验证使用）
+
+	// --- 系统图形验证码配置 ---
+	KeyImageCaptchaLength SettingKey = "image_captcha.length" // 图形验证码字符长度
+	KeyImageCaptchaExpire SettingKey = "image_captcha.expire" // 图形验证码过期时间（秒）
+
+	// --- 顶栏用户面板配置 ---
+	KeyUserPanelShowUserCenter     SettingKey = "userpanel.show_user_center"
+	KeyUserPanelShowNotifications  SettingKey = "userpanel.show_notifications"
+	KeyUserPanelShowPublishArticle SettingKey = "userpanel.show_publish_article"
+	KeyUserPanelShowAdminDashboard SettingKey = "userpanel.show_admin_dashboard"
+)

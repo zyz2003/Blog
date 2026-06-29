@@ -1,0 +1,165 @@
+project:
+  name: "anheyu-app"
+  type: "Go Web Application"
+  description: "Self-hosted blog and content management system"
+
+# 约定式提交配置
+conventional_commits:
+  format: "<类型>[可选作用域]: <描述>"
+  language: "zh-CN"
+  max_subject_length: 50
+
+  types:
+    - name: "feat"
+      description: "新功能"
+      examples: ["feat(auth): 添加双因子认证支持", "feat(upload): 支持批量文件上传"]
+
+    - name: "fix"
+      description: "错误修复"
+      examples: ["fix(upload): 修复大文件上传进度显示错误", "fix(ui): 修复移动端布局问题"]
+
+    - name: "docs"
+      description: "文档更新"
+      examples: ["docs(api): 更新 REST API 文档", "docs: 添加部署指南"]
+
+    - name: "style"
+      description: "代码格式化"
+      examples: ["style: 修正代码缩进和格式", "style(ui): 统一组件样式规范"]
+
+    - name: "refactor"
+      description: "代码重构"
+      examples: ["refactor(auth): 重构用户认证模块", "refactor(db): 优化数据库连接池"]
+
+    - name: "perf"
+      description: "性能优化"
+      examples: ["perf(db): 优化用户查询性能", "perf(ui): 减少首页加载时间"]
+
+    - name: "test"
+      description: "测试相关"
+      examples: ["test(auth): 添加用户认证单元测试", "test: 增加集成测试覆盖率"]
+
+    - name: "chore"
+      description: "构建工具等"
+      examples: ["chore: 更新依赖库版本", "chore: 配置代码格式化工具"]
+
+    - name: "ci"
+      description: "CI配置"
+      examples: ["ci: 更新 GitHub Actions 工作流", "ci: 添加自动化测试流程"]
+
+    - name: "build"
+      description: "构建系统"
+      examples: ["build: 优化 Docker 构建流程", "build: 更新 Makefile 构建目标"]
+
+  scopes:
+    - name: "auth"
+      description: "用户认证相关功能"
+      files: ["internal/pkg/auth/", "pkg/handler/auth/"]
+
+    - name: "upload"
+      description: "文件上传功能"
+      files: ["pkg/handler/upload/", "internal/pkg/upload/"]
+
+    - name: "api"
+      description: "API 接口相关"
+      files: ["pkg/handler/", "internal/api/"]
+
+    - name: "ui"
+      description: "用户界面"
+      files: ["assets/", "templates/"]
+
+    - name: "db"
+      description: "数据库相关"
+      files: ["ent/", "internal/pkg/database/"]
+
+    - name: "config"
+      description: "配置文件"
+      files: ["internal/pkg/config/", "*.yml", "*.yaml", "*.json"]
+
+    - name: "docker"
+      description: "Docker 相关"
+      files: ["Dockerfile", "docker-compose.yml", ".dockerignore"]
+
+    - name: "ci"
+      description: "持续集成"
+      files: [".github/", "Makefile", ".goreleaser.yml"]
+
+    - name: "docs"
+      description: "文档"
+      files: ["*.md", "docs/"]
+
+    - name: "test"
+      description: "测试"
+      files: ["*_test.go", "test/"]
+
+# AI 助手特定配置
+ai_assistants:
+  github_copilot:
+    enabled: true
+    commit_message_prompt: |
+      根据代码变更生成简洁的 Git 提交信息。
+
+      格式：<type>[scope]: <description>
+
+      提交类型：
+      - feat: 新功能
+      - fix: 修复问题
+      - docs: 文档更新
+      - style: 代码格式调整
+      - refactor: 代码重构
+      - perf: 性能优化
+      - test: 测试相关
+      - chore: 构建/依赖更新
+      - ci: CI配置变更
+      - build: 构建系统变更
+
+      作用域(可选): auth, upload, api, ui, db, config, docker, ci, docs, test
+
+      要求：
+      1. 使用中文描述，简洁明确
+      2. 每个变更一行
+      3. 多个变更就多行，每行独立描述一个变更
+      4. 不需要空行、列表符号等格式
+
+  cursor:
+    enabled: true
+    commit_message_prompt: |
+      根据代码变更生成简洁的 Git 提交信息。
+
+      格式：<type>[scope]: <description>
+
+      提交类型：
+      - feat: 新功能
+      - fix: 修复问题
+      - docs: 文档更新
+      - style: 代码格式调整
+      - refactor: 代码重构
+      - perf: 性能优化
+      - test: 测试相关
+      - chore: 构建/依赖更新
+      - ci: CI配置变更
+      - build: 构建系统变更
+
+      作用域(可选): auth, upload, api, ui, db, config, docker, ci, docs, test
+
+      要求：
+      1. 使用中文描述，简洁明确
+      2. 每个变更一行
+      3. 多个变更就多行，每行独立描述一个变更
+      4. 不需要空行、列表符号等格式
+
+# 提交信息模板
+templates:
+  feature: "feat({scope}): {description}"
+  bugfix: "fix({scope}): {description}"
+  docs: "docs({scope}): {description}"
+  refactor: "refactor({scope}): {description}"
+  performance: "perf({scope}): {description}"
+  breaking_change: "{type}({scope})!: {description}\n\nBREAKING CHANGE: {details}"
+
+# 验证规则
+validation:
+  subject_max_length: 50
+  body_max_line_length: 72
+  required_types: true
+  allow_empty_scope: true
+  enforce_scope_for_types: ["feat", "fix"]

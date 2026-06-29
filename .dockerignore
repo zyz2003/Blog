@@ -1,0 +1,5 @@
+frontend/node_modules
+frontend/.next/cache
+frontend/tmp
+.git
+*.md
