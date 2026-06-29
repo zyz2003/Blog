@@ -80,7 +80,14 @@ Plans:
 - Password hashing uses bcrypt
 - Token refresh endpoint works
 
-**Plans:** TBD
+**Plans:** 5 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — SettingsService with in-memory cache, unflatten, public/private key filtering, and SettingsController
+- [ ] 02-02-PLAN.md — AuthService, TokenService, AuthController with Go-compatible JWT lifecycle
+- [ ] 02-03-PLAN.md — UserService, UserController with current user ops and admin user management
+- [ ] 02-04-PLAN.md — CaptchaService, CaptchaController, and @nestjs/throttler rate limiting
+- [ ] 02-05-PLAN.md — AppModule wiring, startup initialization, and integration tests
 
 ---
 
