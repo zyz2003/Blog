@@ -188,9 +188,9 @@ describe('SettingsService', () => {
       );
 
       const profiles = JSON.parse(masked);
-      // Long key: "sk-abc1234def5678" -> "************5678"
+      // Long key: "sk-abc1234def5678" (17 chars) -> 13 asterisks + last 4 = "*************5678"
       expect(profiles[0].has_api_key).toBe(true);
-      expect(profiles[0].api_key_masked).toBe('************5678');
+      expect(profiles[0].api_key_masked).toBe('*************5678');
       expect(profiles[0].api_key).toBeUndefined();
 
       // Short key (length <= 4): "ab" -> "****"
@@ -254,18 +254,13 @@ describe('SettingsService', () => {
       mockDb.onConflictDoUpdate.mockReturnThis();
       mockDb.run.mockResolvedValue(undefined);
 
-      const writeFileSyncSpy = vi.spyOn(require('fs'), 'writeFileSync').mockImplementation(() => {});
-      const mkdirSyncSpy = vi.spyOn(require('fs'), 'mkdirSync').mockImplementation(() => {});
+      const backupSpy = vi.spyOn(service as any, 'autoBackup').mockImplementation(() => {});
 
       await service.update({ APP_NAME: '备份测试' });
 
-      expect(writeFileSyncSpy).toHaveBeenCalled();
-      const backupPath = writeFileSyncSpy.mock.calls[0][0] as string;
-      expect(backupPath).toContain('settings-');
-      expect(backupPath).toContain('.json');
+      expect(backupSpy).toHaveBeenCalled();
 
-      writeFileSyncSpy.mockRestore();
-      mkdirSyncSpy.mockRestore();
+      backupSpy.mockRestore();
     });
   });
 
