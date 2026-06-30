@@ -1,8 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD, APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
 import { validationSchema } from './config/env.validation';
 import { AuthModule } from './auth/auth.module';
+import { UserModule } from './user/user.module';
+import { CaptchaModule } from './captcha/captcha.module';
 import { ArticleModule } from './article/article.module';
 import { SettingsModule } from './settings/settings.module';
 import { PageModule } from './page/page.module';
@@ -32,11 +35,14 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
       isGlobal: true,
       validationSchema,
     }),
+    ThrottlerModule.forRoot([{ name: 'default', ttl: 60000, limit: 100 }]),
     DatabaseModule,
     CommonModule,
     AuthModule,
-    ArticleModule,
+    UserModule,
+    CaptchaModule,
     SettingsModule,
+    ArticleModule,
     PageModule,
     FileModule,
     CommentModule,
@@ -54,6 +60,8 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     ConfigFeatureModule,
   ],
   providers: [
+    // ThrottlerGuard runs before auth — rate limiting before JWT validation
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
     // Global auth guard -- all routes require JWT by default
     // Public routes use @Public() decorator to skip auth (per D-08)
     { provide: APP_GUARD, useClass: JwtAuthGuard },

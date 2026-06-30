@@ -2,6 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
+import { SettingsService } from './settings/settings.service';
+import { initSqidsEncoderWithSeed } from './common/utils/sqids.util';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -18,7 +20,7 @@ async function bootstrap() {
     allowedHeaders:
       'Authorization,Content-Type,X-CSRF-Token,X-Requested-With,Range,Accept-Ranges,Content-Range,Content-Length,Content-Disposition',
     exposedHeaders:
-      'Authorization,Content-Range,Content-Length,Content-Disposition',
+      'Authorization,Content-Range,Content-Length,Content-Length,Content-Disposition',
   });
 
   // Global validation pipe
@@ -28,6 +30,17 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  // Initialize Sqids encoder with seed from settings table
+  // Must run after SettingsService.onModuleInit() loads cache
+  const settingsService = app.get(SettingsService);
+  const idSeed = settingsService.get('id_seed');
+  if (idSeed) {
+    initSqidsEncoderWithSeed(idSeed);
+    logger.log('Sqids encoder initialized with seed from settings');
+  } else {
+    logger.warn('No id_seed found in settings — Sqids encoder not initialized');
+  }
 
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT', 8091);

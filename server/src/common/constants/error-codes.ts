@@ -42,6 +42,17 @@ export const ErrorCodes = {
   CLAIMS_FORMAT_INVALID: '权限信息格式不正确',
   USER_GROUP_ID_INVALID: '权限信息无效：用户组ID无法解析',
   ADMIN_PERMISSION_REQUIRED: '权限不足：此操作需要管理员权限',
+
+  // Phase 02 - Auth & User error messages
+  LOGIN_FAILED: '邮箱或密码错误',
+  USER_NOT_ACTIVATED: '用户未激活',
+  USER_BANNED: '用户已被封禁',
+  OLD_PASSWORD_INCORRECT: '旧密码不正确',
+  CAPTCHA_REQUIRED: '验证码参数缺失',
+  CAPTCHA_EXPIRED: '验证码已过期',
+  CAPTCHA_INCORRECT: '验证码错误',
+  REFRESH_TOKEN_MISSING: '请求未携带Token，无权限访问',
+  USER_NOT_FOUND: '用户不存在',
 } as const;
 
 export type ErrorCode = keyof typeof ErrorCodes;
