@@ -1,23 +1,23 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { ConfigService } from '@nestjs/config';
+import { SettingsService } from '../settings/settings.service';
 
-/**
- * JWT strategy for Passport that validates Bearer tokens.
- * Decodes JWT claims matching Go's CustomClaims structure:
- *   { user_id, user_group_id, permissions, iat, exp, nbf, iss }
- *
- * This is a minimal implementation for Phase 01 infrastructure wiring.
- * Full authentication logic (login, refresh) will be added in Phase 02.
- */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(configService: ConfigService) {
+  constructor(private readonly settingsService: SettingsService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET', 'change-me-in-production'),
+      secretOrKeyProvider: (
+        request: any,
+        rawJwtToken: string,
+        done: (err: any, secret?: string) => void,
+      ) => {
+        const secret =
+          settingsService.get('JWT_SECRET') || 'change-me-in-production';
+        done(null, secret);
+      },
     });
   }
 
