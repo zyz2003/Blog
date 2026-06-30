@@ -25,7 +25,7 @@ Phases 10-11 complete. Scheduled tasks running, migration tool available, end-to
 | Phase | Name | Goal | Priority | Plans |
 |-------|------|------|----------|-------|
 | 01 | Infrastructure | 5/5 | Complete    | 2026-06-28 |
-| 02 | Auth & Settings | Admin can log in via JWT, manage user profile, configure site settings; visitors can read public config | P0 | TBD |
+| 02 | Auth & Settings | 5/5 | Planned    | 2026-06-29 |
 | 03 | Article & Category & Tag | Admin can CRUD articles with categories and tags; visitors can browse, filter, and paginate public articles | P0 | TBD |
 | 04 | Page & Public API | Admin can CRUD pages; visitors can view pages and access public aggregation endpoints and version info | P0 | TBD |
 | 05 | File Upload & Media | Admin can upload files (single + chunked), manage storage policies, generate thumbnails, and manage direct links | P0+P1 | TBD |

@@ -4,14 +4,15 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 02
 current_phase_name: Auth & Settings
-status: completed
+status: executing
 stopped_at: Phase 2 context gathered
-last_updated: "2026-06-29T13:26:07.953Z"
-last_activity: 2026-06-29
+last_updated: "2026-06-30T11:20:29.594Z"
+last_activity: 2026-06-30
+last_activity_desc: Phase 02 execution started
 progress:
   total_phases: 11
   completed_phases: 1
-  total_plans: 5
+  total_plans: 10
   completed_plans: 5
   percent: 9
 ---
@@ -23,16 +24,16 @@ progress:
 | Field | Value |
 |-------|-------|
 | Milestone | M1 - Core CMS Operational |
-| Phase | 02 — Auth & Settings |
-| Status | Completed plan 01-05, Phase 01 complete |
-| Last Activity | 2026-06-29 |
+| Phase | 02 (Auth & Settings) — EXECUTING |
+| Status | Executing Phase 02 |
+| Last Activity | 2026-06-30 — Phase 02 execution started |
 
 ## Phase Status
 
 | Phase | Name | Status | Plans | Last Updated |
 |-------|------|--------|-------|--------------|
 | 01 | Infrastructure | Complete | 5 | 2026-06-28 |
-| 02 | Auth & Settings | Not Started | 0 | 2026-06-28 |
+| 02 | Auth & Settings | Planned | 5 | 2026-06-29 |
 | 03 | Article & Category & Tag | Not Started | 0 | 2026-06-28 |
 | 04 | Page & Public API | Not Started | 0 | 2026-06-28 |
 | 05 | File Upload & Media | Not Started | 0 | 2026-06-28 |
@@ -76,6 +77,21 @@ progress:
 | D-27 | passport-jwt@4.0.1 required as runtime dependency for JwtStrategy | PassportStrategy(Strategy) from passport-jwt needed for JWT validation | 01 |
 | D-28 | Vitest 4.x uses firstValueFrom instead of done() callbacks | done() callback pattern deprecated in Vitest 4.x | 01 |
 | D-29 | Guard test uses Reflect.defineMetadata for @Public() mock | Reflector.getAllAndOverride uses Reflect.getMetadata, not direct property access | 01 |
+| D-30 | JWT_SECRET from settings table dynamically read | Same as Go backend SettingService.Get("JWT_SECRET"), queried on every sign/verify | 02 |
+| D-31 | Access token 15min, refresh token 30d (hardcoded) | Matches Go backend time.Minute*15 and time.Hour*24*30 | 02 |
+| D-32 | Refresh token dual source (header + body) | Matches Go RefreshToken handler: Authorization header first, then body | 02 |
+| D-33 | Login response format: { userInfo, roles, accessToken, refreshToken, expires } | Exact copy of Go login response; expires is millisecond timestamp | 02 |
+| D-34 | Captcha: Image + none modes; Turnstile/Geetest deferred | Architecture-ready, implement two providers | 02 |
+| D-35 | Auth 501 stubs for register/activate/forgot/reset/check-email | Need SMTP for full implementation | 02 |
+| D-36 | Password hashing with bcryptjs (DefaultCost=10) | Compatible with Go golang.org/x/crypto/bcrypt | 02 |
+| D-37 | @nestjs/throttler rate limiting | Login: 5 req/10s; Captcha: 10 req/min | 02 |
+| D-38 | Settings key-value + in-memory cache (Map) | Loaded at startup, refreshed on update | 02 |
+| D-39 | Public/private key distinction via hardcoded list | Matches Go IsPublicSetting() | 02 |
+| D-40 | /api/public/site-config returns predefined public config set | Not all public keys, matches Go GetSiteConfig() | 02 |
+| D-41 | Config version as millisecond timestamp | Refreshed on every settings update | 02 |
+| D-42 | Settings advanced: AI masking, CDN purge detection, auto-backup | All three features implemented in Phase 02 | 02 |
+| D-43 | Full user interfaces: current + admin management | Admin CRUD + reset-password + status | 02 |
+| D-44 | Avatar upload returns 501 | Depends on Phase 05 file service | 02 |
 
 ## Blockers
 
