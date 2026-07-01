@@ -25,7 +25,7 @@ Phases 10-11 complete. Scheduled tasks running, migration tool available, end-to
 | Phase | Name | Goal | Priority | Plans |
 |-------|------|------|----------|-------|
 | 01 | Infrastructure | 5/5 | Complete    | 2026-06-28 |
-| 02 | Auth & Settings | 5/5 | Planned    | 2026-06-29 |
+| 02 | Auth & Settings | 5/5 | Complete    | 2026-06-29 |
 | 03 | Article & Category & Tag | Admin can CRUD articles with categories and tags; visitors can browse, filter, and paginate public articles | P0 | TBD |
 | 04 | Page & Public API | Admin can CRUD pages; visitors can view pages and access public aggregation endpoints and version info | P0 | TBD |
 | 05 | File Upload & Media | Admin can upload files (single + chunked), manage storage policies, generate thumbnails, and manage direct links | P0+P1 | TBD |
@@ -80,14 +80,15 @@ Plans:
 - Password hashing uses bcrypt
 - Token refresh endpoint works
 
-**Plans:** 5 plans
+**Plans:** 5/5 plans complete
 
 Plans:
-- [ ] 02-01-PLAN.md — SettingsService with in-memory cache, unflatten, public/private key filtering, and SettingsController
-- [ ] 02-02-PLAN.md — AuthService, TokenService, AuthController with Go-compatible JWT lifecycle
-- [ ] 02-03-PLAN.md — UserService, UserController with current user ops and admin user management
-- [ ] 02-04-PLAN.md — CaptchaService, CaptchaController, and @nestjs/throttler rate limiting
-- [ ] 02-05-PLAN.md — AppModule wiring, startup initialization, and integration tests
+
+- [x] 02-01-PLAN.md — SettingsService with in-memory cache, unflatten, public/private key filtering, and SettingsController
+- [x] 02-02-PLAN.md — AuthService, TokenService, AuthController with Go-compatible JWT lifecycle
+- [x] 02-03-PLAN.md — UserService, UserController with current user ops and admin user management
+- [x] 02-04-PLAN.md — CaptchaService, CaptchaController, and @nestjs/throttler rate limiting
+- [x] 02-05-PLAN.md — AppModule wiring, startup initialization, and integration tests
 
 ---
 
