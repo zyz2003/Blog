@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { Test } from '@nestjs/testing';
 import { ValidationPipe } from '@nestjs/common';
+import supertest from 'supertest';
 import * as bcryptjs from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import { AppModule } from '../src/app.module';
@@ -10,13 +11,13 @@ import { DRIZZLE } from '../src/database/database.module';
 import { users } from '../src/database/schemas/user.schema';
 import { userGroups } from '../src/database/schemas/user-group.schema';
 import { settings } from '../src/database/schemas/setting.schema';
-import { eq } from 'drizzle-orm';
+import { INestApplication } from '@nestjs/common';
 
 const TEST_SEED = 'integration-test-seed';
 const TEST_JWT_SECRET = 'test-jwt-secret-key';
 
 describe('Phase 02 Integration', () => {
-  let app: any;
+  let app: INestApplication;
   let db: any;
 
   beforeAll(async () => {
@@ -64,9 +65,11 @@ describe('Phase 02 Integration', () => {
   });
 
   it('POST /api/auth/login returns correct structure', async () => {
-    const res = await app.inject({ method: 'POST', url: '/api/auth/login', payload: { email: 'admin@test.com', password: 'password123' } });
-    expect(res.statusCode).toBe(201);
-    const body = res.json();
+    const res = await supertest(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({ email: 'admin@test.com', password: 'password123' });
+    expect(res.status).toBe(201);
+    const body = res.body;
     expect(body.data).toHaveProperty('userInfo');
     expect(body.data).toHaveProperty('accessToken');
     expect(body.data).toHaveProperty('refreshToken');
@@ -74,27 +77,37 @@ describe('Phase 02 Integration', () => {
   });
 
   it('userInfo.id is public ID string, userInfo.userGroupID is raw DB ID number', async () => {
-    const res = await app.inject({ method: 'POST', url: '/api/auth/login', payload: { email: 'admin@test.com', password: 'password123' } });
-    const userInfo = res.json().data.userInfo;
+    const res = await supertest(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({ email: 'admin@test.com', password: 'password123' });
+    const userInfo = res.body.data.userInfo;
     expect(typeof userInfo.id).toBe('string');
     expect(typeof userInfo.userGroupID).toBe('number');
     expect(userInfo.userGroupID).toBe(1);
   });
 
   it('GET /api/user/info with valid JWT returns user profile', async () => {
-    const loginRes = await app.inject({ method: 'POST', url: '/api/auth/login', payload: { email: 'admin@test.com', password: 'password123' } });
-    const token = loginRes.json().data.accessToken;
-    const res = await app.inject({ method: 'GET', url: '/api/user/info', headers: { authorization: `Bearer ${token}` } });
-    expect(res.statusCode).toBe(200);
-    expect(res.json().data).toHaveProperty('username', 'admin');
+    const loginRes = await supertest(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({ email: 'admin@test.com', password: 'password123' });
+    const token = loginRes.body.data.accessToken;
+    const res = await supertest(app.getHttpServer())
+      .get('/api/user/info')
+      .set('authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.data).toHaveProperty('username', 'admin');
   });
 
   it('POST /api/auth/refresh-token returns new accessToken', async () => {
-    const loginRes = await app.inject({ method: 'POST', url: '/api/auth/login', payload: { email: 'admin@test.com', password: 'password123' } });
-    const refreshToken = loginRes.json().data.refreshToken;
-    const res = await app.inject({ method: 'POST', url: '/api/auth/refresh-token', payload: { refreshToken } });
-    expect(res.statusCode).toBe(201);
-    expect(res.json().data).toHaveProperty('accessToken');
+    const loginRes = await supertest(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({ email: 'admin@test.com', password: 'password123' });
+    const refreshToken = loginRes.body.data.refreshToken;
+    const res = await supertest(app.getHttpServer())
+      .post('/api/auth/refresh-token')
+      .send({ refreshToken });
+    expect(res.status).toBe(201);
+    expect(res.body.data).toHaveProperty('accessToken');
   });
 
   it('Go-issued JWT token is accepted by NestJS JwtStrategy', async () => {
@@ -105,37 +118,45 @@ describe('Phase 02 Integration', () => {
       TEST_JWT_SECRET,
       { algorithm: 'HS256', expiresIn: '15m' },
     );
-    const res = await app.inject({ method: 'GET', url: '/api/user/info', headers: { authorization: `Bearer ${goToken}` } });
-    expect(res.statusCode).toBe(200);
+    const res = await supertest(app.getHttpServer())
+      .get('/api/user/info')
+      .set('authorization', `Bearer ${goToken}`);
+    expect(res.status).toBe(200);
   });
 
   it('GET /api/public/site-config returns unflattened public settings', async () => {
-    const res = await app.inject({ method: 'GET', url: '/api/public/site-config' });
-    expect(res.statusCode).toBe(200);
-    const data = res.json().data;
+    const res = await supertest(app.getHttpServer())
+      .get('/api/public/site-config');
+    expect(res.status).toBe(200);
+    const data = res.body.data;
     expect(data).toHaveProperty('_config_version');
   });
 
   it('GET /api/public/captcha/config returns provider config', async () => {
-    const res = await app.inject({ method: 'GET', url: '/api/public/captcha/config' });
-    expect(res.statusCode).toBe(200);
-    expect(res.json().data).toHaveProperty('provider');
+    const res = await supertest(app.getHttpServer())
+      .get('/api/public/captcha/config');
+    expect(res.status).toBe(200);
+    expect(res.body.data).toHaveProperty('provider');
   });
 
   it('GET /api/public/site-config/version returns version number', async () => {
-    const res = await app.inject({ method: 'GET', url: '/api/public/site-config/version' });
-    expect(res.statusCode).toBe(200);
-    expect(typeof res.json().data.version).toBe('number');
+    const res = await supertest(app.getHttpServer())
+      .get('/api/public/site-config/version');
+    expect(res.status).toBe(200);
+    expect(typeof res.body.data.version).toBe('number');
   });
 
   it('Login with wrong password returns 401', async () => {
-    const res = await app.inject({ method: 'POST', url: '/api/auth/login', payload: { email: 'admin@test.com', password: 'wrongpass' } });
-    expect(res.statusCode).toBe(401);
+    const res = await supertest(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({ email: 'admin@test.com', password: 'wrongpass' });
+    expect(res.status).toBe(401);
   });
 
   it('Access protected endpoint without JWT returns 401', async () => {
-    const res = await app.inject({ method: 'GET', url: '/api/user/info' });
-    expect(res.statusCode).toBe(401);
+    const res = await supertest(app.getHttpServer())
+      .get('/api/user/info');
+    expect(res.status).toBe(401);
   });
 
   it('bcryptjs compatibility: hash and verify match', async () => {
