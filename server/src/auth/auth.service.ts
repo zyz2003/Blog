@@ -77,6 +77,7 @@ export class AuthService {
       nickname: user.nickname,
       avatar,
       email: user.email,
+      website: user.website || null,
       lastLoginAt: formatToChinaTime(user.lastLoginAt),
       userGroupID: user.userGroupId, // RAW database ID (number) per Go inconsistency
       userGroup: {

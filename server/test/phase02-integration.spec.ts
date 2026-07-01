@@ -52,8 +52,8 @@ describe('Phase 02 Integration', () => {
       .onConflictDoUpdate({ target: settings.configKey, set: { value: TEST_SEED } }).run();
     await db.insert(settings).values({ configKey: 'APP_NAME', value: 'TestApp' })
       .onConflictDoUpdate({ target: settings.configKey, set: { value: 'TestApp' } }).run();
-    await db.insert(settings).values({ configKey: 'captcha.provider', value: 'image' })
-      .onConflictDoUpdate({ target: settings.configKey, set: { value: 'image' } }).run();
+    await db.insert(settings).values({ configKey: 'captcha.provider', value: 'none' })
+      .onConflictDoUpdate({ target: settings.configKey, set: { value: 'none' } }).run();
     await db.insert(settings).values({ configKey: 'GRAVATAR_URL', value: 'https://cravatar.cn/avatar/' })
       .onConflictDoUpdate({ target: settings.configKey, set: { value: 'https://cravatar.cn/avatar/' } }).run();
 

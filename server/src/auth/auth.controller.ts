@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { TokenService } from './token.service';
+import { CaptchaService } from '../captcha/captcha.service';
 import { LoginRequestDto } from './dto/login-request.dto';
 import { RefreshTokenRequestDto } from './dto/refresh-token-request.dto';
 import { Public } from '../common/decorators/public.decorator';
@@ -21,11 +22,18 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly tokenService: TokenService,
+    private readonly captchaService: CaptchaService,
   ) {}
 
   @Public()
   @Post('login')
   async login(@Body() dto: LoginRequestDto) {
+    // Verify captcha before checking credentials (matches Go: captcha verified first)
+    this.captchaService.verify({
+      image_captcha_id: dto.image_captcha_id,
+      image_captcha_answer: dto.image_captcha_answer,
+    });
+
     return this.authService.login(dto.email, dto.password);
   }
 

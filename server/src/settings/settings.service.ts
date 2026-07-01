@@ -62,6 +62,11 @@ export class SettingsService implements OnModuleInit {
       }
     }
 
+    // Mask AI profiles API keys (matches Go maskSensitiveSettings)
+    if (filtered.ai_profiles) {
+      filtered.ai_profiles = this.maskAIProfiles(filtered.ai_profiles);
+    }
+
     return this.unflatten(filtered);
   }
 

@@ -27,7 +27,7 @@ describe('TokenService', () => {
   });
 
   describe('generateAccessToken', () => {
-    it('Test 1: should create HS256 JWT with user_id (public ID string), user_group_id (public ID string), permissions, iss, exp=now+15min', async () => {
+    it('Test 1: should create HS256 JWT with user_id (public ID string), user_group_id (public ID string), permissions (base64 for Go []byte compat), iss, exp=now+15min', async () => {
       const user = { id: 1, userGroupId: 1, permissions: [1, 2, 3] };
       const token = await service.generateAccessToken(user);
 
@@ -36,7 +36,10 @@ describe('TokenService', () => {
       expect(typeof decoded.user_id).toBe('string');
       expect(decoded.user_group_id).toBeDefined();
       expect(typeof decoded.user_group_id).toBe('string');
-      expect(decoded.permissions).toEqual([1, 2, 3]);
+      // permissions is base64-encoded for Go []byte compatibility
+      expect(typeof decoded.permissions).toBe('string');
+      const decodedPerms = Array.from(Buffer.from(decoded.permissions, 'base64'));
+      expect(decodedPerms).toEqual([1, 2, 3]);
       expect(decoded.iss).toBe('anheyu-app');
       expect(decoded.exp - decoded.iat).toBe(900); // 15 minutes
     });

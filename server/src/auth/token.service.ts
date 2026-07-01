@@ -8,6 +8,33 @@ import { ErrorCodes } from '../common/constants/error-codes';
 import * as jwt from 'jsonwebtoken';
 import { eq } from 'drizzle-orm';
 
+/**
+ * Encode permissions to base64 string for Go JWT compatibility.
+ * Go's CustomClaims has `Permissions []byte` which serializes as base64 in JSON.
+ */
+function encodePermissions(permissions: number[]): string {
+  return Buffer.from(permissions).toString('base64');
+}
+
+/**
+ * Decode permissions from base64 string (Go JWT format) back to number[].
+ * Handles both base64 strings (from Go-issued tokens) and number arrays.
+ */
+function decodePermissions(raw: unknown): number[] {
+  if (Array.isArray(raw)) {
+    return raw.map(Number);
+  }
+  if (typeof raw === 'string') {
+    try {
+      const buf = Buffer.from(raw, 'base64');
+      return Array.from(buf);
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
 @Injectable()
 export class TokenService {
   constructor(
@@ -26,7 +53,7 @@ export class TokenService {
     const payload = {
       user_id: generatePublicID(user.id, EntityType.User),
       user_group_id: generatePublicID(user.userGroupId, EntityType.UserGroup),
-      permissions: user.permissions,
+      permissions: encodePermissions(user.permissions), // base64 string for Go []byte compat
       iss: 'anheyu-app',
       iat: now,
       exp: now + 900, // 15 minutes

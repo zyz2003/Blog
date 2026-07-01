@@ -50,6 +50,7 @@ export class UserService {
       nickname: user.nickname,
       avatar,
       email: user.email,
+      website: user.website || null,
       lastLoginAt: formatToChinaTime(user.lastLoginAt),
       userGroupID: user.userGroupId, // RAW database ID (number) per Go inconsistency
       userGroup: {
@@ -196,7 +197,7 @@ export class UserService {
         email,
         nickname: nickname || null,
         userGroupId: decoded.dbID,
-        status: 2,
+        status: 1, // Default active, matches Go UserStatusActive
       })
       .returning();
 

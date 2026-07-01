@@ -8,12 +8,14 @@ describe('AuthController', () => {
   let controller: AuthController;
   let mockAuthService: any;
   let mockTokenService: any;
+  let mockCaptchaService: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockAuthService = { login: vi.fn() };
     mockTokenService = { refreshAccessToken: vi.fn() };
-    controller = new AuthController(mockAuthService, mockTokenService);
+    mockCaptchaService = { verify: vi.fn().mockReturnValue(true) };
+    controller = new AuthController(mockAuthService, mockTokenService, mockCaptchaService);
   });
 
   describe('POST /api/auth/login', () => {
@@ -23,6 +25,18 @@ describe('AuthController', () => {
 
       const result = await controller.login({ email: 'admin@test.com', password: 'pass' });
       expect(result).toEqual(loginResult);
+    });
+
+    it('Test 1b: should verify captcha before login', async () => {
+      mockAuthService.login.mockResolvedValue({ userInfo: {}, accessToken: 'at' });
+      await controller.login({ email: 'a@b.com', password: 'p', image_captcha_id: 'cap1', image_captcha_answer: 'ans' });
+      expect(mockCaptchaService.verify).toHaveBeenCalledWith({ image_captcha_id: 'cap1', image_captcha_answer: 'ans' });
+    });
+
+    it('Test 1c: should throw when captcha verification fails', async () => {
+      mockCaptchaService.verify.mockImplementation(() => { throw new Error('captcha failed'); });
+      await expect(controller.login({ email: 'a@b.com', password: 'p' })).rejects.toThrow('captcha failed');
+      expect(mockAuthService.login).not.toHaveBeenCalled();
     });
   });
 
