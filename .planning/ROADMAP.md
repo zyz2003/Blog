@@ -108,7 +108,14 @@ Plans:
 - Visitors can view single public article at /api/public/articles/:id
 - Article IDs encode/decode via Sqids matching Go backend
 
-**Plans:** TBD
+**Plans:** 5 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Junction table schemas + PostCategory/PostTag CRUD modules
+- [ ] 03-02-PLAN.md — Article admin CRUD with Go-compatible response shape and count sync
+- [ ] 03-03-PLAN.md — Public article endpoints (7 endpoints with pagination, filtering, prev/next)
+- [ ] 03-04-PLAN.md — Article history versioning with auto-creation and 5 history endpoints
+- [ ] 03-05-PLAN.md — AppModule wiring, test suite, and integration verification
 
 ---
 
