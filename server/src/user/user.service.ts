@@ -164,6 +164,7 @@ export class UserService {
         nickname: user.nickname,
         avatar,
         email: user.email,
+        website: user.website || null,
         lastLoginAt: formatToChinaTime(user.lastLoginAt),
         userGroupID: generatePublicID(user.userGroupId, EntityType.UserGroup), // PUBLIC ID (string!)
         userGroup: {
@@ -220,6 +221,7 @@ export class UserService {
       nickname: user.nickname,
       avatar,
       email: user.email,
+      website: user.website || null,
       lastLoginAt: formatToChinaTime(user.lastLoginAt),
       userGroupID: generatePublicID(user.userGroupId, EntityType.UserGroup),
       userGroup: {

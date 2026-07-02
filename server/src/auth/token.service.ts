@@ -82,20 +82,21 @@ export class TokenService {
     id: number;
     userGroupId: number;
     permissions: number[];
-  }): Promise<{ accessToken: string; refreshToken: string; expires: number }> {
+  }): Promise<{ accessToken: string; refreshToken: string; expires: string }> {
     const [accessToken, refreshToken] = await Promise.all([
       this.generateAccessToken(user),
       this.generateRefreshToken(user.id),
     ]);
 
-    const expires = Date.now() + 15 * 60 * 1000;
+    // Go returns expires as string (UnixMilli), NestJS must match
+    const expires = String(Date.now() + 15 * 60 * 1000);
 
     return { accessToken, refreshToken, expires };
   }
 
   async refreshAccessToken(
     refreshToken: string,
-  ): Promise<{ accessToken: string; expires: number }> {
+  ): Promise<{ accessToken: string; expires: string }> {
     const secret = this.settingsService.get('JWT_SECRET') || 'change-me-in-production';
 
     let claims: any;
@@ -157,7 +158,7 @@ export class TokenService {
       permissions,
     });
 
-    const expires = Date.now() + 15 * 60 * 1000;
+    const expires = String(Date.now() + 15 * 60 * 1000);
 
     return { accessToken, expires };
   }

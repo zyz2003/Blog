@@ -51,7 +51,7 @@ export const ErrorCodes = {
   CAPTCHA_REQUIRED: '验证码参数缺失',
   CAPTCHA_EXPIRED: '验证码已过期',
   CAPTCHA_INCORRECT: '验证码错误',
-  REFRESH_TOKEN_MISSING: '请求未携带Token，无权限访问',
+  REFRESH_TOKEN_MISSING: '未提供RefreshToken',
   USER_NOT_FOUND: '用户不存在',
 } as const;
 

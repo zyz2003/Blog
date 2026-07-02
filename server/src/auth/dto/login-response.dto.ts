@@ -6,7 +6,6 @@ export interface LoginUserInfo {
   nickname: string | null;
   avatar: string | null;
   email: string;
-  website: string | null;
   lastLoginAt: string | null;
   userGroupID: number;
   userGroup: {
@@ -22,5 +21,5 @@ export interface LoginResponse {
   roles: string[];
   accessToken: string;
   refreshToken: string;
-  expires: number;
+  expires: string;
 }

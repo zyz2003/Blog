@@ -6,6 +6,7 @@ export interface AdminUserDTO {
   nickname: string | null;
   avatar: string | null;
   email: string;
+  website: string | null;
   lastLoginAt: string | null;
   userGroupID: string;
   userGroup: {

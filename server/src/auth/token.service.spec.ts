@@ -61,17 +61,18 @@ describe('TokenService', () => {
   });
 
   describe('generateSessionTokens', () => {
-    it('Test 3: should return { accessToken, refreshToken, expires } where expires is millisecond timestamp', async () => {
+    it('Test 3: should return { accessToken, refreshToken, expires } where expires is string (Go compat)', async () => {
       const user = { id: 1, userGroupId: 1, permissions: [1] };
       const result = await service.generateSessionTokens(user);
 
       expect(result.accessToken).toBeDefined();
       expect(result.refreshToken).toBeDefined();
-      expect(typeof result.expires).toBe('number');
-      // expires should be approximately now + 15 minutes in milliseconds
+      expect(typeof result.expires).toBe('string');
+      // expires should be a string representation of a millisecond timestamp
+      const expiresNum = parseInt(result.expires, 10);
       const now = Date.now();
-      expect(result.expires).toBeGreaterThan(now);
-      expect(result.expires).toBeLessThanOrEqual(now + 15 * 60 * 1000 + 1000);
+      expect(expiresNum).toBeGreaterThan(now);
+      expect(expiresNum).toBeLessThanOrEqual(now + 15 * 60 * 1000 + 1000);
     });
   });
 
@@ -96,7 +97,7 @@ describe('TokenService', () => {
 
       const result = await service.refreshAccessToken(refreshToken);
       expect(result.accessToken).toBeDefined();
-      expect(typeof result.expires).toBe('number');
+      expect(typeof result.expires).toBe('string');
 
       const decoded = jwt.verify(result.accessToken, 'test-jwt-secret-for-testing') as any;
       expect(decoded.user_id).toBeDefined();

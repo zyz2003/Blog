@@ -9,6 +9,7 @@ import {
   Optional,
   UnauthorizedException,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { TokenService } from './token.service';
 import { CaptchaService } from '../captcha/captcha.service';
@@ -26,6 +27,7 @@ export class AuthController {
   ) {}
 
   @Public()
+  @Throttle({ default: { limit: 5, ttl: 60000 } }) // Go: CustomRateLimit(10, 5)
   @Post('login')
   async login(@Body() dto: LoginRequestDto) {
     // Verify captcha before checking credentials (matches Go: captcha verified first)
@@ -55,13 +57,14 @@ export class AuthController {
     }
 
     if (!refreshToken) {
-      throw new UnauthorizedException(ErrorCodes.TOKEN_MISSING);
+      throw new UnauthorizedException(ErrorCodes.REFRESH_TOKEN_MISSING);
     }
 
     return this.tokenService.refreshAccessToken(refreshToken);
   }
 
   @Public()
+  @Throttle({ default: { limit: 3, ttl: 60000 } }) // Go: CustomRateLimit(5, 3)
   @Post('register')
   async register() {
     throw new HttpException('注册功能暂未开放', HttpStatus.NOT_IMPLEMENTED);
@@ -74,18 +77,21 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 3, ttl: 60000 } }) // Go: CustomRateLimit(5, 3)
   @Post('forgot-password')
   async forgotPassword() {
     throw new HttpException('忘记密码功能暂未开放', HttpStatus.NOT_IMPLEMENTED);
   }
 
   @Public()
+  @Throttle({ default: { limit: 3, ttl: 60000 } }) // Go: CustomRateLimit(5, 3)
   @Post('reset-password')
   async resetPassword() {
     throw new HttpException('重置密码功能暂未开放', HttpStatus.NOT_IMPLEMENTED);
   }
 
   @Public()
+  @Throttle({ default: { limit: 5, ttl: 60000 } }) // Go: CustomRateLimit(10, 5)
   @Get('check-email')
   async checkEmail() {
     throw new HttpException('邮箱检查功能暂未开放', HttpStatus.NOT_IMPLEMENTED);

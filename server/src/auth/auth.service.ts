@@ -69,16 +69,17 @@ export class AuthService {
     }
 
     // Build userInfo
+    // Note: Go LoginUserInfoResponse uses time.Time (RFC3339) for dates,
+    // while GetUserInfoResponse uses formatted strings — we follow Go's inconsistency
     const userInfo: LoginUserInfo = {
       id: generatePublicID(user.id, EntityType.User),
-      created_at: formatToChinaTime(user.createdAt),
-      updated_at: formatToChinaTime(user.updatedAt),
+      created_at: user.createdAt?.toISOString() || null,
+      updated_at: user.updatedAt?.toISOString() || null,
       username: user.username,
       nickname: user.nickname,
       avatar,
       email: user.email,
-      website: user.website || null,
-      lastLoginAt: formatToChinaTime(user.lastLoginAt),
+      lastLoginAt: user.lastLoginAt?.toISOString() || null,
       userGroupID: user.userGroupId, // RAW database ID (number) per Go inconsistency
       userGroup: {
         id: generatePublicID(userGroup.id, EntityType.UserGroup),
