@@ -49,7 +49,7 @@
 ### Article Response Shape
 - **D-45:** Article 响应模型完全对齐 Go 后端 ArticleResponse 结构：包含 id（Sqids 公共 ID）、title、contentMd、contentHtml、coverUrl、status、viewCount、wordCount、readingTime、primaryColor、summaries（JSON 数组）、abbrlink、copyright 相关字段、keywords、postCategories（嵌套对象数组）、postTags（嵌套对象数组）、owner（嵌套用户信息）、createdAt、updatedAt 等。Go 后端 ToAPIResponse 方法是权威参考
 - **D-46:** Create/Update DTO 分离：CreateArticleDto 包含必填字段（title、status）+ 可选字段；UpdateArticleDto 所有字段可选（PartialType）。DTO 字段名使用 camelCase，与 Go 后端 JSON tag 一致
-- **D-47:** 文章状态枚举：DRAFT、PUBLISHED、ARCHIVED 三种，与 Go 后端 status 字段一致。公开端点只返回 PUBLISHED 且未下架（isTakedown=false）的文章
+- **D-47:** 文章状态枚举：DRAFT、PUBLISHED、ARCHIVED、SCHEDULED 四种，与 Go 后端 status 字段一致。公开端点只返回 PUBLISHED 且未下架（isTakedown=false）的文章。SCHEDULED 状态配合 scheduledAt 字段用于定时发布
 - **D-48:** 文章详情响应包含 prevArticle 和 nextArticle（仅公开端点），与 Go 后端 GetPublicByID 行为一致。上下篇按 createdAt 排序，同分类优先
 
 ### Public Article Listing
@@ -65,7 +65,7 @@
 - **D-56:** CompareVersions 端点返回两个版本之间的差异（字段级 diff），与 Go 后端 CompareVersions 行为一致
 
 ### Category/Tag Relationship
-- **D-57:** Articles ↔ PostCategories 和 Articles ↔ PostTags 使用隐式多对多关系（Go ent edge 模式）。Drizzle 中通过在 articles 表添加 categoryId 整数列（文章只属于一个分类）+ article_post_tags 联结表（文章可有多个标签）实现。需要新建 article-post-tag-pivot.schema.ts 联结表
+- **D-57:** Articles ↔ PostCategories 和 Articles ↔ PostTags 均使用多对多关系，通过两个联结表实现：article_post_categories（文章-分类）和 article_post_tags（文章-标签）。需要新建 article-post-category-pivot.schema.ts 和 article-post-tag-pivot.schema.ts 两个联结表。前端发送 post_category_ids: [...] 和 post_tag_ids: [...] 数组，与 Go 后端 M2M 模式完全一致
 - **D-58:** PostCategories.count 和 PostTags.count 字段在文章 CRUD 时自动同步：创建文章时关联的分类/标签 count+1，删除文章时 count-1，更新文章时 diff 计算增量/减量。与 Go 后端 diffIDs 逻辑一致
 - **D-59:** 分类和标签的 CRUD 端点独立于文章模块：PostCategoryModule 和 PostTagModule 各自包含 controller + service + repository。文章模块通过 Drizzle 关系查询关联分类和标签数据
 
@@ -86,8 +86,11 @@
 - **D-67:** 文章主色调（primaryColor）支持手动设置和自动提取两种模式。isPrimaryColorManual=true 时使用手动值，否则从封面图/topImgUrl 自动提取。Phase 03 实现手动设置 + 默认值，自动提取依赖图片处理（Phase 05 sharp 库），暂时返回默认色值
 
 ### Export/Import
-- **D-68:** 文章导出（ExportArticles）将文章数据序列化为 JSON 格式返回。与 Go 后端 ExportArticles 行为一致
-- **D-69:** 文章导入（ImportArticles）接受 JSON 格式文件，批量创建文章。与 Go 后端 ImportArticles 行为一致
+- **D-68:** 文章导出（ExportArticles）返回 ZIP 文件，内含 JSON 数据 + Markdown 文件。与 Go 后端 ExportArticles 行为完全一致
+- **D-69:** 文章导入（ImportArticles）接受 ZIP 文件，批量创建文章。与 Go 后端 ImportArticles 行为一致
+
+### HTML Sanitization
+- **D-70:** 使用 isomorphic-dompurify 在 Create/Update 时消毒 content_html，与 Go 后端的 SanitizeHTML 行为一致。安装 isomorphic-dompurify + @types/dompurify 依赖
 
 ### Claude's Discretion
 - ArticleRepository 的具体查询方法设计（Drizzle 查询构建方式）
@@ -183,8 +186,8 @@
 - 文章主色调自动提取依赖 Phase 05 sharp 库
 
 ### Missing Schemas
-- **article_post_tag_pivot.schema.ts**: 文章-标签多对多联结表尚未创建，需要在 Phase 03 新建
-- **articles 表缺少 categoryId 列**: 当前 article.schema.ts 没有 categoryId 外键列，需要添加（文章属于一个分类）
+- **article_post_category_pivot.schema.ts**: 文章-分类多对多联结表需要新建
+- **article_post_tag_pivot.schema.ts**: 文章-标签多对多联结表需要新建
 
 </code_context>
 
@@ -207,6 +210,7 @@
 - 文章主色调自动提取 — 留待 Phase 05 sharp 库集成后实现，Phase 03 只支持手动设置 + 默认值
 - 文章浏览量批量写入优化 — Phase 03 实现简单自增，Phase 10 定时任务完善批量写入
 - PRO 功能（付费文章、密码保护、登录可见）— Out of Scope，不属于任何当前阶段
+- 定时发布执行 — Phase 03 只支持 SCHEDULED 状态和 scheduledAt 字段存储，实际定时发布逻辑留待 Phase 10 定时任务
 
 </deferred>
 
