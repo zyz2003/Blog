@@ -1,7 +1,7 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { PostTagRepository } from './post-tag.repository';
 import { generatePublicID, EntityType } from '../common/utils/sqids.util';
-import { formatToChinaTime } from '../common/utils/time.util';
+import { formatToChinaTime, toISODateString } from '../common/utils/time.util';
 import { ErrorCodes } from '../common/constants/error-codes';
 import { CreatePostTagDto } from './dto/create-post-tag.dto';
 import { UpdatePostTagDto } from './dto/update-post-tag.dto';
@@ -85,8 +85,8 @@ export class PostTagService {
     if (!tag) return null;
     return {
       id: generatePublicID(tag.id, EntityType.PostTag),
-      created_at: formatToChinaTime(tag.createdAt),
-      updated_at: formatToChinaTime(tag.updatedAt),
+      created_at: toISODateString(tag.createdAt),
+      updated_at: toISODateString(tag.updatedAt),
       name: tag.name,
       slug: tag.slug,
       count: tag.count,

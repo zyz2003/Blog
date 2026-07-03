@@ -320,7 +320,7 @@ describe('ArticleService', () => {
       expect(result.list).toHaveLength(1);
       expect(result.total).toBe(1);
       expect(result.page).toBe(1);
-      expect(result.page_size).toBe(10);
+      expect(result.pageSize).toBe(10);
     });
   });
 

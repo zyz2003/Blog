@@ -12,7 +12,7 @@ import { ArticleHistoryService } from '../article-history/article-history.servic
 import { DRIZZLE } from '../database/database.module';
 import { articles } from '../database/schemas/article.schema';
 import { generatePublicID, decodePublicID, EntityType } from '../common/utils/sqids.util';
-import { formatToChinaTime } from '../common/utils/time.util';
+import { formatToChinaTime, toISODateString } from '../common/utils/time.util';
 import { ErrorCodes } from '../common/constants/error-codes';
 import { sanitizeHtml } from './article.sanitize';
 import { CreateArticleDto } from './dto/create-article.dto';
@@ -71,8 +71,8 @@ export class ArticleService {
     // Map nested tags
     const postTags = (article.postTags || []).map((tag: any) => ({
       id: generatePublicID(tag.id, EntityType.PostTag),
-      created_at: formatToChinaTime(tag.createdAt),
-      updated_at: formatToChinaTime(tag.updatedAt),
+      created_at: toISODateString(tag.createdAt),
+      updated_at: toISODateString(tag.updatedAt),
       name: tag.name,
       slug: tag.slug ?? null,
       count: tag.count ?? 0,
@@ -81,8 +81,8 @@ export class ArticleService {
     // Map nested categories
     const postCategories = (article.postCategories || []).map((cat: any) => ({
       id: generatePublicID(cat.id, EntityType.PostCategory),
-      created_at: formatToChinaTime(cat.createdAt),
-      updated_at: formatToChinaTime(cat.updatedAt),
+      created_at: toISODateString(cat.createdAt),
+      updated_at: toISODateString(cat.updatedAt),
       name: cat.name,
       slug: cat.slug ?? null,
       description: cat.description ?? null,
@@ -108,8 +108,8 @@ export class ArticleService {
 
     return {
       id: responseID,
-      created_at: formatToChinaTime(article.createdAt),
-      updated_at: formatToChinaTime(article.updatedAt),
+      created_at: toISODateString(article.createdAt),
+      updated_at: toISODateString(article.updatedAt),
       title: article.title,
       content_md: article.contentMd ?? null,
       content_html: includeHTML ? (article.contentHtml ?? null) : null,
@@ -137,7 +137,7 @@ export class ArticleService {
       keywords: article.keywords ?? null,
       comment_count: 0, // Phase 06
       scheduled_at: article.scheduledAt
-        ? formatToChinaTime(article.scheduledAt)
+        ? toISODateString(article.scheduledAt)
         : null,
       review_status: article.reviewStatus ?? 'NONE',
       owner_id: article.ownerId ?? null,
@@ -146,7 +146,7 @@ export class ArticleService {
       owner_email: ownerEmail,
       is_takedown: article.isTakedown ?? false,
       takedown_reason: article.takedownReason ?? null,
-      takedown_at: article.takedownAt ? formatToChinaTime(article.takedownAt) : null,
+      takedown_at: article.takedownAt ? toISODateString(article.takedownAt) : null,
       takedown_by: article.takedownBy ?? null,
       extra_config: article.extraConfig ?? null,
       is_doc: article.isDoc ?? false,
@@ -421,7 +421,7 @@ export class ArticleService {
       list: result.list.map((a: any) => this.toApiResponse(a, false, true)),
       total: result.total,
       page,
-      page_size: pageSize,
+      pageSize,
     };
   }
 
@@ -538,7 +538,7 @@ export class ArticleService {
       list: result.list.map((a: any) => this.toApiResponse(a, true, false)),
       total: result.total,
       page,
-      page_size: pageSize,
+      pageSize,
     };
   }
 
@@ -686,7 +686,7 @@ export class ArticleService {
       title: article.title,
       cover_url: article.coverUrl ?? null,
       abbrlink: article.abbrlink ?? null,
-      created_at: formatToChinaTime(article.createdAt),
+      created_at: toISODateString(article.createdAt),
       primary_color: article.primaryColor ?? null,
       is_doc: article.isDoc ?? false,
       doc_series_id: docSeriesId,

@@ -154,7 +154,7 @@ describe('ArticleController', () => {
     });
 
     it('list calls service.list with parsed query params', async () => {
-      const mockResult = { list: [], total: 0, page: 1, page_size: 10 };
+      const mockResult = { list: [], total: 0, page: 1, pageSize: 10 };
       const serviceSpy = controller['articleService'].list as vi.Mock;
       serviceSpy.mockResolvedValue(mockResult);
 

@@ -4,7 +4,7 @@ import { DRIZZLE } from '../database/database.module';
 import { users } from '../database/schemas/user.schema';
 import { eq } from 'drizzle-orm';
 import { generatePublicID, decodePublicID, EntityType } from '../common/utils/sqids.util';
-import { formatToChinaTime } from '../common/utils/time.util';
+import { toISODateString } from '../common/utils/time.util';
 import { ErrorCodes } from '../common/constants/error-codes';
 
 /** Maximum history versions to keep per article. Matches Go maxVersions=10. */
@@ -181,7 +181,7 @@ export class ArticleHistoryService {
       editor_id: history.editorId,
       editor_nickname: history.editorNickname ?? null,
       change_note: history.changeNote ?? null,
-      created_at: formatToChinaTime(history.createdAt),
+      created_at: toISODateString(history.createdAt),
     };
   }
 
@@ -197,7 +197,7 @@ export class ArticleHistoryService {
       word_count: history.wordCount ?? 0,
       editor_nickname: history.editorNickname ?? null,
       change_note: history.changeNote ?? null,
-      created_at: formatToChinaTime(history.createdAt),
+      created_at: toISODateString(history.createdAt),
     };
   }
 

@@ -86,7 +86,7 @@ export interface ArticleListResponseDto {
   list: ArticleResponseDto[];
   total: number;
   page: number;
-  page_size: number;
+  pageSize: number; // camelCase matching Go ArticleListResponse.PageSize
 }
 
 /**

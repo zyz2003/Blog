@@ -1,7 +1,7 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { PostCategoryRepository } from './post-category.repository';
 import { generatePublicID, EntityType } from '../common/utils/sqids.util';
-import { formatToChinaTime } from '../common/utils/time.util';
+import { formatToChinaTime, toISODateString } from '../common/utils/time.util';
 import { ErrorCodes } from '../common/constants/error-codes';
 import { CreatePostCategoryDto } from './dto/create-post-category.dto';
 import { UpdatePostCategoryDto } from './dto/update-post-category.dto';
@@ -91,8 +91,8 @@ export class PostCategoryService {
     if (!category) return null;
     return {
       id: generatePublicID(category.id, EntityType.PostCategory),
-      created_at: formatToChinaTime(category.createdAt),
-      updated_at: formatToChinaTime(category.updatedAt),
+      created_at: toISODateString(category.createdAt),
+      updated_at: toISODateString(category.updatedAt),
       name: category.name,
       slug: category.slug,
       description: category.description,

@@ -15,3 +15,18 @@ export function formatToChinaTime(
   const zoned = toZonedTime(date, 'Asia/Shanghai');
   return format(zoned, 'yyyy-MM-dd HH:mm:ss', { timeZone: 'Asia/Shanghai' });
 }
+
+/**
+ * Format a date to ISO 8601 / RFC3339 string (e.g. "2026-07-03T08:30:00.000Z").
+ * Matches Go's time.Time default JSON serialization.
+ * Returns null for null/undefined input.
+ */
+export function toISODateString(
+  date: Date | null | undefined,
+): string | null {
+  if (date == null) {
+    return null;
+  }
+
+  return date.toISOString();
+}
