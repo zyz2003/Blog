@@ -53,6 +53,12 @@ export const ErrorCodes = {
   CAPTCHA_INCORRECT: '验证码错误',
   REFRESH_TOKEN_MISSING: '未提供RefreshToken',
   USER_NOT_FOUND: '用户不存在',
+
+  // Phase 03 - Category & Tag error messages
+  CATEGORY_NOT_FOUND: '分类不存在',
+  CATEGORY_NAME_EXISTS: '分类名称已存在',
+  TAG_NOT_FOUND: '标签不存在',
+  TAG_NAME_EXISTS: '标签名称已存在',
 } as const;
 
 export type ErrorCode = keyof typeof ErrorCodes;
