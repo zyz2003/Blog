@@ -8,6 +8,6 @@ import { PostCategoryRepository } from './post-category.repository';
   imports: [DatabaseModule],
   controllers: [PostCategoryController],
   providers: [PostCategoryService, PostCategoryRepository],
-  exports: [PostCategoryService],
+  exports: [PostCategoryService, PostCategoryRepository],
 })
 export class PostCategoryModule {}

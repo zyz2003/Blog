@@ -8,6 +8,6 @@ import { PostTagRepository } from './post-tag.repository';
   imports: [DatabaseModule],
   controllers: [PostTagController],
   providers: [PostTagService, PostTagRepository],
-  exports: [PostTagService],
+  exports: [PostTagService, PostTagRepository],
 })
 export class PostTagModule {}

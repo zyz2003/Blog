@@ -17,6 +17,15 @@ import { sanitizeHtml } from './article.sanitize';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { ArticleResponseDto } from './dto/article-response.dto';
+import {
+  ArticleListResponseDto,
+  SimpleArticleResponseDto,
+  ArticleDetailResponseDto,
+  ArchiveSummaryResponseDto,
+  ArticleStatisticsDto,
+  TopViewedPostItemDto,
+  PublishTrendItemDto,
+} from './dto/article-response.dto';
 import { eq, isNull, and, sql } from 'drizzle-orm';
 
 /** Reserved paths that abbrlink cannot match (from Go service.go) */
@@ -479,5 +488,233 @@ export class ArticleService {
         // Count sync failure should not block article CRUD
       }
     }
+  }
+
+  // ─── Public service methods ──────────────────────────────────────
+
+  /**
+   * List published articles with pagination and filters.
+   * Matches Go ListPublic (service.go lines 1779-1825).
+   */
+  async listPublic(options: {
+    page?: number;
+    pageSize?: number;
+    category?: string;
+    tag?: string;
+    year?: number;
+    month?: number;
+  }): Promise<ArticleListResponseDto> {
+    const page = options.page || 1;
+    const pageSize = options.pageSize || 10;
+
+    const result = await this.articleRepo.listPublic({
+      page,
+      pageSize,
+      categoryName: options.category,
+      tagName: options.tag,
+      year: options.year,
+      month: options.month,
+    });
+
+    return {
+      list: result.list.map((a: any) => this.toApiResponse(a, true, false)),
+      total: result.total,
+      page,
+      page_size: pageSize,
+    };
+  }
+
+  /**
+   * List home-visible articles. No pagination per D-51.
+   * Matches Go ListHome (service.go lines 1762-1776).
+   */
+  async listHome(): Promise<ArticleResponseDto[]> {
+    const articles = await this.articleRepo.listHome();
+    return articles.map((a: any) => this.toApiResponse(a, true, false));
+  }
+
+  /**
+   * Get a single random published article.
+   * Matches Go GetRandom (service.go lines 1751-1759).
+   */
+  async getRandom(): Promise<ArticleResponseDto> {
+    const article = await this.articleRepo.getRandom();
+    if (!article) {
+      throw new NotFoundException('没有找到已发布的文章');
+    }
+    return this.toApiResponse(article, true, true);
+  }
+
+  /**
+   * List archives grouped by year/month.
+   * Matches Go ListArchives (service.go lines 1828-1845).
+   */
+  async listArchives(): Promise<ArchiveSummaryResponseDto> {
+    const rows = await this.articleRepo.listArchives();
+    return {
+      list: rows.map((r: any) => ({
+        year: r.year,
+        month: r.month,
+        count: r.count,
+      })),
+    };
+  }
+
+  /**
+   * Get article statistics.
+   * Matches Go GetArticleStatistics (service.go lines 428-523).
+   */
+  async getArticleStatistics(): Promise<ArticleStatisticsDto> {
+    const stats = await this.articleRepo.getArticleStatistics();
+
+    const topViewedPosts: TopViewedPostItemDto[] = stats.topViewedPosts.map(
+      (post: any) => ({
+        id: generatePublicID(post.id, EntityType.Article),
+        title: post.title,
+        views: post.viewCount,
+        cover_url: post.coverUrl ?? null,
+      }),
+    );
+
+    const publishTrend: PublishTrendItemDto[] = stats.publishTrend.map(
+      (item: any) => ({
+        month: item.month,
+        count: item.count,
+      }),
+    );
+
+    return {
+      total_posts: stats.totalPosts,
+      total_words: stats.totalWords,
+      avg_words: stats.avgWords,
+      total_views: stats.totalViews,
+      category_stats: stats.categoryStats,
+      tag_stats: stats.tagStats,
+      top_viewed_posts: topViewedPosts,
+      publish_trend: publishTrend,
+    };
+  }
+
+  /**
+   * Get article by URL — extract slug from URL path and find article.
+   * Matches Go GetByURL (handler.go lines 352-376 + extractSlugFromURL).
+   */
+  async getByURL(url: string): Promise<ArticleDetailResponseDto> {
+    const slug = this.extractSlugFromURL(url);
+    if (!slug) {
+      throw new BadRequestException('无法从URL中解析出文章标识');
+    }
+    return this.getPublic(slug);
+  }
+
+  /**
+   * Get public article detail with prev/next navigation.
+   * Matches Go GetPublicBySlugOrID (service.go lines 874-973).
+   * Per Pitfall 4: Go swaps prev/next — prev=newer, next=older.
+   */
+  async getPublic(slugOrId: string): Promise<ArticleDetailResponseDto> {
+    const article = await this.articleRepo.findByAbbrlinkOrId(slugOrId);
+    if (!article) {
+      throw new NotFoundException('文章未找到');
+    }
+
+    // Increment view count (D-65: simple increment for Phase 03)
+    await this.articleRepo.incrementViewCount(article.id);
+
+    // Find prev/next — returns raw chronological neighbors
+    const { chronoNewer, chronoOlder } = await this.articleRepo.findPrevNextArticles(
+      article.id,
+      article.createdAt,
+    );
+
+    // Per Go swap convention (Pitfall 4 in RESEARCH.md):
+    // prevArticle = chronologically newer (creation time later = "previous" in reading order)
+    // nextArticle = chronologically older (creation time earlier = "next" in reading order)
+    const prevArticle = chronoNewer ? this.toSimpleApiResponse(chronoNewer) : null;
+    const nextArticle = chronoOlder ? this.toSimpleApiResponse(chronoOlder) : null;
+
+    // Main article response — useAbbrlinkAsID=true per Go GetPublic behavior
+    const mainResponse = this.toApiResponse(article, true, true);
+
+    return {
+      ...mainResponse,
+      prev_article: prevArticle,
+      next_article: nextArticle,
+      related_articles: [], // Phase 03: empty array (Go uses FindRelatedArticles, deferred)
+    };
+  }
+
+  /**
+   * Map article to SimpleArticleResponse.
+   * Matches Go toSimpleAPIResponse (service.go lines 695-722).
+   */
+  toSimpleApiResponse(article: any): SimpleArticleResponseDto | null {
+    if (!article) return null;
+
+    const responseID =
+      article.abbrlink || generatePublicID(article.id, EntityType.Article);
+
+    let docSeriesId: string | null = null;
+    if (article.docSeriesId) {
+      try {
+        docSeriesId = generatePublicID(article.docSeriesId, EntityType.DocSeries);
+      } catch {
+        docSeriesId = null;
+      }
+    }
+
+    return {
+      id: responseID,
+      title: article.title,
+      cover_url: article.coverUrl ?? null,
+      abbrlink: article.abbrlink ?? null,
+      created_at: formatToChinaTime(article.createdAt),
+      primary_color: article.primaryColor ?? null,
+      is_doc: article.isDoc ?? false,
+      doc_series_id: docSeriesId,
+    };
+  }
+
+  /**
+   * Extract slug from URL path.
+   * Matches Go extractSlugFromURL (handler.go lines 378-407).
+   */
+  private extractSlugFromURL(rawURL: string): string {
+    let path = rawURL;
+
+    // Strip protocol (http:// or https://)
+    const schemeIdx = rawURL.indexOf('://');
+    if (schemeIdx >= 0) {
+      const afterScheme = rawURL.substring(schemeIdx + 3);
+      const slashIdx = afterScheme.indexOf('/');
+      if (slashIdx >= 0) {
+        path = afterScheme.substring(slashIdx);
+      } else {
+        return '';
+      }
+    }
+
+    // Trim trailing slash
+    path = path.replace(/\/+$/, '');
+
+    // Find /posts/ prefix and extract slug
+    const postsPrefix = '/posts/';
+    const postsIdx = path.indexOf(postsPrefix);
+    if (postsIdx >= 0) {
+      let slug = path.substring(postsIdx + postsPrefix.length);
+      const nextSlash = slug.indexOf('/');
+      if (nextSlash >= 0) {
+        slug = slug.substring(0, nextSlash);
+      }
+      return slug;
+    }
+
+    // Fallback: last segment of path
+    const parts = path.split('/').filter((s) => s.length > 0);
+    if (parts.length > 0) {
+      return parts[parts.length - 1];
+    }
+
+    return '';
   }
 }

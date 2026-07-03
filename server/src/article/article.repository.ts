@@ -6,6 +6,7 @@ import { articlePostTags } from '../database/schemas/article-post-tag-pivot.sche
 import { postCategories } from '../database/schemas/post-category.schema';
 import { postTags } from '../database/schemas/post-tag.schema';
 import { users } from '../database/schemas/user.schema';
+import { decodePublicID, EntityType } from '../common/utils/sqids.util';
 import { isNull, eq, and, desc, asc, like, sql, inArray, gt, lt } from 'drizzle-orm';
 
 /**
@@ -652,7 +653,6 @@ export class ArticleRepository {
 
     // Second try: decode as Sqids public ID
     try {
-      const { decodePublicID, EntityType } = require('../common/utils/sqids.util');
       const { dbID, entityType } = decodePublicID(slugOrId);
       if (entityType !== EntityType.Article) return null;
 

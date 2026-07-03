@@ -88,3 +88,92 @@ export interface ArticleListResponseDto {
   page: number;
   page_size: number;
 }
+
+/**
+ * Simple article response for prev/next/related navigation.
+ * Matches Go SimpleArticleResponse (model.go lines 214-223).
+ */
+export interface SimpleArticleResponseDto {
+  id: string;
+  title: string;
+  cover_url: string | null;
+  abbrlink: string | null;
+  created_at: string | null;
+  primary_color: string | null;
+  is_doc: boolean;
+  doc_series_id: string | null;
+}
+
+/**
+ * Article detail response with prev/next/related articles.
+ * Matches Go ArticleDetailResponse (model.go lines 226-231).
+ */
+export interface ArticleDetailResponseDto extends ArticleResponseDto {
+  prev_article: SimpleArticleResponseDto | null;
+  next_article: SimpleArticleResponseDto | null;
+  related_articles: SimpleArticleResponseDto[];
+}
+
+/**
+ * Archive item matching Go ArchiveItem (model.go lines 363-367).
+ */
+export interface ArchiveItemDto {
+  year: number;
+  month: number;
+  count: number;
+}
+
+/**
+ * Archive summary response matching Go ArchiveSummaryResponse (model.go lines 369-372).
+ */
+export interface ArchiveSummaryResponseDto {
+  list: ArchiveItemDto[];
+}
+
+/**
+ * Category stat item matching Go CategoryStatItem (model.go lines 279-283).
+ */
+export interface CategoryStatItemDto {
+  name: string;
+  count: number;
+}
+
+/**
+ * Tag stat item matching Go TagStatItem (model.go lines 285-289).
+ */
+export interface TagStatItemDto {
+  name: string;
+  count: number;
+}
+
+/**
+ * Top viewed post item matching Go TopViewedPostItem (model.go lines 292-297).
+ */
+export interface TopViewedPostItemDto {
+  id: string;
+  title: string;
+  views: number;
+  cover_url: string | null;
+}
+
+/**
+ * Publish trend item matching Go PublishTrendItem (model.go lines 299-303).
+ */
+export interface PublishTrendItemDto {
+  month: string;
+  count: number;
+}
+
+/**
+ * Article statistics matching Go ArticleStatistics (model.go lines 268-277).
+ */
+export interface ArticleStatisticsDto {
+  total_posts: number;
+  total_words: number;
+  avg_words: number;
+  total_views: number;
+  category_stats: CategoryStatItemDto[];
+  tag_stats: TagStatItemDto[];
+  top_viewed_posts: TopViewedPostItemDto[];
+  publish_trend: PublishTrendItemDto[];
+}
