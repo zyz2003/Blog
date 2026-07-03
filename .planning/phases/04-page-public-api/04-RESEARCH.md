@@ -631,17 +631,19 @@ function splitContentAndCustomJS(content: string): { content: string; customJs: 
 
 **Risk assessment:** A1 and A2 are the highest-risk assumptions. A1 can be verified with a simple test during implementation. A2 is well-documented NestJS behavior but should be tested. A5 is confirmed by reading the Go source code (SoftDeleteMixin is applied to Page schema).
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Version info injection mechanism**
    - What we know: Go uses ldflags at build time. D-90 says "build-time env vars with runtime git fallback."
    - What's unclear: Whether to use a build script (e.g., in package.json) that sets env vars, or rely on process.env at runtime with git CLI fallback.
    - Recommendation: Use `process.env.VERSION/COMMIT/BUILD_DATE` with fallback to 'dev'/'unknown'. Add a `build:version` npm script that injects these from git. This is Claude's discretion per CONTEXT.md.
+   - RESOLVED: Plan 04-02 uses process.env with fallback per D-90.
 
 2. **Page search keyword length limit**
    - What we know: Go backend has no explicit length limit on the search parameter.
    - What's unclear: Whether to add a limit for safety (e.g., 200 chars).
    - Recommendation: No limit — match Go behavior exactly. This is Claude's discretion.
+   - RESOLVED: No limit added, matching Go behavior exactly.
 
 ## Environment Availability
 
