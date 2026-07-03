@@ -148,7 +148,22 @@ Plans:
 - GET /api/version returns backend version info matching Go response format
 - Public endpoints work without authentication; optional JWT identifies admin visitors
 
-**Plans:** TBD
+**Plans:** 4 plans
+
+Plans:
+
+**Wave 1** (parallel)
+
+- [ ] 04-01-PLAN.md — PageRepository and PageService with path validation, script splitting, and InitializeDefaultPages
+- [ ] 04-02-PLAN.md — VersionController and VersionModule with @Res() bypass for /string endpoint
+
+**Wave 2** *(blocked on 04-01)*
+
+- [ ] 04-03-PLAN.md — PageController (admin CRUD), PublicPageController (path wildcard), DTOs, and PageModule wiring
+
+**Wave 3** *(blocked on 04-01, 04-02, 04-03)*
+
+- [ ] 04-04-PLAN.md — AppModule wiring, unit tests, and integration verification
 
 ---
 
