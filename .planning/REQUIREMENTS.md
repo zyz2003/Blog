@@ -66,8 +66,8 @@
 - [ ] ARTICLE-01: 文章：CRUD、公开/私密
 - [ ] ARTICLE-02: 文章：列表分页、分类筛选、标签筛选
 - [ ] ARTICLE-03: 文章：公开文章浏览
-- [ ] CATEGORY-01: 分类：CRUD、排序
-- [ ] TAG-01: 标签：CRUD、与文章关联
+- [x] CATEGORY-01: 分类：CRUD、排序
+- [x] TAG-01: 标签：CRUD、与文章关联
 - [ ] PAGE-01: 页面：CRUD、公开/私密
 - [ ] PUBLIC-01: 公开：聚合端点
 - [ ] VERSION-01: 版本：版本信息 API

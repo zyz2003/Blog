@@ -26,7 +26,7 @@ Phases 10-11 complete. Scheduled tasks running, migration tool available, end-to
 |-------|------|------|----------|-------|
 | 01 | Infrastructure | 5/5 | Complete    | 2026-06-28 |
 | 02 | Auth & Settings | 5/5 | Complete    | 2026-06-29 |
-| 03 | Article & Category & Tag | Admin can CRUD articles with categories and tags; visitors can browse, filter, and paginate public articles | P0 | TBD |
+| 03 | Article & Category & Tag | 1/5 | In Progress|  |
 | 04 | Page & Public API | Admin can CRUD pages; visitors can view pages and access public aggregation endpoints and version info | P0 | TBD |
 | 05 | File Upload & Media | Admin can upload files (single + chunked), manage storage policies, generate thumbnails, and manage direct links | P0+P1 | TBD |
 | 06 | Comment & Search | Visitors can post and browse comments with nested replies; all users can full-text search articles via FTS5 | P0+P1 | TBD |
@@ -108,12 +108,12 @@ Plans:
 - Visitors can view single public article at /api/public/articles/:id
 - Article IDs encode/decode via Sqids matching Go backend
 
-**Plans:** 5 plans
+**Plans:** 1/5 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 03-01-PLAN.md — Junction table schemas + PostCategory/PostTag CRUD modules
+- [x] 03-01-PLAN.md — Junction table schemas + PostCategory/PostTag CRUD modules
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
