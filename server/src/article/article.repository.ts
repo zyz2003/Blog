@@ -6,7 +6,7 @@ import { articlePostTags } from '../database/schemas/article-post-tag-pivot.sche
 import { postCategories } from '../database/schemas/post-category.schema';
 import { postTags } from '../database/schemas/post-tag.schema';
 import { users } from '../database/schemas/user.schema';
-import { isNull, eq, and, desc, asc, like, sql, inArray } from 'drizzle-orm';
+import { isNull, eq, and, desc, asc, like, sql, inArray, gt, lt } from 'drizzle-orm';
 
 /**
  * Calculate word count and reading time from Markdown content.
@@ -341,5 +341,401 @@ export class ArticleRepository {
       .from(articles)
       .where(and(...conditions));
     return (result?.count ?? 0) > 0;
+  }
+
+  // ─── Public query methods ────────────────────────────────────────
+  // All filter: status=PUBLISHED AND isTakedown=false AND deletedAt IS NULL
+
+  /**
+   * Base conditions for all public queries.
+   */
+  private publicConditions() {
+    return [
+      eq(articles.status, 'PUBLISHED'),
+      eq(articles.isTakedown, false),
+      isNull(articles.deletedAt),
+    ];
+  }
+
+  /**
+   * List published articles with pagination and optional category/tag/year/month filters.
+   * Matches Go ListPublic (service.go lines 1779-1825).
+   */
+  async listPublic(options: {
+    page: number;
+    pageSize: number;
+    categoryName?: string;
+    tagName?: string;
+    year?: number;
+    month?: number;
+  }) {
+    const { page, pageSize, categoryName, tagName, year, month } = options;
+    const conditions = [...this.publicConditions()];
+
+    // Filter by category name via junction table
+    let articleIds: number[] | null = null;
+
+    if (categoryName) {
+      const matched = await this.db
+        .select({ articleId: articlePostCategories.articleId })
+        .from(articlePostCategories)
+        .innerJoin(
+          postCategories,
+          eq(articlePostCategories.postCategoryId, postCategories.id),
+        )
+        .where(
+          and(
+            eq(postCategories.name, categoryName),
+            isNull(postCategories.deletedAt),
+          ),
+        );
+      articleIds = matched.map((r: any) => r.articleId);
+      if (articleIds.length === 0) {
+        return { list: [], total: 0 };
+      }
+    }
+
+    // Filter by tag name via junction table
+    if (tagName) {
+      const matched = await this.db
+        .select({ articleId: articlePostTags.articleId })
+        .from(articlePostTags)
+        .innerJoin(
+          postTags,
+          eq(articlePostTags.postTagId, postTags.id),
+        )
+        .where(
+          and(eq(postTags.name, tagName), isNull(postTags.deletedAt)),
+        );
+      const tagArticleIds = matched.map((r: any) => r.articleId);
+      if (articleIds !== null) {
+        articleIds = articleIds.filter((id) => tagArticleIds.includes(id));
+      } else {
+        articleIds = tagArticleIds;
+      }
+      if (articleIds.length === 0) {
+        return { list: [], total: 0 };
+      }
+    }
+
+    if (articleIds !== null) {
+      conditions.push(inArray(articles.id, articleIds));
+    }
+
+    // Filter by year
+    if (year) {
+      conditions.push(
+        sql`cast(strftime('%Y', ${articles.createdAt}, 'unixepoch', '+8 hours') as integer) = ${year}`,
+      );
+    }
+
+    // Filter by month
+    if (month) {
+      conditions.push(
+        sql`cast(strftime('%m', ${articles.createdAt}, 'unixepoch', '+8 hours') as integer) = ${month}`,
+      );
+    }
+
+    const whereClause = and(...conditions);
+
+    // Count
+    const [{ count: total }] = await this.db
+      .select({ count: sql`count(*)` })
+      .from(articles)
+      .where(whereClause);
+
+    // Fetch paginated — order by pinSort ASC, createdAt DESC (matches Go sort)
+    const list = await this.db
+      .select()
+      .from(articles)
+      .where(whereClause)
+      .orderBy(asc(articles.pinSort), desc(articles.createdAt))
+      .limit(pageSize)
+      .offset((page - 1) * pageSize);
+
+    // Fetch relations for each article
+    const listWithRelations = await Promise.all(
+      list.map(async (article: any) => {
+        const [categories, tags, owner] = await Promise.all([
+          this.getArticleCategories(article.id),
+          this.getArticleTags(article.id),
+          this.getArticleOwner(article.ownerId),
+        ]);
+        return { ...article, postCategories: categories, postTags: tags, owner };
+      }),
+    );
+
+    return { list: listWithRelations, total };
+  }
+
+  /**
+   * List home-visible articles (showOnHome=true).
+   * No pagination per D-51 — returns all home-visible articles.
+   * Matches Go ListHome (service.go lines 1762-1776).
+   */
+  async listHome() {
+    const conditions = [
+      ...this.publicConditions(),
+      eq(articles.showOnHome, true),
+    ];
+
+    const list = await this.db
+      .select()
+      .from(articles)
+      .where(and(...conditions))
+      .orderBy(asc(articles.pinSort), asc(articles.homeSort), desc(articles.createdAt));
+
+    // Fetch relations
+    const listWithRelations = await Promise.all(
+      list.map(async (article: any) => {
+        const [categories, tags, owner] = await Promise.all([
+          this.getArticleCategories(article.id),
+          this.getArticleTags(article.id),
+          this.getArticleOwner(article.ownerId),
+        ]);
+        return { ...article, postCategories: categories, postTags: tags, owner };
+      }),
+    );
+
+    return listWithRelations;
+  }
+
+  /**
+   * Get a single random published article.
+   * Matches Go GetRandom (service.go lines 1751-1759).
+   */
+  async getRandom() {
+    const [article] = await this.db
+      .select()
+      .from(articles)
+      .where(and(...this.publicConditions()))
+      .orderBy(sql`RANDOM()`)
+      .limit(1);
+
+    if (!article) return null;
+
+    // Fetch relations
+    const [categories, tags, owner] = await Promise.all([
+      this.getArticleCategories(article.id),
+      this.getArticleTags(article.id),
+      this.getArticleOwner(article.ownerId),
+    ]);
+
+    return { ...article, postCategories: categories, postTags: tags, owner };
+  }
+
+  /**
+   * List archive summary: year-month grouped article counts.
+   * Returns raw { year, month, count } rows for service to format.
+   * Matches Go GetArchiveSummary / ListArchives (service.go lines 1828-1845).
+   */
+  async listArchives() {
+    const rows = await this.db
+      .select({
+        year: sql<number>`cast(strftime('%Y', ${articles.createdAt}, 'unixepoch', '+8 hours') as integer)`.as('year'),
+        month: sql<number>`cast(strftime('%m', ${articles.createdAt}, 'unixepoch', '+8 hours') as integer)`.as('month'),
+        count: sql<number>`count(*)`.as('count'),
+      })
+      .from(articles)
+      .where(and(...this.publicConditions()))
+      .groupBy(
+        sql`strftime('%Y', ${articles.createdAt}, 'unixepoch', '+8 hours')`,
+        sql`strftime('%m', ${articles.createdAt}, 'unixepoch', '+8 hours')`,
+      )
+      .orderBy(
+        sql`strftime('%Y', ${articles.createdAt}, 'unixepoch', '+8 hours') DESC`,
+        sql`strftime('%m', ${articles.createdAt}, 'unixepoch', '+8 hours') DESC`,
+      );
+
+    return rows;
+  }
+
+  /**
+   * Get article statistics: total posts, total words, avg words, total views,
+   * per-category counts, per-tag counts, top viewed posts, publish trend.
+   * Matches Go GetArticleStatistics (service.go lines 428-523).
+   */
+  async getArticleStatistics() {
+    // 1. Basic stats: total posts, total words, total views
+    const [siteStats] = await this.db
+      .select({
+        totalPosts: sql<number>`count(*)`.as('totalPosts'),
+        totalWords: sql<number>`coalesce(sum(${articles.wordCount}), 0)`.as('totalWords'),
+        totalViews: sql<number>`coalesce(sum(${articles.viewCount}), 0)`.as('totalViews'),
+      })
+      .from(articles)
+      .where(and(...this.publicConditions()));
+
+    const avgWords =
+      siteStats?.totalPosts > 0
+        ? Math.floor(siteStats.totalWords / siteStats.totalPosts)
+        : 0;
+
+    // 2. Per-category article counts
+    const categoryStats = await this.db
+      .select({
+        name: postCategories.name,
+        count: postCategories.count,
+      })
+      .from(postCategories)
+      .where(isNull(postCategories.deletedAt));
+
+    // 3. Per-tag article counts
+    const tagStats = await this.db
+      .select({
+        name: postTags.name,
+        count: postTags.count,
+      })
+      .from(postTags)
+      .where(isNull(postTags.deletedAt));
+
+    // 4. Top 10 viewed articles
+    const topViewedPosts = await this.db
+      .select({
+        id: articles.id,
+        title: articles.title,
+        viewCount: articles.viewCount,
+        coverUrl: articles.coverUrl,
+      })
+      .from(articles)
+      .where(and(...this.publicConditions()))
+      .orderBy(desc(articles.viewCount))
+      .limit(10);
+
+    // 5. Publish trend: group by month (last 12 months)
+    const publishTrend = await this.db
+      .select({
+        month: sql<string>`strftime('%Y-%m', ${articles.createdAt}, 'unixepoch', '+8 hours')`.as('month'),
+        count: sql<number>`count(*)`.as('count'),
+      })
+      .from(articles)
+      .where(and(...this.publicConditions()))
+      .groupBy(
+        sql`strftime('%Y-%m', ${articles.createdAt}, 'unixepoch', '+8 hours')`,
+      )
+      .orderBy(
+        sql`strftime('%Y-%m', ${articles.createdAt}, 'unixepoch', '+8 hours') DESC`,
+      )
+      .limit(12);
+
+    return {
+      totalPosts: siteStats?.totalPosts ?? 0,
+      totalWords: siteStats?.totalWords ?? 0,
+      avgWords,
+      totalViews: siteStats?.totalViews ?? 0,
+      categoryStats: categoryStats.filter((c: any) => c.count > 0),
+      tagStats: tagStats.filter((t: any) => t.count > 0),
+      topViewedPosts,
+      publishTrend,
+    };
+  }
+
+  /**
+   * Find article by abbrlink first, then try Sqids decode.
+   * Matches Go GetBySlugOrID (repo layer).
+   */
+  async findByAbbrlinkOrId(slugOrId: string) {
+    // First try: find by abbrlink
+    const [byAbbrlink] = await this.db
+      .select()
+      .from(articles)
+      .where(
+        and(
+          eq(articles.abbrlink, slugOrId),
+          ...this.publicConditions(),
+        ),
+      );
+
+    if (byAbbrlink) {
+      return this.enrichWithRelations(byAbbrlink);
+    }
+
+    // Second try: decode as Sqids public ID
+    try {
+      const { decodePublicID, EntityType } = require('../common/utils/sqids.util');
+      const { dbID, entityType } = decodePublicID(slugOrId);
+      if (entityType !== EntityType.Article) return null;
+
+      const [byId] = await this.db
+        .select()
+        .from(articles)
+        .where(
+          and(
+            eq(articles.id, dbID),
+            ...this.publicConditions(),
+          ),
+        );
+
+      if (byId) {
+        return this.enrichWithRelations(byId);
+      }
+    } catch {
+      // Not a valid Sqids ID
+    }
+
+    return null;
+  }
+
+  /**
+   * Find chronologically adjacent published articles for prev/next navigation.
+   * Returns raw chronological neighbors; service handles the Go swap.
+   * - chronoNewer: createdAt > currentCreatedAt, order ASC LIMIT 1
+   * - chronoOlder: createdAt < currentCreatedAt, order DESC LIMIT 1
+   */
+  async findPrevNextArticles(dbId: number, createdAt: Date) {
+    // Chronologically newer article (created after current)
+    const [chronoNewer] = await this.db
+      .select()
+      .from(articles)
+      .where(
+        and(
+          ...this.publicConditions(),
+          gt(articles.createdAt, createdAt),
+        ),
+      )
+      .orderBy(asc(articles.createdAt))
+      .limit(1);
+
+    // Chronologically older article (created before current)
+    const [chronoOlder] = await this.db
+      .select()
+      .from(articles)
+      .where(
+        and(
+          ...this.publicConditions(),
+          lt(articles.createdAt, createdAt),
+        ),
+      )
+      .orderBy(desc(articles.createdAt))
+      .limit(1);
+
+    // Enrich with relations if found
+    const newer = chronoNewer ? await this.enrichWithRelations(chronoNewer) : null;
+    const older = chronoOlder ? await this.enrichWithRelations(chronoOlder) : null;
+
+    return { chronoNewer: newer, chronoOlder: older };
+  }
+
+  /**
+   * Increment view count atomically.
+   * Per D-65: simple DB increment for Phase 03.
+   */
+  async incrementViewCount(dbId: number) {
+    await this.db
+      .update(articles)
+      .set({ viewCount: sql`${articles.viewCount} + 1` })
+      .where(eq(articles.id, dbId));
+  }
+
+  /**
+   * Helper: enrich an article row with categories, tags, and owner.
+   */
+  private async enrichWithRelations(article: any) {
+    const [categories, tags, owner] = await Promise.all([
+      this.getArticleCategories(article.id),
+      this.getArticleTags(article.id),
+      this.getArticleOwner(article.ownerId),
+    ]);
+    return { ...article, postCategories: categories, postTags: tags, owner };
   }
 }
