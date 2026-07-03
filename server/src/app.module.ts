@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { CaptchaModule } from './captcha/captcha.module';
 import { ArticleModule } from './article/article.module';
+import { ArticleHistoryModule } from './article-history/article-history.module';
 import { PostCategoryModule } from './post-category/post-category.module';
 import { PostTagModule } from './post-tag/post-tag.module';
 import { SettingsModule } from './settings/settings.module';
@@ -45,6 +46,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     CaptchaModule,
     SettingsModule,
     ArticleModule,
+    ArticleHistoryModule,
     PostCategoryModule,
     PostTagModule,
     PageModule,

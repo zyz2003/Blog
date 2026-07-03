@@ -8,6 +8,7 @@ import {
 import { ArticleRepository, calculatePostStats, diffIDs } from './article.repository';
 import { PostCategoryRepository } from '../post-category/post-category.repository';
 import { PostTagRepository } from '../post-tag/post-tag.repository';
+import { ArticleHistoryService } from '../article-history/article-history.service';
 import { DRIZZLE } from '../database/database.module';
 import { articles } from '../database/schemas/article.schema';
 import { generatePublicID, decodePublicID, EntityType } from '../common/utils/sqids.util';
@@ -43,6 +44,7 @@ export class ArticleService {
     private readonly articleRepo: ArticleRepository,
     private readonly categoryRepo: PostCategoryRepository,
     private readonly tagRepo: PostTagRepository,
+    private readonly historyService: ArticleHistoryService,
     @Inject(DRIZZLE) private readonly db: any,
   ) {}
 
@@ -229,6 +231,14 @@ export class ArticleService {
 
     // Fetch with relations for response
     const articleWithRelations = await this.articleRepo.findByIdWithRelations(article.id);
+
+    // Auto-create history version=1 on Create (D-55)
+    try {
+      await this.historyService.createHistory(articleWithRelations, ownerDbId, '创建文章');
+    } catch {
+      // History creation failure should not block article creation
+    }
+
     return this.toApiResponse(articleWithRelations, false, true);
   }
 
@@ -340,6 +350,14 @@ export class ArticleService {
 
     // Fetch updated article with relations
     const updated = await this.articleRepo.findByIdWithRelations(dbID);
+
+    // Auto-create history version on Update (D-55)
+    try {
+      await this.historyService.createHistory(updated, ownerDbId, '更新文章');
+    } catch {
+      // History creation failure should not block article update
+    }
+
     return this.toApiResponse(updated, false, true);
   }
 
