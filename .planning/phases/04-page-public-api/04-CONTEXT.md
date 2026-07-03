@@ -28,7 +28,7 @@
 ## Implementation Decisions
 
 ### Page ID 处理
-- **D-71:** Page 管理端（/api/pages/:id）使用原始数字 ID，不经过 Sqids 编码。与 Go 后端完全一致，Page 是唯一不使用 Sqids 公共 ID 的实体类型。PageRepository 的 ID 查询直接使用数字 ID，无需解码步骤
+- **D-71:** Page 管理端（/api/pages/:id）使用原始数字 ID，不经过 Sqids 编码。与 Go 后端完全一致，Page 是唯一不使用 Sqids 公共 ID 的实体类型。PageRepository 的 ID 查询直接使用数字 ID，无需解码步骤。前端类型定义 CustomPage.id: number 证实 Page ID 是数字类型（参见 frontend/src/types/page-management.ts）
 - **D-72:** Page 公开端（/api/public/pages/*path）使用路径路由而非 ID 路由。与 Go 后端 GetByPath 行为一致，路径是页面的主要标识
 - **D-73:** Page 列表响应格式精确复制 Go 后端：`{ pages: PageResponse[], total: number, page: number, size: number }`。与文章列表的 `{ list, pagination }` 格式不同，但必须与 Go 后端保持一致
 
@@ -56,7 +56,7 @@
 
 ### Version 端点
 - **D-88:** GET /api/version 返回 BuildInfo JSON：`{ version, commit, date, node_version }`。Go 后端的 go_version 字段替换为 node_version（Node.js 版本）。响应通过全局拦截器包装为 `{ code: 200, data: BuildInfo, message: "获取版本信息成功" }`
-- **D-89:** GET /api/version/string 返回纯文本格式：`{ version: string }`，不经过全局拦截器包装。与 Go 后端 GetVersionString 行为一致（Go 后端直接返回 JSON `{ version: string }`，不走 response.Success）
+- **D-89:** GET /api/version/string 返回 `{ version: string }` JSON 格式，不经过全局拦截器包装（Go 后端直接 c.JSON 返回，不走 response.Success）。NestJS 中需要绕过全局拦截器，使用 @Res() 装饰器手动写入响应。前端当前不调用此端点，但需实现以保持 API 兼容性
 - **D-90:** 版本信息通过构建时环境变量注入（VERSION、COMMIT、BUILD_DATE），运行时回退到 git 信息检测。与 Go 后端 ldflags 注入模式等效
 - **D-91:** Version 端点设置 no-cache 响应头（Cache-Control: no-cache, no-store, must-revalidate, private, max-age=0；Pragma: no-cache；Expires: 0），与 Go 后端行为一致
 
@@ -109,6 +109,11 @@
 - `server/src/settings/settings.service.ts` — SettingsService（内存缓存）
 - `server/src/auth/auth.service.ts` — AuthService
 
+### 前端页面 API 调用（确认请求/响应格式）
+- `frontend/src/lib/api/page-management.ts` — 页面管理 API 服务：确认管理端用数字 ID、分页参数用 page_size、公开端用路径路由
+- `frontend/src/types/page-management.ts` — CustomPage（id: number）、PageListParams（page_size）、PageListResponse（pages/total/page/size）、CreatePageRequest、UpdatePageRequest 类型定义
+- `frontend/src/lib/version.ts` — 版本检测工具：确认前端期望 /api/version 返回 `{ code: 200, data: BuildInfo }` 格式
+
 ### 项目配置
 - `.planning/STATE.md` — 活跃决策记录（D-01 到 D-44，加上 Phase 03 的 D-45 到 D-70）
 - `.planning/REQUIREMENTS.md` — 完整验收标准（PAGE-01, PUBLIC-01, VERSION-01）
@@ -157,7 +162,9 @@
 - Go 后端 GetByPath 公开端点的路由是 `pagesPublic.GET("/*path", r.pageHandler.GetByPath)`，Gin 的通配符 /*path 可以匹配 /privacy、/docs/guide 等多级路径。NestJS 中需要用 @Get('*path') 实现
 - Go 后端 InitializeDefaultPages 中的隐私政策页面内容非常长（约 300+ 行 Markdown），包含嵌入式 JavaScript 用于获取访客 IP 信息。需要精确复制这些内容
 - Go 后端 splitContentAndCustomJS 使用 `(?is)<script[^>]*>(.*?)</script>` 正则，(?is) 表示单行模式 + 大小写不敏感
-- Go 后端 Version Handler 的 GetVersion 直接用 c.JSON 返回 { code, data, message } 格式（不通过 response.Success），但 GetVersionString 也直接用 c.JSON 返回 { version: string }（不走 response.Success 包装）。NestJS 中 GetVersion 走全局拦截器包装，GetVersionString 需要绕过拦截器（使用 @Res() 或自定义装饰器）
+- Go 后端 Version Handler 的 GetVersion 手动返回 `{ code: 200, data: BuildInfo, message: "获取版本信息成功" }`（与 response.Success 格式相同，NestJS 走全局拦截器效果一致）。GetVersionString 直接返回 `{ version: string }`（不走 response.Success 包装），NestJS 中需用 @Res() 绕过拦截器
+- 前端 /api/version 调用期望 `{ code: 200, data: { version, commit, date, go_version } }` 格式（参见 frontend/src/lib/version.ts 第 56 行 `result.code === 200 && result.data`）
+- 前端 /api/version/string 端点当前未被调用，但需实现以保持 API 兼容性
 
 </specifics>
 
