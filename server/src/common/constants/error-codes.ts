@@ -66,6 +66,9 @@ export const ErrorCodes = {
   ABBRLINK_INVALID: '永久链接格式无效',
   ARTICLE_CREATE_FAILED: '文章创建失败',
   ARTICLE_UPDATE_FAILED: '文章更新失败',
+
+  // Phase 03 - Article History error messages
+  ARTICLE_HISTORY_NOT_FOUND: '历史版本不存在',
 } as const;
 
 export type ErrorCode = keyof typeof ErrorCodes;
