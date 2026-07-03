@@ -86,8 +86,8 @@
 - **D-67:** 文章主色调（primaryColor）支持手动设置和自动提取两种模式。isPrimaryColorManual=true 时使用手动值，否则从封面图/topImgUrl 自动提取。Phase 03 实现手动设置 + 默认值，自动提取依赖图片处理（Phase 05 sharp 库），暂时返回默认色值
 
 ### Export/Import
-- **D-68:** 文章导出（ExportArticles）返回 ZIP 文件，内含 JSON 数据 + Markdown 文件。与 Go 后端 ExportArticles 行为完全一致
-- **D-69:** 文章导入（ImportArticles）接受 ZIP 文件，批量创建文章。与 Go 后端 ImportArticles 行为一致
+- **D-68:** 文章导出（ExportArticles）返回 501 stub。完整 ZIP 实现需要 JSZip 库，复杂度较高，留待后续实现。路由保留，返回 501 Not Implemented
+- **D-69:** 文章导入（ImportArticles）返回 501 stub。完整 ZIP 解析实现复杂度较高，留待后续实现。路由保留，返回 501 Not Implemented
 
 ### HTML Sanitization
 - **D-70:** 使用 isomorphic-dompurify 在 Create/Update 时消毒 content_html，与 Go 后端的 SanitizeHTML 行为一致。安装 isomorphic-dompurify + @types/dompurify 依赖
@@ -211,6 +211,7 @@
 - 文章浏览量批量写入优化 — Phase 03 实现简单自增，Phase 10 定时任务完善批量写入
 - PRO 功能（付费文章、密码保护、登录可见）— Out of Scope，不属于任何当前阶段
 - 定时发布执行 — Phase 03 只支持 SCHEDULED 状态和 scheduledAt 字段存储，实际定时发布逻辑留待 Phase 10 定时任务
+- 文章导出/导入（ExportArticles/ImportArticles）— 完整 ZIP 实现需要 JSZip 库，复杂度较高，Phase 03 返回 501 stub
 
 </deferred>
 
