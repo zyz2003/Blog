@@ -63,9 +63,9 @@
 - [ ] USER-01: 用户：个人资料管理
 - [ ] SETTING-01: 设置：读取/更新站点配置
 - [ ] SETTING-02: 设置：公开配置查询
-- [ ] ARTICLE-01: 文章：CRUD、公开/私密
-- [ ] ARTICLE-02: 文章：列表分页、分类筛选、标签筛选
-- [ ] ARTICLE-03: 文章：公开文章浏览
+- [x] ARTICLE-01: 文章：CRUD、公开/私密
+- [x] ARTICLE-02: 文章：列表分页、分类筛选、标签筛选
+- [x] ARTICLE-03: 文章：公开文章浏览
 - [x] CATEGORY-01: 分类：CRUD、排序
 - [x] TAG-01: 标签：CRUD、与文章关联
 - [ ] PAGE-01: 页面：CRUD、公开/私密
