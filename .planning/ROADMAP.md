@@ -111,10 +111,24 @@ Plans:
 **Plans:** 5 plans
 
 Plans:
+**Wave 1**
+
 - [ ] 03-01-PLAN.md — Junction table schemas + PostCategory/PostTag CRUD modules
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 03-02-PLAN.md — Article admin CRUD with Go-compatible response shape and count sync
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 03-03-PLAN.md — Public article endpoints (7 endpoints with pagination, filtering, prev/next)
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
 - [ ] 03-04-PLAN.md — Article history versioning with auto-creation and 5 history endpoints
+
+**Wave 5** *(blocked on Wave 4 completion)*
+
 - [ ] 03-05-PLAN.md — AppModule wiring, test suite, and integration verification
 
 ---
