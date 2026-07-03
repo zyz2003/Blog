@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { DRIZZLE } from '../database/database.module';
 import { postCategories } from '../database/schemas/post-category.schema';
-import { isNull, eq, and } from 'drizzle-orm';
+import { isNull, eq, and, sql } from 'drizzle-orm';
 
 @Injectable()
 export class PostCategoryRepository {
@@ -75,5 +75,19 @@ export class PostCategoryRepository {
       .where(eq(postCategories.id, dbId))
       .returning();
     return category ?? null;
+  }
+
+  async incrementCount(dbId: number) {
+    await this.db
+      .update(postCategories)
+      .set({ count: sql`${postCategories.count} + 1` })
+      .where(eq(postCategories.id, dbId));
+  }
+
+  async decrementCount(dbId: number) {
+    await this.db
+      .update(postCategories)
+      .set({ count: sql`CASE WHEN ${postCategories.count} > 0 THEN ${postCategories.count} - 1 ELSE 0 END` })
+      .where(eq(postCategories.id, dbId));
   }
 }

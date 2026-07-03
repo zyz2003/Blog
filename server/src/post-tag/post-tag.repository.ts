@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { DRIZZLE } from '../database/database.module';
 import { postTags } from '../database/schemas/post-tag.schema';
-import { isNull, eq, and } from 'drizzle-orm';
+import { isNull, eq, and, sql } from 'drizzle-orm';
 
 @Injectable()
 export class PostTagRepository {
@@ -57,5 +57,19 @@ export class PostTagRepository {
       .where(eq(postTags.id, dbId))
       .returning();
     return tag ?? null;
+  }
+
+  async incrementCount(dbId: number) {
+    await this.db
+      .update(postTags)
+      .set({ count: sql`${postTags.count} + 1` })
+      .where(eq(postTags.id, dbId));
+  }
+
+  async decrementCount(dbId: number) {
+    await this.db
+      .update(postTags)
+      .set({ count: sql`CASE WHEN ${postTags.count} > 0 THEN ${postTags.count} - 1 ELSE 0 END` })
+      .where(eq(postTags.id, dbId));
   }
 }

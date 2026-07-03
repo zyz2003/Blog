@@ -59,6 +59,13 @@ export const ErrorCodes = {
   CATEGORY_NAME_EXISTS: '分类名称已存在',
   TAG_NOT_FOUND: '标签不存在',
   TAG_NAME_EXISTS: '标签名称已存在',
+
+  // Phase 03 - Article error messages
+  ARTICLE_NOT_FOUND: '文章不存在',
+  ABBRLINK_CONFLICT: '永久链接已被其他文章使用',
+  ABBRLINK_INVALID: '永久链接格式无效',
+  ARTICLE_CREATE_FAILED: '文章创建失败',
+  ARTICLE_UPDATE_FAILED: '文章更新失败',
 } as const;
 
 export type ErrorCode = keyof typeof ErrorCodes;
