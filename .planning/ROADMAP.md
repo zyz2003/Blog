@@ -27,7 +27,7 @@ Phases 10-11 complete. Scheduled tasks running, migration tool available, end-to
 | 01 | Infrastructure | 5/5 | Complete    | 2026-06-28 |
 | 02 | Auth & Settings | 5/5 | Complete    | 2026-06-29 |
 | 03 | Article & Category & Tag | 5/5 | Complete   | 2026-07-03 |
-| 04 | Page & Public API | 2/4 | In Progress|  |
+| 04 | Page & Public API | 4/4 | Complete    | 2026-07-04 |
 | 05 | File Upload & Media | Admin can upload files (single + chunked), manage storage policies, generate thumbnails, and manage direct links | P0+P1 | TBD |
 | 06 | Comment & Search | Visitors can post and browse comments with nested replies; all users can full-text search articles via FTS5 | P0+P1 | TBD |
 | 07 | Statistics & Links | Visitor tracking and analytics dashboard; friend link CRUD with health check | P1 | TBD |
@@ -148,7 +148,7 @@ Plans:
 - GET /api/version returns backend version info matching Go response format
 - Public endpoints work without authentication; optional JWT identifies admin visitors
 
-**Plans:** 2/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 
@@ -159,11 +159,11 @@ Plans:
 
 **Wave 2** *(blocked on 04-01)*
 
-- [ ] 04-03-PLAN.md — PageController (admin CRUD), PublicPageController (path wildcard), DTOs, and PageModule wiring
+- [x] 04-03-PLAN.md — PageController (admin CRUD), PublicPageController (path wildcard), DTOs, and PageModule wiring
 
 **Wave 3** *(blocked on 04-01, 04-02, 04-03)*
 
-- [ ] 04-04-PLAN.md — AppModule wiring, unit tests, and integration verification
+- [x] 04-04-PLAN.md — AppModule wiring, unit tests, and integration verification
 
 ---
 

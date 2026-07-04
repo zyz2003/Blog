@@ -68,8 +68,8 @@
 - [x] ARTICLE-03: 文章：公开文章浏览
 - [x] CATEGORY-01: 分类：CRUD、排序
 - [x] TAG-01: 标签：CRUD、与文章关联
-- [ ] PAGE-01: 页面：CRUD、公开/私密
-- [ ] PUBLIC-01: 公开：聚合端点
+- [x] PAGE-01: 页面：CRUD、公开/私密
+- [x] PUBLIC-01: 公开：聚合端点
 - [x] VERSION-01: 版本：版本信息 API
 - [ ] FILE-01: 文件上传：单文件上传
 - [ ] FILE-02: 文件上传：分块上传
