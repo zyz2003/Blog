@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 03
-current_phase_name: Article & Category & Tag
-current_plan: 03-04 (completed)
+current_phase: 04
+current_phase_name: Page & Public API
+current_plan: 2
 status: executing
-stopped_at: Phase 4 context gathered
-last_updated: "2026-07-03T18:41:46.936Z"
-last_activity: 2026-07-03
-last_activity_desc: Plan 03-04 complete
+stopped_at: Plan 04-02 complete
+last_updated: "2026-07-04T09:53:54Z"
+last_activity: 2026-07-04
+last_activity_desc: Plan 04-02 (VersionModule) complete
 progress:
   total_phases: 11
   completed_phases: 3
-  total_plans: 15
-  completed_plans: 15
+  total_plans: 19
+  completed_plans: 16
   percent: 27
 ---
 
@@ -25,10 +25,10 @@ progress:
 | Field | Value |
 |-------|-------|
 | Milestone | M1 - Core CMS Operational |
-| Phase | 03 — Article & Category & Tag |
-| Current Plan | 03-04 (completed) |
-| Status | Ready to execute |
-| Last Activity | 2026-07-03 — Plan 03-04 complete |
+| Phase | 04 (Page & Public API) — EXECUTING |
+| Current Plan | 1 |
+| Status | Executing Phase 04 |
+| Last Activity | 2026-07-04 — Phase 04 execution started |
 
 ## Phase Status
 
@@ -37,7 +37,7 @@ progress:
 | 01 | Infrastructure | Complete | 5 | 2026-06-28 |
 | 02 | Auth & Settings | Planned | 5 | 2026-06-29 |
 | 03 | Article & Category & Tag | Executing | 4/5 | 2026-07-03 |
-| 04 | Page & Public API | Not Started | 0 | 2026-06-28 |
+| 04 | Page & Public API | Executing | 2/4 | 2026-07-04 |
 | 05 | File Upload & Media | Not Started | 0 | 2026-06-28 |
 | 06 | Comment & Search | Not Started | 0 | 2026-06-28 |
 | 07 | Statistics & Links | Not Started | 0 | 2026-06-28 |
@@ -94,6 +94,11 @@ progress:
 | D-42 | Settings advanced: AI masking, CDN purge detection, auto-backup | All three features implemented in Phase 02 | 02 |
 | D-43 | Full user interfaces: current + admin management | Admin CRUD + reset-password + status | 02 |
 | D-44 | Avatar upload returns 501 | Depends on Phase 05 file service | 02 |
+| D-88 | GET /api/version returns BuildInfo with node_version replacing go_version | Matches Go backend format, Node.js runtime version instead of Go version | 04 |
+| D-89 | GET /api/version/string uses @Res() to bypass global interceptor | Matches Go backend's direct c.JSON without response.Success wrapper | 04 |
+| D-90 | Version info from process.env (VERSION/COMMIT/BUILD_DATE) with fallback (dev/unknown) | Equivalent to Go ldflags injection pattern | 04 |
+| D-91 | Version endpoints set no-cache headers (Cache-Control/Pragma/Expires) | Matches Go backend behavior, prevents CDN/proxy caching | 04 |
+| D-93 | VersionModule standalone with controller only, no service dependency | No DB/service needed for version info | 04 |
 
 ## Blockers
 
@@ -123,9 +128,9 @@ progress:
 |--------|-------|
 | Phases Completed | 0 / 11 |
 | Plans Created | 5 |
-| Plans Executed | 13 |
-| Requirements Covered | 22 / 39 |
-| API Endpoints Implemented | 17 / ~60+ |
+| Plans Executed | 14 |
+| Requirements Covered | 23 / 39 |
+| API Endpoints Implemented | 19 / ~60+ |
 
 ---
 
@@ -133,6 +138,6 @@ progress:
 
 ## Session
 
-**Last session:** 2026-07-03T09:46:10.031Z
-**Stopped at:** Phase 4 context gathered
-**Resume file:** .planning/phases/04-page-public-api/04-CONTEXT.md
+**Last session:** 2026-07-04T09:53:54Z
+**Stopped at:** Plan 04-02 (VersionModule) complete
+**Resume file:** .planning/phases/04-page-public-api/04-03-PLAN.md

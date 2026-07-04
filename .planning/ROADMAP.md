@@ -27,7 +27,7 @@ Phases 10-11 complete. Scheduled tasks running, migration tool available, end-to
 | 01 | Infrastructure | 5/5 | Complete    | 2026-06-28 |
 | 02 | Auth & Settings | 5/5 | Complete    | 2026-06-29 |
 | 03 | Article & Category & Tag | 5/5 | Complete   | 2026-07-03 |
-| 04 | Page & Public API | Admin can CRUD pages; visitors can view pages and access public aggregation endpoints and version info | P0 | TBD |
+| 04 | Page & Public API | 2/4 | In Progress|  |
 | 05 | File Upload & Media | Admin can upload files (single + chunked), manage storage policies, generate thumbnails, and manage direct links | P0+P1 | TBD |
 | 06 | Comment & Search | Visitors can post and browse comments with nested replies; all users can full-text search articles via FTS5 | P0+P1 | TBD |
 | 07 | Statistics & Links | Visitor tracking and analytics dashboard; friend link CRUD with health check | P1 | TBD |
@@ -148,14 +148,14 @@ Plans:
 - GET /api/version returns backend version info matching Go response format
 - Public endpoints work without authentication; optional JWT identifies admin visitors
 
-**Plans:** 4 plans
+**Plans:** 2/4 plans executed
 
 Plans:
 
 **Wave 1** (parallel)
 
-- [ ] 04-01-PLAN.md — PageRepository and PageService with path validation, script splitting, and InitializeDefaultPages
-- [ ] 04-02-PLAN.md — VersionController and VersionModule with @Res() bypass for /string endpoint
+- [x] 04-01-PLAN.md — PageRepository and PageService with path validation, script splitting, and InitializeDefaultPages
+- [x] 04-02-PLAN.md — VersionController and VersionModule with @Res() bypass for /string endpoint
 
 **Wave 2** *(blocked on 04-01)*
 
