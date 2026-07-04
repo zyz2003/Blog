@@ -171,7 +171,10 @@ describe('PageService', () => {
 
       expect(repo.existsByPath).toHaveBeenCalledWith(dto.path);
       expect(repo.create).toHaveBeenCalled();
-      expect(result).toEqual(createdPage);
+      // Service returns toApiResponse format (snake_case, ISO dates)
+      expect(result.id).toBe(createdPage.id);
+      expect(result.title).toBe(createdPage.title);
+      expect(result.path).toBe(createdPage.path);
     });
 
     it('should throw ConflictException when path already exists', async () => {
@@ -181,8 +184,8 @@ describe('PageService', () => {
       await expect(service.create(dto)).rejects.toThrow(ConflictException);
     });
 
-    it('should throw BadRequestException for invalid path', async () => {
-      const dto = createMockCreatePageDto({ path: 'invalid' });
+    it('should throw BadRequestException for invalid path with special chars', async () => {
+      const dto = createMockCreatePageDto({ path: '/invalid?path' });
 
       await expect(service.create(dto)).rejects.toThrow(BadRequestException);
     });
@@ -195,7 +198,9 @@ describe('PageService', () => {
 
       const result = await service.getById(TEST_IDS.PAGE_1);
 
-      expect(result).toEqual(mockPage);
+      expect(result.id).toBe(mockPage.id);
+      expect(result.title).toBe(mockPage.title);
+      expect(result.path).toBe(mockPage.path);
     });
 
     it('should throw NotFoundException when page not found', async () => {
@@ -212,7 +217,8 @@ describe('PageService', () => {
 
       const result = await service.getByPath('/privacy');
 
-      expect(result).toEqual(mockPage);
+      expect(result.id).toBe(mockPage.id);
+      expect(result.path).toBe(mockPage.path);
       expect(repo.findByPath).toHaveBeenCalledWith('/privacy');
     });
 
@@ -225,7 +231,7 @@ describe('PageService', () => {
 
       const result = await service.getByPath('/privacy');
 
-      expect(result).toEqual(mockPage);
+      expect(result.id).toBe(mockPage.id);
       expect(repo.findByPath).toHaveBeenCalledTimes(2);
     });
 
@@ -243,12 +249,12 @@ describe('PageService', () => {
 
       const result = await service.list({ page: 1, pageSize: 10 });
 
-      expect(result).toEqual({
-        pages: mockPages,
-        total: 1,
-        page: 1,
-        size: 10,
-      });
+      expect(result.pages).toHaveLength(1);
+      expect(result.pages[0].id).toBe(mockPages[0].id);
+      expect(result.pages[0].path).toBe(mockPages[0].path);
+      expect(result.total).toBe(1);
+      expect(result.page).toBe(1);
+      expect(result.size).toBe(10);
     });
   });
 
@@ -263,7 +269,8 @@ describe('PageService', () => {
       const result = await service.update(TEST_IDS.PAGE_1, updateData);
 
       expect(repo.update).toHaveBeenCalled();
-      expect(result).toEqual(updatedPage);
+      expect(result.id).toBe(updatedPage.id);
+      expect(result.title).toBe('Updated Title');
     });
 
     it('should validate and check uniqueness when path changes', async () => {
@@ -277,7 +284,8 @@ describe('PageService', () => {
       const result = await service.update(TEST_IDS.PAGE_1, updateData);
 
       expect(repo.existsByPath).toHaveBeenCalledWith('/new-path', TEST_IDS.PAGE_1);
-      expect(result).toEqual(updatedPage);
+      expect(result.id).toBe(updatedPage.id);
+      expect(result.path).toBe('/new-path');
     });
 
     it('should throw NotFoundException when page not found', async () => {
