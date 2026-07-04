@@ -12,6 +12,7 @@ import { PostCategoryModule } from './post-category/post-category.module';
 import { PostTagModule } from './post-tag/post-tag.module';
 import { SettingsModule } from './settings/settings.module';
 import { PageModule } from './page/page.module';
+import { VersionModule } from './version/version.module';
 import { FileModule } from './file/file.module';
 import { CommentModule } from './comment/comment.module';
 import { SearchModule } from './search/search.module';
@@ -50,6 +51,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     PostCategoryModule,
     PostTagModule,
     PageModule,
+    VersionModule,
     FileModule,
     CommentModule,
     SearchModule,
