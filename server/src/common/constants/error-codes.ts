@@ -69,6 +69,45 @@ export const ErrorCodes = {
 
   // Phase 03 - Article History error messages
   ARTICLE_HISTORY_NOT_FOUND: '历史版本不存在',
+
+  // Phase 04 - Page error messages
+  PAGE_NOT_FOUND: '页面不存在',
+  PAGE_PATH_EXISTS: '路径已存在',
+  PAGE_PATH_EMPTY: '路径不能为空',
+  PAGE_PATH_NO_SLASH: '路径必须以 / 开头',
+  PAGE_PATH_HAS_SPACE: '路径不能包含空格',
+  PAGE_PATH_INVALID_CHAR: '路径不能包含特殊字符',
+
+  // Phase 05 - Storage Policy error messages
+  STORAGE_POLICY_FLAG_CONFLICT: '存储策略标志冲突',
+  STORAGE_DEFAULT_POLICY_INIT_FAILED: '默认存储策略初始化失败',
+
+  // Phase 05 - Upload error messages
+  UPLOAD_SESSION_NOT_FOUND: '上传会话不存在或已过期',
+  UPLOAD_SESSION_EXPIRED: '上传会话已过期',
+  UPLOAD_SESSION_INVALID_CHUNK: '无效的文件块索引',
+  UPLOAD_SESSION_NOT_OWNER: '无权操作此上传会话',
+  UPLOAD_FILE_EXISTS: '文件已存在',
+  UPLOAD_URI_INVALID: '无效的文件URI',
+  UPLOAD_TEMP_DIR_CLEANUP_FAILED: '临时目录清理失败',
+
+  // Phase 05 - File error messages
+  FILE_NOT_FOUND: '文件不存在',
+  FILE_NAME_EXISTS: '文件名已存在',
+  FILE_PARENT_NOT_FOUND: '父目录不存在',
+  FILE_DELETE_FAILED: '文件删除失败',
+  FILE_COPY_FAILED: '文件复制失败',
+  FILE_MOVE_FAILED: '文件移动失败',
+  FOLDER_NOT_FOUND: '文件夹不存在',
+  FOLDER_NOT_EMPTY: '文件夹不为空',
+  SIGNED_URL_INVALID: '签名URL无效',
+  SIGNED_URL_EXPIRED: '签名URL已过期',
+
+  // Phase 05 - Thumbnail error messages
+  THUMBNAIL_GENERATION_FAILED: '缩略图生成失败',
+  THUMBNAIL_NOT_FOUND: '缩略图不存在',
+  THUMBNAIL_SIGN_EXPIRED: '缩略图签名已过期',
+  THUMBNAIL_SIGN_INVALID: '缩略图签名无效',
 } as const;
 
 export type ErrorCode = keyof typeof ErrorCodes;
