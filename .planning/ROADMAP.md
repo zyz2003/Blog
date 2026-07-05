@@ -28,7 +28,7 @@ Phases 10-11 complete. Scheduled tasks running, migration tool available, end-to
 | 02 | Auth & Settings | 5/5 | Complete    | 2026-06-29 |
 | 03 | Article & Category & Tag | 5/5 | Complete   | 2026-07-03 |
 | 04 | Page & Public API | 4/4 | Complete    | 2026-07-04 |
-| 05 | File Upload & Media | Admin can upload files (single + chunked), manage storage policies, generate thumbnails, and manage direct links | P0+P1 | TBD |
+| 05 | File Upload & Media | 5/5 | Complete    | 2026-07-05 |
 | 06 | Comment & Search | Visitors can post and browse comments with nested replies; all users can full-text search articles via FTS5 | P0+P1 | TBD |
 | 07 | Statistics & Links | Visitor tracking and analytics dashboard; friend link CRUD with health check | P1 | TBD |
 | 08 | Album & Doc Series | Photo album CRUD with categories; document series CRUD for ordered article collections | P2 | TBD |
@@ -175,7 +175,7 @@ Plans:
 
 **Success Criteria:**
 
-- Single file upload works at POST /api/file/upload with multer
+- Single file upload works at PUT /api/file/upload with multer
 - Chunked upload session lifecycle works (create session, upload chunks, finalize)
 - Thumbnails auto-generated for uploaded images using sharp
 - Storage policy CRUD at /api/policies supports local storage (remote providers deferred)
@@ -183,7 +183,26 @@ Plans:
 - Uploaded files accessible via static file serving
 - File manager folder tree structure operational
 
-**Plans:** TBD
+**Plans:** 5/5 plans complete
+
+Plans:
+
+**Wave 1** (parallel)
+
+- [x] 05-01-PLAN.md — StoragePolicyModule: CRUD + default policy initialization + flag validation
+- [x] 05-02-PLAN.md — UploadService: session lifecycle, chunk handling, merge, URI parser
+
+**Wave 2** *(blocked on Wave 1)*
+
+- [x] 05-03-PLAN.md — FileService + FileController + FolderController: file operations, queries, downloads, folder tree
+
+**Wave 3** *(blocked on Wave 2)*
+
+- [x] 05-04-PLAN.md — ThumbnailModule + DirectLinkModule: generation, signing, serving, short-link download
+
+**Wave 4** *(blocked on Wave 3)*
+
+- [x] 05-05-PLAN.md — AppModule wiring, article upload stub completion, static file serving, integration tests
 
 ---
 

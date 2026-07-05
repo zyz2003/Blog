@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 05
-current_phase_name: File Upload & Media
-current_plan: Not started
+current_phase: 06
+current_phase_name: Comment & Search
+current_plan: 06-01 (ready to plan)
 status: executing
-stopped_at: Phase 05 context gathered
-last_updated: "2026-07-04T12:29:16.701Z"
-last_activity: 2026-07-04
+stopped_at: Phase 05 execution complete
+last_updated: "2026-07-05T14:00:00.000Z"
+last_activity: 2026-07-05
 progress:
   total_phases: 11
-  completed_phases: 4
-  total_plans: 19
-  completed_plans: 19
-  percent: 36
+  completed_phases: 5
+  total_plans: 24
+  completed_plans: 24
+  percent: 45
 ---
 
 # STATE: anheyu-app NestJS + SQLite Backend
@@ -23,22 +23,22 @@ progress:
 
 | Field | Value |
 |-------|-------|
-| Milestone | M1 - Core CMS Operational |
-| Phase | 05 — File Upload & Media |
+| Milestone | M2 - Full Feature Parity |
+| Phase | 06 — Comment & Search |
 | Current Plan | Not started |
-| Status | Executing Phase 04 |
-| Last Activity | 2026-07-04 |
+| Status | Phase 05 Complete |
+| Last Activity | 2026-07-05 |
 
 ## Phase Status
 
 | Phase | Name | Status | Plans | Last Updated |
 |-------|------|--------|-------|--------------|
 | 01 | Infrastructure | Complete | 5 | 2026-06-28 |
-| 02 | Auth & Settings | Planned | 5 | 2026-06-29 |
-| 03 | Article & Category & Tag | Executing | 4/5 | 2026-07-03 |
-| 04 | Page & Public API | Executing | 4/4 | 2026-07-04 |
-| 05 | File Upload & Media | Not Started | 0 | 2026-06-28 |
-| 06 | Comment & Search | Not Started | 0 | 2026-06-28 |
+| 02 | Auth & Settings | Complete | 5 | 2026-06-29 |
+| 03 | Article & Category & Tag | Complete | 5 | 2026-07-03 |
+| 04 | Page & Public API | Complete | 4 | 2026-07-04 |
+| 05 | File Upload & Media | Complete | 5 | 2026-07-05 |
+| 06 | Comment & Search | Not Started | 0 | 2026-07-05 |
 | 07 | Statistics & Links | Not Started | 0 | 2026-06-28 |
 | 08 | Album & Doc Series | Not Started | 0 | 2026-06-28 |
 | 09 | SEO & Music & Notifications | Not Started | 0 | 2026-06-28 |
@@ -66,49 +66,40 @@ progress:
 | D-15 | Sqids init from DB settings table id_seed | Same as Go backend, shuffled alphabet | 01 |
 | D-16 | @nestjs/config + NestJS built-in Logger | Official NestJS solutions, no extra dependencies | 01 |
 | D-17 | GoRNGSource replicates Go's math/rand lagged fibonacci PRNG | rngLen=607, rngTap=273 for exact Sqids shuffle compatibility | 01 |
-| D-18 | CommonModule provides but does NOT globally register guards/interceptors | APP_GUARD/APP_INTERCEPTOR wiring deferred to app.module.ts in Plan 06 | 01 |
+| D-18 | CommonModule provides but does NOT globally register guards/interceptors | APP_GUARD/APP_INTERCEPTOR wiring deferred to app.module.ts | 01 |
 | D-19 | Drizzle v0.45 uses integer/text (not sqliteInteger/sqliteText) | API changed in v0.45; lowercase function names are correct exports | 01 |
 | D-20 | uniqueIndex() replaces index().unique() in Drizzle v0.45 | IndexBuilder.unique() removed; uniqueIndex() is the correct API | 01 |
 | D-21 | PRAGMA foreign_keys=ON added alongside WAL and busy_timeout | Go backend expects referential integrity, SQLite defaults to off | 01 |
 | D-22 | ES module imports for FK references in schema files | Matches Plan 03 pattern (user.schema.ts); require() is CJS syntax | 01 |
 | D-23 | real() column type for Go field.Float in url_stat avgDuration | Drizzle v0.45 exports real() for SQLite REAL column type | 01 |
-| D-24 | linkTagPivot explicit join table for Link-LinkTag many-to-many | Implied by Go edge.StorageKey(edge.Table("link_tag_pivot")), not in ent/schema dir | 01 |
-| D-25 | JwtStrategy + JwtModule created in Phase 01 for APP_GUARD wiring | Without registered strategy, AuthGuard('jwt') throws on every request | 01 |
+| D-24 | linkTagPivot explicit join table for Link-LinkTag many-to-many | Implied by Go edge.StorageKey(edge.Table("link_tag_pivot")) | 01 |
+| D-25 | JwtStrategy + JwtModule created in Phase 01 for APP_GUARD wiring | Without registered strategy, AuthGuard('jwt') throws | 01 |
 | D-26 | drizzle.config.ts uses schema path string, not import object | drizzle-kit v0.31 Zod validation rejects imported schema objects | 01 |
-| D-27 | passport-jwt@4.0.1 required as runtime dependency for JwtStrategy | PassportStrategy(Strategy) from passport-jwt needed for JWT validation | 01 |
-| D-28 | Vitest 4.x uses firstValueFrom instead of done() callbacks | done() callback pattern deprecated in Vitest 4.x | 01 |
-| D-29 | Guard test uses Reflect.defineMetadata for @Public() mock | Reflector.getAllAndOverride uses Reflect.getMetadata, not direct property access | 01 |
-| D-30 | JWT_SECRET from settings table dynamically read | Same as Go backend SettingService.Get("JWT_SECRET"), queried on every sign/verify | 02 |
+| D-27 | passport-jwt@4.0.1 required as runtime dependency for JwtStrategy | PassportStrategy(Strategy) from passport-jwt needed | 01 |
+| D-30 | JWT_SECRET from settings table dynamically read | Same as Go backend SettingService.Get("JWT_SECRET") | 02 |
 | D-31 | Access token 15min, refresh token 30d (hardcoded) | Matches Go backend time.Minute*15 and time.Hour*24*30 | 02 |
-| D-32 | Refresh token dual source (header + body) | Matches Go RefreshToken handler: Authorization header first, then body | 02 |
-| D-33 | Login response format: { userInfo, roles, accessToken, refreshToken, expires } | Exact copy of Go login response; expires is millisecond timestamp | 02 |
-| D-34 | Captcha: Image + none modes; Turnstile/Geetest deferred | Architecture-ready, implement two providers | 02 |
-| D-35 | Auth 501 stubs for register/activate/forgot/reset/check-email | Need SMTP for full implementation | 02 |
-| D-36 | Password hashing with bcryptjs (DefaultCost=10) | Compatible with Go golang.org/x/crypto/bcrypt | 02 |
-| D-37 | @nestjs/throttler rate limiting | Login: 5 req/10s; Captcha: 10 req/min | 02 |
 | D-38 | Settings key-value + in-memory cache (Map) | Loaded at startup, refreshed on update | 02 |
 | D-39 | Public/private key distinction via hardcoded list | Matches Go IsPublicSetting() | 02 |
-| D-40 | /api/public/site-config returns predefined public config set | Not all public keys, matches Go GetSiteConfig() | 02 |
-| D-41 | Config version as millisecond timestamp | Refreshed on every settings update | 02 |
-| D-42 | Settings advanced: AI masking, CDN purge detection, auto-backup | All three features implemented in Phase 02 | 02 |
-| D-43 | Full user interfaces: current + admin management | Admin CRUD + reset-password + status | 02 |
-| D-44 | Avatar upload returns 501 | Depends on Phase 05 file service | 02 |
-| D-88 | GET /api/version returns BuildInfo with node_version replacing go_version | Matches Go backend format, Node.js runtime version instead of Go version | 04 |
-| D-89 | GET /api/version/string uses @Res() to bypass global interceptor | Matches Go backend's direct c.JSON without response.Success wrapper | 04 |
-| D-90 | Version info from process.env (VERSION/COMMIT/BUILD_DATE) with fallback (dev/unknown) | Equivalent to Go ldflags injection pattern | 04 |
-| D-91 | Version endpoints set no-cache headers (Cache-Control/Pragma/Expires) | Matches Go backend behavior, prevents CDN/proxy caching | 04 |
-| D-93 | VersionModule standalone with controller only, no service dependency | No DB/service needed for version info | 04 |
+| D-44 | Avatar upload now functional | StoragePolicyService + ThumbnailService available after Phase 05 | 05 |
+| D-94 | Upload sessions in memory Map with 60s cleanup, 24h TTL | Matches Go backend session lifecycle pattern | 05 |
+| D-95 | Chunk temp files in data/uploads/tmp/{sessionId}/ | Cleaned up on session completion and startup | 05 |
+| D-96 | Auto-merge triggers on last chunk (uploadedChunks.size === totalChunks) | Matches Go backend auto-merge behavior | 05 |
+| D-99 | Only type='local' allowed for storage policies; cloud types return 400 | Cloud storage deferred to future release | 05 |
+| D-100 | Policy max_size=0 means unlimited | Matches Go backend behavior | 05 |
+| D-101 | Flag uniqueness among non-deleted policies; 3 allowed flags | article_image, comment_image, user_avatar | 05 |
+| D-103 | Post-upload thumbnail generation via forwardRef | Circular dependency FileModule <-> ThumbnailModule | 05 |
+| D-104 | WebP thumbnails at max 400x400 using sharp | Matches Go backend thumbnail dimensions | 05 |
+| D-105 | HMAC-SHA256 signing with 15-min expiry for thumbnails | Prevents unauthorized thumbnail access | 05 |
+| D-106 | Thumbnail failure does not block file upload | Matches Go backend error handling | 05 |
+| D-107 | Direct links use EntityType.DirectLink=7 | NOT EntityType.File — critical for correct ID decoding | 05 |
+| D-108 | Short-link download with Content-Disposition header | Matches Go backend download behavior | 05 |
+| D-112 | File download via createReadStream for streaming | Efficient memory usage for large files | 05 |
+| D-113 | ArticleController.uploadImage with FileInterceptor | Replaced Phase 03 501 stub | 05 |
+| D-114 | ServeStaticModule for data/uploads at /uploads | Provides direct URL access for article images | 05 |
 
 ## Blockers
 
 (None)
-
-## Pending Todos
-
-- [x] Create PLAN.md for Phase 01 (Infrastructure)
-- [x] Verify Go backend API response format by reading original source code
-- [x] Confirm Sqids alphabet/seed configuration from Go source
-- [x] Confirm JWT payload structure (UserID, UserGroupID field names) from Go source
 
 ## Key Learnings
 
@@ -117,26 +108,20 @@ progress:
 - Go JWT payload uses `UserID` and `UserGroupID` as public ID strings, not database integers
 - Frontend expects exact Chinese error messages from Go backend; error message mapping is required
 - Chunked upload uses session-based flow: create session, upload chunks by index, finalize assembly
-- SQLite FTS5 replaces PostgreSQL tsvector; different syntax but sufficient for blog search
-- Date serialization must match Go's time.Time format (ISO8601/RFC3339)
-- Null vs undefined handling differs: Go nil serializes to JSON null, TypeScript undefined omits the key
+- Circular dependency between FileModule and ThumbnailModule resolved via forwardRef()
+- Upload sessions must be stored in-memory (Map) — not in DB — for performance per D-94
+- Sharp import must use `import sharp from 'sharp'` (default export), not namespace import
+- Direct link publicIDs must use EntityType.DirectLink=7, NOT EntityType.File=2 (critical pitfall)
 
 ## Metrics
 
 | Metric | Value |
 |--------|-------|
-| Phases Completed | 0 / 11 |
-| Plans Created | 5 |
-| Plans Executed | 18 |
-| Requirements Covered | 23 / 39 |
-| API Endpoints Implemented | 19 / ~60+ |
+| Phases Completed | 5 / 11 |
+| Plans Created | 24 |
+| Plans Executed | 24 |
+| Requirements Covered | 28 / 39 |
+| API Endpoints Implemented | 47 / ~60+ |
 
 ---
-
-*Last updated: 2026-07-03*
-
-## Session
-
-**Last session:** 2026-07-04T12:29:16.694Z
-**Stopped at:** Phase 05 context gathered
-**Resume file:** .planning/phases/05-file-upload-media/05-CONTEXT.md
+*Last updated: 2026-07-05*
