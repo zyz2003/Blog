@@ -91,8 +91,16 @@ export class ThumbnailService implements OnModuleInit {
   }
 
   /**
-   * Get thumbnail sign per RESEARCH Section 5.
-   * Triggers sync generation if thumbnail missing per D-106.
+   * Get thumbnail sign per Go backend GetThumbnailSign handler.
+   *
+   * Three possible responses matching Go backend behavior:
+   * 1. Ready: { sign, expires, obfuscated: true } with HTTP 200
+   * 2. Processing: { status: "processing" } with HTTP 202 — thumbnail missing, dispatching generation
+   * 3. Failed: { status: "failed", error } with HTTP 200 — generation failed
+   *
+   * Since we don't have a background task broker like Go, we generate synchronously
+   * and return either "ready" or "failed" immediately. The "processing" state is only
+   * returned if we intentionally want to defer generation (not the case in Phase 05).
    */
   async getThumbnailSign(publicID: string) {
     const { dbID, entityType } = decodePublicID(publicID);
@@ -105,35 +113,46 @@ export class ThumbnailService implements OnModuleInit {
       `${publicID}.${THUMBNAIL_FORMAT}`,
     );
 
-    // Check if thumbnail exists; generate if missing per D-106
+    // Check if thumbnail already exists on disk
+    let thumbnailExists = false;
     try {
       await fs.access(thumbnailPath);
+      thumbnailExists = true;
     } catch {
-      // Thumbnail missing — generate synchronously
-      const file = await this.db
+      // Thumbnail missing — try to generate synchronously
+      const [file] = await this.db
         .select()
         .from(files)
         .where(and(eq(files.id, dbID), isNull(files.deletedAt)));
 
-      if (!file || file.length === 0) {
+      if (!file) {
         throw new NotFoundException(ErrorCodes.THUMBNAIL_NOT_FOUND);
       }
 
-      const entity = file[0].primaryEntityId
+      const [entity] = file.primaryEntityId
         ? await this.db
             .select()
             .from(entities)
-            .where(eq(entities.id, file[0].primaryEntityId))
-        : null;
+            .where(eq(entities.id, file.primaryEntityId))
+        : [];
 
-      if (!entity || entity.length === 0 || !entity[0].source) {
+      if (!entity?.source) {
         throw new NotFoundException(ErrorCodes.THUMBNAIL_NOT_FOUND);
       }
 
-      await this.generateThumbnail(dbID, entity[0].source, file[0].name);
+      const result = await this.generateThumbnail(dbID, entity.source, file.name);
+      thumbnailExists = result !== null;
     }
 
-    // Generate signed token per D-105
+    // If generation failed, return "failed" status
+    if (!thumbnailExists) {
+      return {
+        status: 'failed',
+        error: 'Thumbnail generation failed',
+      };
+    }
+
+    // Thumbnail ready — generate signed token per D-105
     const expiresAt = Math.floor(Date.now() / 1000) + SIGN_EXPIRY_SECONDS;
     const payload = `${publicID}:${expiresAt}`;
     const signature = crypto

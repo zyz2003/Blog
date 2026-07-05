@@ -6,6 +6,11 @@ import { CopyItemsDto } from './dto/copy-items.dto';
 import { UpdateViewConfigDto } from './dto/update-view-config.dto';
 import { decodePublicID, EntityType } from '../common/utils/sqids.util';
 
+/**
+ * FolderController at /api/folder/*
+ * Per RESEARCH Pitfall 6: registered at @Controller('folder'), NOT @Controller('file/folder')
+ * All endpoints require JWT (enforced by global JwtAuthGuard)
+ */
 @Controller('folder')
 export class FolderController {
   constructor(private readonly fileService: FileService) {}

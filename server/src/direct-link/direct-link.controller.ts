@@ -15,6 +15,10 @@ import { ErrorCodes } from '../common/constants/error-codes';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import * as fs from 'fs';
 
+/**
+ * DirectLinkController at /api/direct-links
+ * POST endpoint requires JWT (enforced by global JwtAuthGuard), matching Go backend.
+ */
 @Controller('direct-links')
 export class DirectLinkController {
   constructor(private readonly service: DirectLinkService) {}
@@ -31,15 +35,15 @@ export class DirectLinkController {
 
 /**
  * Public short-link download controller.
- * Routes:
- * - GET /api/f/:publicID/*filename — direct download via short-link
+ * Route: GET /api/f/:publicID/*filename — direct download via short-link
+ * The filename part is for display only (Content-Disposition), not used for lookup.
+ * NestJS wildcard: @Get(':publicID/*') captures the filename in params[0]
  */
 @Controller('f')
 export class DirectLinkPublicController {
   constructor(private readonly service: DirectLinkService) {}
 
-  @Get(':publicID')
-  @Get(':publicID/*filename')
+  @Get(':publicID/*')
   @Public()
   async handleDirectDownload(
     @Param('publicID') publicID: string,
@@ -57,6 +61,13 @@ export class DirectLinkPublicController {
     res.setHeader('Content-Length', size);
 
     const stream = fs.createReadStream(filePath);
+    stream.on('error', (err: any) => {
+      if (!res.headersSent) {
+        res.status(404).json({ code: 404, message: '文件不存在', data: null });
+      } else {
+        res.end();
+      }
+    });
     stream.pipe(res);
   }
 }
@@ -87,6 +98,13 @@ export class NeedcacheDownloadController {
 
     res.setHeader('Content-Type', mimeType);
     const stream = fs.createReadStream(filePath);
+    stream.on('error', () => {
+      if (!res.headersSent) {
+        res.status(404).json({ code: 404, message: '文件不存在', data: null });
+      } else {
+        res.end();
+      }
+    });
     stream.pipe(res);
   }
 }

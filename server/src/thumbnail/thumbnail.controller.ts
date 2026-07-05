@@ -3,6 +3,10 @@ import { ThumbnailService } from './thumbnail.service';
 import { Public } from '../common/decorators/public.decorator';
 import * as fs from 'fs';
 
+/**
+ * ThumbnailController at /api/thumbnail/*
+ * All endpoints require JWT (enforced by global JwtAuthGuard), matching Go backend.
+ */
 @Controller('thumbnail')
 export class ThumbnailController {
   constructor(private readonly service: ThumbnailService) {}
@@ -44,6 +48,13 @@ export class ThumbnailPublicController {
 
     res.setHeader('Content-Type', mimeType);
     const stream = fs.createReadStream(filePath);
+    stream.on('error', () => {
+      if (!res.headersSent) {
+        res.status(404).json({ code: 404, message: '缩略图不存在', data: null });
+      } else {
+        res.end();
+      }
+    });
     stream.pipe(res);
   }
 }

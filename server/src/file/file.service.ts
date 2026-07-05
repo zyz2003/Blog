@@ -16,6 +16,7 @@ import {
 import { ErrorCodes } from '../common/constants/error-codes';
 import { parseAnzhiyuURI, resolvePhysicalPath, inferMimeType } from './utils/path-resolver';
 import { ensureDirectoryExists, isThumbnailableExtension } from './utils/file-system';
+import { findOrCreateParentPath } from './utils/parent-path';
 import { files } from '../database/schemas/file.schema';
 import { entities } from '../database/schemas/entity.schema';
 import { storagePolicies } from '../database/schemas/storage-policy.schema';
@@ -228,17 +229,15 @@ export class FileService {
     );
 
     // Filter image files and generate signed URLs
+    // Go backend returns string[] (just URLs), not objects
     const imageFiles = siblings.filter((f: any) => {
       const ext = f.name.split('.').pop()?.toLowerCase() || '';
       return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext);
     });
 
-    const urls = imageFiles.map((f: any) => ({
-      url: this.generateSignedContentUrl(generatePublicID(f.id, EntityType.File)),
-      file_id: generatePublicID(f.id, EntityType.File),
-      file_name: f.name,
-      file_size: f.size,
-    }));
+    const urls = imageFiles.map((f: any) =>
+      this.generateSignedContentUrl(generatePublicID(f.id, EntityType.File)),
+    );
 
     // Find initial index
     const initialIndex = imageFiles.findIndex((f: any) => f.id === dbID);
@@ -322,7 +321,7 @@ export class FileService {
 
     const fileRecord = await this.db.transaction(async (tx: any) => {
       // findOrCreateParentPath
-      const parentId = await this.findOrCreateParentPath(
+      const parentId = await findOrCreateParentPath(
         uriPath,
         ownerId,
         policyId,
@@ -710,82 +709,6 @@ export class FileService {
   }
 
   // ─── Helper Methods ─────────────────────────────────────────
-
-  /**
-   * Walk path segments and create missing directory file records.
-   */
-  private async findOrCreateParentPath(
-    uriPath: string,
-    ownerId: number,
-    policyId: number,
-    tx: any,
-  ): Promise<number | null> {
-    const segments = uriPath.split('/').filter(Boolean);
-    const dirSegments = segments.slice(0, -1);
-
-    if (dirSegments.length === 0) {
-      return null;
-    }
-
-    let currentParentId: number | null = null;
-
-    for (const dirName of dirSegments) {
-      const conditions = [
-        eq(files.name, dirName),
-        eq(files.ownerId, ownerId),
-        eq(files.type, 2),
-        isNull(files.deletedAt),
-      ];
-      if (currentParentId === null) {
-        conditions.push(isNull(files.parentId));
-      } else {
-        conditions.push(eq(files.parentId, currentParentId));
-      }
-
-      const [existing] = await tx
-        .select()
-        .from(files)
-        .where(and(...conditions));
-
-      if (existing) {
-        currentParentId = existing.id;
-      } else {
-        const [dirEntity] = await tx
-          .insert(entities)
-          .values({
-            type: 'directory',
-            source: '',
-            size: 0,
-            policyId,
-            createdBy: ownerId,
-          })
-          .returning();
-
-        const [dirFile] = await tx
-          .insert(files)
-          .values({
-            ownerId,
-            parentId: currentParentId,
-            name: dirName,
-            size: 0,
-            type: 2,
-            primaryEntityId: dirEntity.id,
-          })
-          .returning();
-
-        if (currentParentId !== null) {
-          await tx
-            .update(files)
-            .set({ childrenCount: sql`${files.childrenCount} + 1` })
-            .where(eq(files.id, currentParentId));
-        }
-
-        currentParentId = dirFile.id;
-      }
-    }
-
-    return currentParentId;
-  }
 
   /**
    * Convert DB row to frontend FileItem format per RESEARCH Section 9.

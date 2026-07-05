@@ -9,7 +9,6 @@ import {
   ConflictException,
   ForbiddenException,
   forwardRef,
-  Optional,
 } from '@nestjs/common';
 import { DRIZZLE } from '../database/database.module';
 import { StoragePolicyService } from '../storage-policy/storage-policy.service';
@@ -35,6 +34,7 @@ import {
   cleanupExpiredTempDirs,
   mergeChunkFiles,
 } from './utils/file-system';
+import { findOrCreateParentPath } from './utils/parent-path';
 import { files } from '../database/schemas/file.schema';
 import { entities } from '../database/schemas/entity.schema';
 import { storagePolicies } from '../database/schemas/storage-policy.schema';
@@ -54,11 +54,11 @@ export class UploadService implements OnModuleInit, OnModuleDestroy {
   constructor(
     @Inject(DRIZZLE) private readonly db: any,
     private readonly policyService: StoragePolicyService,
-    // Circular dependency: UploadService needs ThumbnailService for post-upload thumbnail generation
-    // Resolved via forwardRef per D-103
-    @Optional()
+    // ThumbnailService for post-upload thumbnail generation per D-103
+    // Not a true circular dependency: ThumbnailService doesn't depend on UploadService
+    // forwardRef is needed because FileModule and ThumbnailModule use forwardRef on each other
     @Inject(forwardRef(() => ThumbnailService))
-    private readonly thumbnailService?: ThumbnailService,
+    private readonly thumbnailService: ThumbnailService,
   ) {}
 
   async onModuleInit() {
@@ -133,7 +133,7 @@ export class UploadService implements OnModuleInit, OnModuleDestroy {
 
     const result = await this.db.transaction(async (tx: any) => {
       // findOrCreateParentPath — create directory file records as needed
-      const parentId = await this.findOrCreateParentPath(
+      const parentId = await findOrCreateParentPath(
         uriPath,
         ownerId,
         policyId,
@@ -300,7 +300,7 @@ export class UploadService implements OnModuleInit, OnModuleDestroy {
         .where(eq(entities.id, session.tempEntityId));
 
       // Find parent directory
-      const parentId = await this.findOrCreateParentPath(
+      const parentId = await findOrCreateParentPath(
         uriPath,
         session.ownerId,
         session.policyId,
@@ -479,7 +479,7 @@ export class UploadService implements OnModuleInit, OnModuleDestroy {
     // Create entity + file records in transaction
     let fileRecord: any;
     await this.db.transaction(async (tx: any) => {
-      const parentId = await this.findOrCreateParentPath(
+      const parentId = await findOrCreateParentPath(
         uriPath,
         ownerId,
         policyId,
@@ -531,89 +531,6 @@ export class UploadService implements OnModuleInit, OnModuleDestroy {
       name: fileRecord.name,
       size: fileRecord.size,
     };
-  }
-
-  /**
-   * Walk path segments and create missing directory file records.
-   * Returns the parent directory file ID.
-   */
-  private async findOrCreateParentPath(
-    uriPath: string,
-    ownerId: number,
-    policyId: number,
-    tx: any,
-  ): Promise<number | null> {
-    const segments = uriPath.split('/').filter(Boolean);
-    // Remove the last segment (file name) — we only want directories
-    const dirSegments = segments.slice(0, -1);
-
-    if (dirSegments.length === 0) {
-      return null; // Root level
-    }
-
-    let currentParentId: number | null = null;
-
-    for (const dirName of dirSegments) {
-      // Check if directory exists
-      const conditions = [
-        eq(files.name, dirName),
-        eq(files.ownerId, ownerId),
-        eq(files.type, 2), // directory type
-        isNull(files.deletedAt),
-      ];
-      if (currentParentId === null) {
-        conditions.push(isNull(files.parentId));
-      } else {
-        conditions.push(eq(files.parentId, currentParentId));
-      }
-
-      const [existing] = await tx
-        .select()
-        .from(files)
-        .where(and(...conditions));
-
-      if (existing) {
-        currentParentId = existing.id;
-      } else {
-        // Create directory record
-        const [dirEntity] = await tx
-          .insert(entities)
-          .values({
-            type: 'directory',
-            source: '',
-            size: 0,
-            policyId,
-            createdBy: ownerId,
-          })
-          .returning();
-
-        const [dirFile] = await tx
-          .insert(files)
-          .values({
-            ownerId,
-            parentId: currentParentId,
-            name: dirName,
-            size: 0,
-            type: 2, // directory
-            primaryEntityId: dirEntity.id,
-          })
-          .returning();
-
-        // Update parent's childrenCount
-        if (currentParentId !== null) {
-          await tx
-            .update(files)
-            .set({
-              childrenCount: sql`${files.childrenCount} + 1`,
-            })
-            .where(eq(files.id, currentParentId));
-        }
-
-        currentParentId = dirFile.id;
-      }
-    }
-
-    return currentParentId;
   }
 
   /**

@@ -23,6 +23,16 @@ import { DeleteUploadSessionDto } from './dto/delete-upload-session.dto';
 import { decodePublicID, EntityType } from '../common/utils/sqids.util';
 import * as fs from 'fs';
 
+/**
+ * FileController at /api/file/*
+ *
+ * Route security matches Go backend (internal/infra/router/router.go):
+ * - GET /api/file/content is @Public() (signed URL verification instead of JWT)
+ * - All other endpoints require JWT (enforced by global JwtAuthGuard)
+ *
+ * Note: The Go router registers /file/content BEFORE applying JWTAuth() middleware,
+ * making it publicly accessible. All other /file/* routes are inside the JWTAuth() group.
+ */
 @Controller('file')
 export class FileController {
   constructor(
@@ -89,8 +99,10 @@ export class FileController {
     @Query() query: any,
     @CurrentUser() user: any,
   ) {
+    // Default URI matching Go backend: c.DefaultQuery("uri", "anzhiyu://my/")
+    const resolvedUri = uri || 'anzhiyu://my/';
     const ownerId = this.extractOwnerDbId(user);
-    return this.fileService.getFilesByPath(uri, ownerId, {
+    return this.fileService.getFilesByPath(resolvedUri, ownerId, {
       page: query.page ? parseInt(query.page, 10) : undefined,
       pageSize: query.pageSize ? parseInt(query.pageSize, 10) : undefined,
       orderBy: query.order_by,
@@ -114,6 +126,13 @@ export class FileController {
     res.setHeader('Content-Length', size);
 
     const stream = fs.createReadStream(filePath);
+    stream.on('error', (err: any) => {
+      if (!res.headersSent) {
+        res.status(404).json({ code: 404, message: '文件不存在', data: null });
+      } else {
+        res.end();
+      }
+    });
     stream.pipe(res);
   }
 
@@ -142,6 +161,13 @@ export class FileController {
 
     res.setHeader('Content-Type', mimeType);
     const stream = fs.createReadStream(filePath);
+    stream.on('error', () => {
+      if (!res.headersSent) {
+        res.status(404).json({ code: 404, message: '文件不存在', data: null });
+      } else {
+        res.end();
+      }
+    });
     stream.pipe(res);
   }
 
