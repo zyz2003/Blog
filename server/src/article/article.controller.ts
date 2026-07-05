@@ -9,16 +9,34 @@ import {
   Query,
   HttpException,
   HttpStatus,
+  UseInterceptors,
+  UploadedFile,
+  Inject,
 } from '@nestjs/common';
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { decodePublicID, EntityType } from '../common/utils/sqids.util';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { StoragePolicyService } from '../storage-policy/storage-policy.service';
+import { ThumbnailService } from '../thumbnail/thumbnail.service';
+import { generatePublicID } from '../common/utils/sqids.util';
+import { files } from '../database/schemas/file.schema';
+import { entities } from '../database/schemas/entity.schema';
+import { DRIZZLE } from '../database/database.module';
+import { eq, isNull, and } from 'drizzle-orm';
+import * as fs from 'fs/promises';
+import * as path from 'path';
 
 @Controller('articles')
 export class ArticleController {
-  constructor(private readonly articleService: ArticleService) {}
+  constructor(
+    private readonly articleService: ArticleService,
+    private readonly policyService: StoragePolicyService,
+    private readonly thumbnailService: ThumbnailService,
+    @Inject(DRIZZLE) private readonly db: any,
+  ) {}
 
   @Post()
   async create(
@@ -62,10 +80,85 @@ export class ArticleController {
     return this.articleService.delete(publicId);
   }
 
-  // Stubs for Phase 05 dependencies
+  /**
+   * Article image upload — replaces Phase 03 501 stub per D-113.
+   * Uses FileInterceptor('file') with StoragePolicyService and ThumbnailService.
+   */
   @Post('upload')
-  async uploadImage() {
-    throw new HttpException('功能暂未实现', HttpStatus.NOT_IMPLEMENTED);
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadImage(
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser() user: any,
+  ) {
+    if (!file) {
+      throw new HttpException('未选择文件', HttpStatus.BAD_REQUEST);
+    }
+
+    const ownerId = this.extractOwnerDbId(user);
+
+    // 1. Get default article_image policy per D-113
+    const policy = await this.policyService.findByFlag('article_image');
+    if (!policy) {
+      throw new HttpException(
+        '默认存储策略未初始化',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
+    // 2. Generate unique filename
+    const timestamp = Date.now();
+    const uniqueName = `${timestamp}-${file.originalname}`;
+
+    // 3. Ensure target directory exists
+    const targetDir = path.join(policy.basePath || 'data/uploads', 'articles');
+    await fs.mkdir(targetDir, { recursive: true });
+
+    // 4. Write uploaded file to target path
+    const targetPath = path.join(targetDir, uniqueName);
+    await fs.writeFile(targetPath, file.buffer);
+
+    // 5. Create entity record
+    const [entity] = await this.db
+      .insert(entities)
+      .values({
+        type: 'image_content',
+        source: targetPath,
+        size: file.size,
+        policyId: policy.id,
+        createdBy: ownerId,
+        mimeType: file.mimetype,
+      })
+      .returning();
+
+    // 6. Create file record
+    const [fileRecord] = await this.db
+      .insert(files)
+      .values({
+        ownerId,
+        name: file.originalname,
+        size: file.size,
+        type: 1, // file
+        primaryEntityId: entity.id,
+      })
+      .returning();
+
+    // 7. Generate thumbnail (try-catch per D-106)
+    try {
+      await this.thumbnailService.generateThumbnail(
+        fileRecord.id,
+        targetPath,
+        file.originalname,
+      );
+    } catch {
+      // Thumbnail failure does not block upload per D-106
+    }
+
+    // 8. Return response matching Go backend UploadImage format
+    return {
+      file_id: generatePublicID(fileRecord.id, EntityType.File),
+      name: file.originalname,
+      size: file.size,
+    };
   }
 
   @Post('primary-color')

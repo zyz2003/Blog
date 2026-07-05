@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { DRIZZLE } from '../database/database.module';
 import { StoragePolicyService } from '../storage-policy/storage-policy.service';
+import { ThumbnailService } from '../thumbnail/thumbnail.service';
 import {
   generatePublicID,
   decodePublicID,
@@ -53,10 +54,11 @@ export class UploadService implements OnModuleInit, OnModuleDestroy {
   constructor(
     @Inject(DRIZZLE) private readonly db: any,
     private readonly policyService: StoragePolicyService,
-    // ThumbnailService injected optionally via forwardRef for circular dependency resolution
+    // Circular dependency: UploadService needs ThumbnailService for post-upload thumbnail generation
+    // Resolved via forwardRef per D-103
     @Optional()
-    @Inject(forwardRef(() => 'ThumbnailService'))
-    private readonly thumbnailService?: any,
+    @Inject(forwardRef(() => ThumbnailService))
+    private readonly thumbnailService?: ThumbnailService,
   ) {}
 
   async onModuleInit() {

@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD, APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 import { validationSchema } from './config/env.validation';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
@@ -14,6 +16,9 @@ import { SettingsModule } from './settings/settings.module';
 import { PageModule } from './page/page.module';
 import { VersionModule } from './version/version.module';
 import { FileModule } from './file/file.module';
+import { StoragePolicyModule } from './storage-policy/storage-policy.module';
+import { ThumbnailModule } from './thumbnail/thumbnail.module';
+import { DirectLinkModule } from './direct-link/direct-link.module';
 import { CommentModule } from './comment/comment.module';
 import { SearchModule } from './search/search.module';
 import { StatisticsModule } from './statistics/statistics.module';
@@ -25,7 +30,6 @@ import { SitemapModule } from './sitemap/sitemap.module';
 import { MusicModule } from './music/music.module';
 import { NotificationModule } from './notification/notification.module';
 import { SubscriberModule } from './subscriber/subscriber.module';
-import { ThumbnailModule } from './thumbnail/thumbnail.module';
 import { ConfigFeatureModule } from './config-module/config.module';
 import { DatabaseModule } from './database/database.module';
 import { CommonModule } from './common/common.module';
@@ -52,7 +56,19 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     PostTagModule,
     PageModule,
     VersionModule,
+    // Phase 05 — File Upload & Media
+    StoragePolicyModule,
     FileModule,
+    ThumbnailModule,
+    DirectLinkModule,
+    // Static file serving for uploaded files per D-114
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', '..', 'data', 'uploads'),
+      serveRoot: '/uploads',
+      serveStaticOptions: {
+        maxAge: 86400000, // 24h cache
+      },
+    }),
     CommentModule,
     SearchModule,
     StatisticsModule,
@@ -64,7 +80,6 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     MusicModule,
     NotificationModule,
     SubscriberModule,
-    ThumbnailModule,
     ConfigFeatureModule,
   ],
   providers: [
