@@ -222,7 +222,24 @@ Plans:
 - FTS5 index auto-updates on article create/update/delete
 - Search results match Go backend relevance ordering
 
-**Plans:** TBD
+**Plans:** 5 plans
+
+**Wave 1** (parallel)
+
+- [ ] 06-01-PLAN.md — CommentRepository, 8 DTOs, Markdown renderer, rate limiter, error codes
+- [ ] 06-02-PLAN.md — SearchModule: FTS5 index management, bm25 search, SearchController
+
+**Wave 2** *(blocked on 06-01)*
+
+- [ ] 06-03-PLAN.md — CommentService: Create, ListByPath, ListLatest, ListChildren, toResponseDTO, admin operations
+
+**Wave 3** *(blocked on 06-03)*
+
+- [ ] 06-04-PLAN.md — CommentController + CommentAdminController + CommentModule wiring
+
+**Wave 4** *(blocked on 06-01, 06-02, 06-03, 06-04)*
+
+- [ ] 06-05-PLAN.md — WeatherModule, ArticleService FTS5 hooks, AppModule wiring
 
 ---
 
