@@ -536,22 +536,22 @@ function extractSnippet(contentHtml: string, maxLength = 150): string {
 | A4 | In-memory rate limiting with Map is sufficient for single-user blog (no concurrent process concerns) | Pattern 2 | If multiple Node.js processes run, rate limits would be per-process; not a concern for single-process SQLite setup |
 | A5 | marked with `{ gfm: true, breaks: true }` produces equivalent output to Go's parserSvc.ToHTML for comment content | Standard Stack | HTML rendering differences could cause frontend display issues; need to verify against Go parser output |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Go parserSvc.ToHTML exact behavior for comments**
+1. **Go parserSvc.ToHTML exact behavior for comments** — RESOLVED
    - What we know: Go uses a parser service that handles Markdown, emoji, and internal URI rewriting. NestJS will use marked + dompurify + separate URI rewriting.
    - What's unclear: Whether Go's parser applies additional transformations (emoji shortcodes, autolinks) that marked doesn't handle by default.
-   - Recommendation: Implement marked with GFM + breaks first, then test against Go backend output for specific comment content. Add marked extensions if needed.
+   - **Resolution:** Implement marked with GFM + breaks first, then test against Go backend output for specific comment content. Add marked extensions if needed. The Go backend's parserSvc is goldmark-based with minimal extensions for comments — marked's GFM mode covers the same feature set.
 
-2. **FTS5 MATCH query syntax for multi-word searches**
+2. **FTS5 MATCH query syntax for multi-word searches** — RESOLVED
    - What we know: FTS5 uses implicit AND for multiple tokens by default. Go's SimpleSearcher uses simple `strings.Contains` which is also AND-like.
    - What's unclear: Whether the frontend sends multi-word queries and expects OR behavior.
-   - Recommendation: Use FTS5 default (implicit AND) which matches Go SimpleSearcher behavior. If frontend needs OR, can use `OR` operator in FTS5 query.
+   - **Resolution:** Use FTS5 default (implicit AND) which matches Go SimpleSearcher behavior. Frontend sends single query strings; Go SimpleSearcher also uses AND-like matching. No OR behavior needed.
 
-3. **Comment image URL rewriting: anzhiyu://file/ protocol**
+3. **Comment image URL rewriting: anzhiyu://file/ protocol** — RESOLVED
    - What we know: Go's renderHTMLURLs replaces `src="anzhiyu://file/{publicID}"` with signed download URLs. NestJS has parseAnzhiyuURI in path-resolver.ts but no equivalent renderHTMLURLs.
    - What's unclear: Whether the NestJS file service has a method equivalent to Go's `GetDownloadURLForFileWithExpiration`.
-   - Recommendation: Implement renderHTMLURLs as a dedicated function in CommentService that uses FileService to resolve internal URIs to signed URLs. Check FileService API for download URL generation.
+   - **Resolution:** Implement renderHTMLURLs as a dedicated function in CommentService that uses FileService.getDownloadInfo() to resolve internal URIs to signed download URLs. FileService.getDownloadInfo() already returns download URL information (verified in Phase 05 implementation). The function will parse `anzhiyu://file/{publicID}` URIs in comment HTML and replace them with the corresponding download URLs from FileService.
 
 ## Environment Availability
 
