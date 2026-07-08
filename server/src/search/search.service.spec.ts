@@ -2,29 +2,33 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Test } from '@nestjs/testing';
 import { SearchService } from './search.service';
 import { SettingsService } from '../settings/settings.service';
+import { initSqidsEncoderWithSeed } from '../common/utils/sqids.util';
+
+// Initialize Sqids encoder for tests that use generatePublicID
+initSqidsEncoderWithSeed('test-seed');
 
 describe('SearchService', () => {
   let service: SearchService;
   let mockDb: any;
   let mockSettingsService: any;
 
-  // Track raw SQL calls
-  let rawSqlCalls: { sql: string; params: any[] }[];
+  // Track db.run() calls
+  let runCalls: any[];
 
   beforeEach(async () => {
-    rawSqlCalls = [];
+    runCalls = [];
 
-    // Mock Drizzle db with raw method for FTS5 operations
+    // Mock Drizzle db
     mockDb = {
-      run: vi.fn((sql, params) => {
-        rawSqlCalls.push({ sql, params });
+      run: vi.fn((sqlObj) => {
+        runCalls.push(sqlObj);
         return { changes: 1 };
       }),
       all: vi.fn(),
       get: vi.fn(),
       select: vi.fn().mockReturnThis(),
       from: vi.fn().mockReturnThis(),
-      where: vi.fn().mockReturnThis(),
+      where: vi.fn().mockResolvedValue([]),
       orderBy: vi.fn().mockReturnThis(),
       limit: vi.fn().mockReturnThis(),
       offset: vi.fn().mockReturnThis(),
@@ -56,32 +60,68 @@ describe('SearchService', () => {
     service = module.get<SearchService>(SearchService);
   });
 
+  /**
+   * Helper: extract SQL string from a Drizzle sql`` tagged template call.
+   * Drizzle sql tag produces objects with queryChunks containing
+   * StringChunk objects (with .value arrays) and raw parameter values.
+   */
+  function getSqlString(sqlObj: any): string {
+    if (typeof sqlObj === 'string') return sqlObj;
+    const chunks = sqlObj.queryChunks || [];
+    const parts: string[] = [];
+    for (const chunk of chunks) {
+      if (chunk && typeof chunk === 'object' && Array.isArray(chunk.value)) {
+        parts.push(chunk.value.join(''));
+      } else if (typeof chunk === 'number' || typeof chunk === 'string') {
+        parts.push('?');
+      }
+    }
+    return parts.join('');
+  }
+
+  function getSqlParams(sqlObj: any): any[] {
+    if (typeof sqlObj === 'string') return [];
+    const chunks = sqlObj.queryChunks || [];
+    const params: any[] = [];
+    for (const chunk of chunks) {
+      if (typeof chunk === 'number' || typeof chunk === 'string') {
+        params.push(chunk);
+      }
+    }
+    return params;
+  }
+
   describe('ensureFts5Table', () => {
     it('Test 1: should create articles_fts virtual table with contentless mode and unicode61 tokenizer', async () => {
+      // Mock select chain for rebuildAllIndexes (called by ensureFts5Table)
+      mockDb.select = vi.fn().mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([]),
+        }),
+      });
+
       await service.ensureFts5Table();
 
       // Verify CREATE VIRTUAL TABLE was called
-      const createCall = rawSqlCalls.find(
-        (c) => c.sql.includes('CREATE VIRTUAL TABLE') && c.sql.includes('articles_fts'),
-      );
+      const createCall = runCalls.find((c) => {
+        const sql = getSqlString(c);
+        return sql.includes('CREATE VIRTUAL TABLE') && sql.includes('articles_fts');
+      });
       expect(createCall).toBeDefined();
-      expect(createCall!.sql).toContain("content=''");
-      expect(createCall!.sql).toContain('unicode61');
+      const sqlStr = getSqlString(createCall);
+      expect(sqlStr).toContain("content=''");
+      expect(sqlStr).toContain('unicode61');
     });
   });
 
   describe('rebuildAllIndexes', () => {
     it('Test 2: should insert all published articles into FTS5 with HTML-stripped content', async () => {
-      // Mock: all() returns FTS5 search results for the rebuild query
-      // Mock: select chain for fetching published articles
       const publishedArticles = [
         {
           id: 1,
           title: 'Test Article',
           contentHtml: '<p>Hello <strong>world</strong></p>',
           keywords: 'test, article',
-          status: 'PUBLISHED',
-          deletedAt: null,
         },
       ];
 
@@ -94,13 +134,15 @@ describe('SearchService', () => {
 
       await service.rebuildAllIndexes();
 
-      // Verify INSERT INTO articles_fts was called with stripped content
-      const insertCall = rawSqlCalls.find(
-        (c) => c.sql.includes('INSERT INTO articles_fts'),
-      );
+      // Verify INSERT INTO articles_fts was called
+      const insertCall = runCalls.find((c) => {
+        const sql = getSqlString(c);
+        return sql.includes('INSERT INTO articles_fts');
+      });
       expect(insertCall).toBeDefined();
       // Content should have HTML stripped
-      expect(insertCall!.params).toContain('Hello world');
+      const params = getSqlParams(insertCall);
+      expect(params).toContain('Hello world');
     });
   });
 
@@ -115,14 +157,16 @@ describe('SearchService', () => {
 
       await service.indexArticle(article);
 
-      const insertCall = rawSqlCalls.find(
-        (c) => c.sql.includes('INSERT INTO articles_fts'),
-      );
+      const insertCall = runCalls.find((c) => {
+        const sql = getSqlString(c);
+        return sql.includes('INSERT INTO articles_fts');
+      });
       expect(insertCall).toBeDefined();
       // rowid should equal article.id
-      expect(insertCall!.params[0]).toBe(42);
+      const params = getSqlParams(insertCall);
+      expect(params[0]).toBe(42);
       // Content should be HTML-stripped
-      expect(insertCall!.params[2]).toBe('Some content here');
+      expect(params[2]).toBe('Some content here');
     });
   });
 
@@ -130,11 +174,13 @@ describe('SearchService', () => {
     it('Test 4: should remove an article from FTS5 by rowid', async () => {
       await service.deleteArticle(42);
 
-      const deleteCall = rawSqlCalls.find(
-        (c) => c.sql.includes('DELETE FROM articles_fts'),
-      );
+      const deleteCall = runCalls.find((c) => {
+        const sql = getSqlString(c);
+        return sql.includes('DELETE FROM articles_fts');
+      });
       expect(deleteCall).toBeDefined();
-      expect(deleteCall!.params[0]).toBe(42);
+      const params = getSqlParams(deleteCall);
+      expect(params[0]).toBe(42);
     });
   });
 
@@ -149,7 +195,10 @@ describe('SearchService', () => {
       // Mock the all() call for FTS5 search
       mockDb.all = vi.fn().mockResolvedValue(ftsResults);
 
-      // Mock the select chain for fetching article data by IDs
+      // Mock count query
+      mockDb.get = vi.fn().mockResolvedValue({ total: 2 });
+
+      // Mock article data
       const articlesData = [
         {
           id: 1,
@@ -185,28 +234,27 @@ describe('SearchService', () => {
         },
       ];
 
-      // Mock count query
-      mockDb.get = vi.fn().mockResolvedValue({ total: 2 });
-
-      // Mock select for article data
-      let selectCallCount = 0;
+      // Mock select for article data — needs to handle multiple select calls
+      let selectCallIndex = 0;
       mockDb.select = vi.fn().mockImplementation(() => {
-        selectCallCount++;
-        return {
+        selectCallIndex++;
+        const chain = {
           from: vi.fn().mockReturnValue({
             where: vi.fn().mockImplementation(() => {
-              if (selectCallCount === 1) {
+              if (selectCallIndex === 1) {
                 // Article data query
                 return Promise.resolve(articlesData);
               }
+              // Category/tag queries return empty
               return Promise.resolve([]);
+            }),
+            innerJoin: vi.fn().mockReturnValue({
+              where: vi.fn().mockResolvedValue([]),
             }),
           }),
         };
+        return chain;
       });
-
-      // Mock relation queries
-      mockDb.innerJoin = vi.fn().mockReturnThis();
 
       const result = await service.search('test query', 1, 10);
 
