@@ -108,6 +108,14 @@ export const ErrorCodes = {
   THUMBNAIL_NOT_FOUND: '缩略图不存在',
   THUMBNAIL_SIGN_EXPIRED: '缩略图签名已过期',
   THUMBNAIL_SIGN_INVALID: '缩略图签名无效',
+
+  // Phase 06 - Comment error messages
+  COMMENT_RATE_LIMITED: '您的评论太频繁了，请稍后再试',
+  COMMENT_PARENT_NOT_FOUND: '父评论不存在',
+  COMMENT_REPLY_TARGET_NOT_FOUND: '回复目标评论不存在',
+  COMMENT_ANONYMOUS_NO_REPLY: '匿名评论不允许被回复',
+  COMMENT_ANONYMOUS_EMAIL_MISMATCH: '匿名评论邮箱验证失败',
+  COMMENT_NOT_FOUND: '评论不存在',
 } as const;
 
 export type ErrorCode = keyof typeof ErrorCodes;
