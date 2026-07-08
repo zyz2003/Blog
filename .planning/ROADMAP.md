@@ -29,7 +29,7 @@ Phases 10-11 complete. Scheduled tasks running, migration tool available, end-to
 | 03 | Article & Category & Tag | 5/5 | Complete   | 2026-07-03 |
 | 04 | Page & Public API | 4/4 | Complete    | 2026-07-04 |
 | 05 | File Upload & Media | 5/5 | Complete    | 2026-07-05 |
-| 06 | Comment & Search | Visitors can post and browse comments with nested replies; all users can full-text search articles via FTS5 | P0+P1 | TBD |
+| 06 | Comment & Search | 1/5 | In Progress|  |
 | 07 | Statistics & Links | Visitor tracking and analytics dashboard; friend link CRUD with health check | P1 | TBD |
 | 08 | Album & Doc Series | Photo album CRUD with categories; document series CRUD for ordered article collections | P2 | TBD |
 | 09 | SEO & Music & Notifications | RSS/Sitemap XML feeds; music playlist API; notification management; subscriber management | P2 | TBD |
@@ -222,11 +222,11 @@ Plans:
 - FTS5 index auto-updates on article create/update/delete
 - Search results match Go backend relevance ordering
 
-**Plans:** 5 plans
+**Plans:** 1/5 plans executed
 
 **Wave 1** (parallel)
 
-- [ ] 06-01-PLAN.md — CommentRepository, 8 DTOs, Markdown renderer, rate limiter, error codes
+- [x] 06-01-PLAN.md — CommentRepository, 8 DTOs, Markdown renderer, rate limiter, error codes
 - [ ] 06-02-PLAN.md — SearchModule: FTS5 index management, bm25 search, SearchController
 
 **Wave 2** *(blocked on 06-01)*
