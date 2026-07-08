@@ -30,6 +30,7 @@
     "isomorphic-dompurify": "^3.18.0",
     "joi": "17.13.3",
     "jsonwebtoken": "^9.0.3",
+    "marked": "^18.0.5",
     "passport": "0.7.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "1.0.0",
