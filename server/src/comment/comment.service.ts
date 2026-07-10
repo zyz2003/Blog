@@ -4,7 +4,6 @@ import {
   Logger,
   BadRequestException,
   NotFoundException,
-  Optional,
   forwardRef,
 } from '@nestjs/common';
 import { DRIZZLE } from '../database/database.module';
@@ -14,6 +13,7 @@ import { CommentRateLimiter } from './comment-rate-limiter';
 import { UploadService } from '../file/upload.service';
 import { StoragePolicyService } from '../storage-policy/storage-policy.service';
 import { FileService } from '../file/file.service';
+import { GeoIPService } from '../weather/geoip.service';
 import { renderCommentMarkdown } from './comment-markdown';
 import {
   generatePublicID,
@@ -39,7 +39,7 @@ const qqEmailRegex = /^([1-9]\d{4,10})@qq\.com$/;
  * CommentService — core business logic for comment operations.
  * Matches Go pkg/service/comment/service.go exactly.
  *
- * Per D-143: GeoIPService is optional (Wave 2 fallback to direct HTTP call).
+ * Per D-143: GeoIPService injected from WeatherModule for IP location lookup.
  * Per D-141: UploadService is injected from FileModule for comment image uploads.
  */
 @Injectable()
@@ -53,10 +53,8 @@ export class CommentService {
     private readonly uploadService: UploadService,
     private readonly policyService: StoragePolicyService,
     private readonly fileService: FileService,
+    private readonly geoipService: GeoIPService,
     @Inject(DRIZZLE) private readonly db: any,
-    @Optional()
-    @Inject(forwardRef(() => GeoIPService))
-    private readonly geoipService: any | null,
   ) {}
 
   // ============================================================
@@ -364,20 +362,24 @@ export class CommentService {
 
   /**
    * Lookup IP geolocation.
-   * Delegates to GeoIPService when available (Wave 4+).
-   * Falls back to direct HTTP call to NSUUU API in Wave 2.
+   * Delegates to GeoIPService from WeatherModule per D-143.
+   * Falls back to direct HTTP call if GeoIPService fails.
    */
   async lookupIPLocation(ip: string, referer: string): Promise<string> {
     if (!ip) return '未知';
 
-    // Try GeoIPService first (available from Wave 4)
-    if (this.geoipService) {
-      try {
-        const location = await this.geoipService.lookup(ip, referer);
-        if (location) return location;
-      } catch {
-        this.logger.warn(`GeoIPService lookup failed for IP: ${ip}`);
+    // Try GeoIPService first (from WeatherModule)
+    try {
+      const location = await this.geoipService.lookup(ip, referer);
+      if (location) {
+        const { province, city } = location;
+        if (province && city) {
+          return province === city ? province : `${province}${city}`;
+        }
+        if (province) return province;
       }
+    } catch {
+      this.logger.warn(`GeoIPService lookup failed for IP: ${ip}`);
     }
 
     // Fallback: direct HTTP call to NSUUU API
@@ -391,7 +393,7 @@ export class CommentService {
       const response = await fetch(url, { headers });
       if (!response.ok) return '未知';
 
-      const data = await response.json();
+      const data = (await response.json()) as any;
       if (data.code === 200 && data.data) {
         const { province, city } = data.data;
         if (province && city) {
@@ -1201,13 +1203,4 @@ export class CommentService {
       );
     }
   }
-}
-
-/**
- * Placeholder interface for GeoIPService.
- * Will be replaced by the real GeoIPService from WeatherModule in Wave 4.
- * Per D-143: CommentService delegates to GeoIPService when available.
- */
-export abstract class GeoIPService {
-  abstract lookup(ip: string, referer?: string): Promise<string>;
 }

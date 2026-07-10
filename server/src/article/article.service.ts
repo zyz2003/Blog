@@ -4,11 +4,13 @@ import {
   ConflictException,
   BadRequestException,
   Inject,
+  Logger,
 } from '@nestjs/common';
 import { ArticleRepository, calculatePostStats, diffIDs } from './article.repository';
 import { PostCategoryRepository } from '../post-category/post-category.repository';
 import { PostTagRepository } from '../post-tag/post-tag.repository';
 import { ArticleHistoryService } from '../article-history/article-history.service';
+import { SearchService } from '../search/search.service';
 import { DRIZZLE } from '../database/database.module';
 import { articles } from '../database/schemas/article.schema';
 import { generatePublicID, decodePublicID, EntityType } from '../common/utils/sqids.util';
@@ -40,11 +42,14 @@ const RESERVED_PATHS = [
 
 @Injectable()
 export class ArticleService {
+  private readonly logger = new Logger(ArticleService.name);
+
   constructor(
     private readonly articleRepo: ArticleRepository,
     private readonly categoryRepo: PostCategoryRepository,
     private readonly tagRepo: PostTagRepository,
     private readonly historyService: ArticleHistoryService,
+    private readonly searchService: SearchService,
     @Inject(DRIZZLE) private readonly db: any,
   ) {}
 
@@ -239,6 +244,21 @@ export class ArticleService {
       // History creation failure should not block article creation
     }
 
+    // FTS5 index hook: index article if PUBLISHED per D-151
+    if (articleWithRelations.status === 'PUBLISHED') {
+      try {
+        await this.searchService.indexArticle({
+          id: articleWithRelations.id,
+          title: articleWithRelations.title,
+          contentHtml: articleWithRelations.contentHtml || '',
+          keywords: articleWithRelations.keywords || null,
+        });
+      } catch (e) {
+        this.logger.warn(`FTS5 index failed for article ${articleWithRelations.id}: ${e}`);
+        // FTS5 index failure must not block article creation
+      }
+    }
+
     return this.toApiResponse(articleWithRelations, false, true);
   }
 
@@ -358,6 +378,40 @@ export class ArticleService {
       // History creation failure should not block article update
     }
 
+    // FTS5 index hooks per D-151:
+    // - If article becomes PUBLISHED: index it
+    // - If article changes away from PUBLISHED: remove from index
+    // - If article stays PUBLISHED: delete old index + re-index (content may have changed)
+    try {
+      const wasPublished = existing.status === 'PUBLISHED';
+      const isPublished = updated.status === 'PUBLISHED';
+
+      if (isPublished && !wasPublished) {
+        // Status changed to PUBLISHED: add to index
+        await this.searchService.indexArticle({
+          id: updated.id,
+          title: updated.title,
+          contentHtml: updated.contentHtml || '',
+          keywords: updated.keywords || null,
+        });
+      } else if (!isPublished && wasPublished) {
+        // Status changed away from PUBLISHED: remove from index
+        await this.searchService.deleteArticle(dbID);
+      } else if (isPublished && wasPublished) {
+        // Still PUBLISHED but content may have changed: delete + re-index
+        await this.searchService.deleteArticle(dbID);
+        await this.searchService.indexArticle({
+          id: updated.id,
+          title: updated.title,
+          contentHtml: updated.contentHtml || '',
+          keywords: updated.keywords || null,
+        });
+      }
+    } catch (e) {
+      this.logger.warn(`FTS5 index update failed for article ${dbID}: ${e}`);
+      // FTS5 index failure must not block article update
+    }
+
     return this.toApiResponse(updated, false, true);
   }
 
@@ -378,6 +432,14 @@ export class ArticleService {
     const categoryIds = (existing.postCategories || []).map((c: any) => c.id);
     const tagIds = (existing.postTags || []).map((t: any) => t.id);
     await this.syncCounts(categoryIds, tagIds, 'decrement');
+
+    // FTS5 index hook: remove from index per D-151
+    try {
+      await this.searchService.deleteArticle(dbID);
+    } catch (e) {
+      this.logger.warn(`FTS5 index delete failed for article ${dbID}: ${e}`);
+      // FTS5 index failure must not block article deletion
+    }
 
     return null;
   }

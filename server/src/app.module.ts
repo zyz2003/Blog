@@ -21,6 +21,7 @@ import { ThumbnailModule } from './thumbnail/thumbnail.module';
 import { DirectLinkModule } from './direct-link/direct-link.module';
 import { CommentModule } from './comment/comment.module';
 import { SearchModule } from './search/search.module';
+import { WeatherModule } from './weather/weather.module';
 import { StatisticsModule } from './statistics/statistics.module';
 import { LinkModule } from './link/link.module';
 import { AlbumModule } from './album/album.module';
@@ -71,6 +72,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     }),
     CommentModule,
     SearchModule,
+    WeatherModule,
     StatisticsModule,
     LinkModule,
     AlbumModule,

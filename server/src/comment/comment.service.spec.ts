@@ -50,6 +50,12 @@ const mockFileService = {
   findFileByPublicID: vi.fn(),
 } as any;
 
+const mockGeoIPService = {
+  lookup: vi.fn(),
+  isPrivateIP: vi.fn(),
+  getDefaultCoordinates: vi.fn(),
+} as any;
+
 const mockDb = {
   select: vi.fn().mockReturnThis(),
   from: vi.fn().mockReturnThis(),
@@ -111,8 +117,8 @@ function createService() {
     mockUploadService,
     mockStoragePolicyService,
     mockFileService,
+    mockGeoIPService,
     mockDb,
-    null, // GeoIPService not available in Wave 2
   );
 }
 
@@ -384,21 +390,33 @@ describe('CommentService', () => {
       expect(result.ip_location).toBeDefined();
     });
 
-    it('Test 9: lookupIPLocation should delegate to GeoIPService when available, otherwise fall back to direct HTTP call', async () => {
-      // Test fallback (GeoIPService is null in Wave 2)
+    it('Test 9: lookupIPLocation should delegate to GeoIPService, fall back to direct HTTP call on failure', async () => {
+      // Test GeoIPService delegation
+      mockGeoIPService.lookup.mockResolvedValueOnce({
+        province: '北京',
+        city: '北京',
+        latitude: 39.9,
+        longitude: 116.4,
+        country: '中国',
+      });
+
+      const location = await service.lookupIPLocation('8.8.8.8', 'http://example.com');
+      expect(mockGeoIPService.lookup).toHaveBeenCalledWith('8.8.8.8', 'http://example.com');
+      expect(location).toBe('北京'); // province === city, return province only
+
+      // Test fallback when GeoIPService returns null
+      mockGeoIPService.lookup.mockResolvedValueOnce(null);
       const mockFetch = vi.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({
           code: 200,
-          data: { province: '北京', city: '北京' },
+          data: { province: '广东', city: '深圳' },
         }),
       });
       vi.stubGlobal('fetch', mockFetch);
 
-      const location = await service.lookupIPLocation('8.8.8.8', 'http://example.com');
-      // Should return a location string (either from API or default)
-      expect(typeof location).toBe('string');
-      expect(location).toBeTruthy();
+      const location2 = await service.lookupIPLocation('8.8.4.4', 'http://example.com');
+      expect(location2).toBe('广东深圳');
 
       vi.restoreAllMocks();
     });

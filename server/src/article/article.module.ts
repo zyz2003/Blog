@@ -9,6 +9,7 @@ import { PostTagModule } from '../post-tag/post-tag.module';
 import { ArticleHistoryModule } from '../article-history/article-history.module';
 import { StoragePolicyModule } from '../storage-policy/storage-policy.module';
 import { ThumbnailModule } from '../thumbnail/thumbnail.module';
+import { SearchModule } from '../search/search.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ThumbnailModule } from '../thumbnail/thumbnail.module';
     ArticleHistoryModule,
     StoragePolicyModule,
     ThumbnailModule,
+    SearchModule,
   ],
   controllers: [ArticleController, PublicArticleController],
   providers: [ArticleService, ArticleRepository],
