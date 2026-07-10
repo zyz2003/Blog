@@ -222,7 +222,7 @@ Plans:
 - FTS5 index auto-updates on article create/update/delete
 - Search results match Go backend relevance ordering
 
-**Plans:** 4/5 plans executed
+**Plans:** 5/5 plans complete
 
 **Wave 1** (parallel)
 
