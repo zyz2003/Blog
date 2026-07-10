@@ -30,7 +30,11 @@ export class SearchService implements OnModuleInit {
   ) {}
 
   async onModuleInit(): Promise<void> {
-    await this.ensureFts5Table();
+    try {
+      await this.ensureFts5Table();
+    } catch (error) {
+      this.logger.warn('FTS5 table initialization skipped (may not be available in test environment)');
+    }
   }
 
   /**

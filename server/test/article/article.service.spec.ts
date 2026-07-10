@@ -5,6 +5,7 @@ import { ArticleRepository, calculatePostStats, diffIDs } from '../../src/articl
 import { PostCategoryRepository } from '../../src/post-category/post-category.repository';
 import { PostTagRepository } from '../../src/post-tag/post-tag.repository';
 import { ArticleHistoryService } from '../../src/article-history/article-history.service';
+import { SearchService } from '../../src/search/search.service';
 import { DRIZZLE } from '../../src/database/database.module';
 import { generatePublicID, decodePublicID, EntityType } from '../../src/common/utils/sqids.util';
 import {
@@ -56,6 +57,10 @@ describe('ArticleService', () => {
         }},
         { provide: ArticleHistoryService, useValue: {
           createHistory: vi.fn(),
+        }},
+        { provide: SearchService, useValue: {
+          indexArticle: vi.fn(),
+          deleteArticle: vi.fn(),
         }},
         { provide: DRIZZLE, useValue: mockDb },
       ],

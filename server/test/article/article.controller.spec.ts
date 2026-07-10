@@ -3,6 +3,9 @@ import { Test } from '@nestjs/testing';
 import { ArticleController } from '../../src/article/article.controller';
 import { PublicArticleController } from '../../src/article/public-article.controller';
 import { ArticleService } from '../../src/article/article.service';
+import { StoragePolicyService } from '../../src/storage-policy/storage-policy.service';
+import { ThumbnailService } from '../../src/thumbnail/thumbnail.service';
+import { DRIZZLE } from '../../src/database/database.module';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../../src/common/decorators/public.decorator';
 
@@ -29,6 +32,13 @@ describe('ArticleController', () => {
           getByURL: vi.fn(),
           getPublic: vi.fn(),
         }},
+        { provide: StoragePolicyService, useValue: {
+          findByFlag: vi.fn(),
+        }},
+        { provide: ThumbnailService, useValue: {
+          generateThumbnail: vi.fn(),
+        }},
+        { provide: DRIZZLE, useValue: {} },
       ],
     }).compile();
 

@@ -19,7 +19,7 @@ describe('Schema Definitions Verification', () => {
       .all() as { name: string }[];
     db.close();
 
-    expect(tables.length).toBe(30);
+    expect(tables.length).toBe(32);
 
     const tableNames = tables.map((t) => t.name);
     // Verify all expected tables exist
@@ -54,6 +54,8 @@ describe('Schema Definitions Verification', () => {
       'visitor_stats',
       'url_stats',
       'tags',
+      'article_post_categories', // join table for article-category many-to-many
+      'article_post_tags', // join table for article-tag many-to-many
     ];
 
     for (const expected of expectedTables) {
@@ -73,7 +75,11 @@ describe('Schema Definitions Verification', () => {
       )
       .all() as { name: string }[];
 
+    // FTS5 virtual tables and join tables don't have an 'id' primary key column
+    const skipIdCheck = new Set(['articles_fts', 'article_post_categories', 'article_post_tags']);
+
     for (const table of tables) {
+      if (skipIdCheck.has(table.name)) continue;
       const columns = db.pragma(`table_info('${table.name}')`) as {
         name: string;
         pk: number;
