@@ -80,7 +80,7 @@
 
 - [ ] STATS-01: 统计：访客记录、趋势统计
 - [ ] STATS-02: 统计：来源分析、设备分析
-- [ ] COMMENT-01: 评论：CRUD、审核、嵌套回复
+- [x] COMMENT-01: 评论：CRUD、审核、嵌套回复
 - [ ] LINK-FRIEND-01: 友链：CRUD、分类、健康检查
 - [ ] STORAGE-01: 存储策略：CRUD
 - [ ] LINK-DIRECT-01: 直链：CRUD、短链访问

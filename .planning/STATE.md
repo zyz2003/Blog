@@ -4,17 +4,17 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 06
 current_phase_name: Comment & Search
-current_plan: 3
+current_plan: 5
 status: executing
-stopped_at: Plan 06-02 complete
-last_updated: "2026-07-08T14:08:01Z"
-last_activity: 2026-07-08
-last_activity_desc: Plan 06-02 executed (FTS5 Full-Text Search Module)
+stopped_at: Plan 06-05 complete
+last_updated: "2026-07-10T12:22:46Z"
+last_activity: 2026-07-10
+last_activity_desc: Plan 06-05 executed (WeatherModule, FTS5 Hooks & Module Wiring)
 progress:
   total_phases: 11
   completed_phases: 5
   total_plans: 29
-  completed_plans: 27
+  completed_plans: 28
   percent: 47
 ---
 
@@ -26,9 +26,9 @@ progress:
 |-------|-------|
 | Milestone | M2 - Full Feature Parity |
 | Phase | 06 (Comment & Search) — EXECUTING |
-| Current Plan | 3 |
+| Current Plan | 5 |
 | Status | Executing Phase 06 |
-| Last Activity | 2026-07-08 — Plan 06-02 complete |
+| Last Activity | 2026-07-10 — Plan 06-05 complete |
 
 ## Phase Status
 
@@ -39,7 +39,7 @@ progress:
 | 03 | Article & Category & Tag | Complete | 5 | 2026-07-03 |
 | 04 | Page & Public API | Complete | 4 | 2026-07-04 |
 | 05 | File Upload & Media | Complete | 5 | 2026-07-05 |
-| 06 | Comment & Search | Executing | 2 | 2026-07-08 |
+| 06 | Comment & Search | Executing | 5 | 2026-07-10 |
 | 07 | Statistics & Links | Not Started | 0 | 2026-06-28 |
 | 08 | Album & Doc Series | Not Started | 0 | 2026-06-28 |
 | 09 | SEO & Music & Notifications | Not Started | 0 | 2026-06-28 |
@@ -97,6 +97,8 @@ progress:
 | D-112 | File download via createReadStream for streaming | Efficient memory usage for large files | 05 |
 | D-113 | ArticleController.uploadImage with FileInterceptor | Replaced Phase 03 501 stub | 05 |
 | D-114 | ServeStaticModule for data/uploads at /uploads | Provides direct URL access for article images | 05 |
+| D-143 | GeoIPService injected from WeatherModule into CommentService | Replaces @Optional() HTTP fallback per D-143 | 06 |
+| D-151 | FTS5 index hooks in ArticleService CRUD (try-catch) | Index failure never blocks article operations | 06 |
 
 ## Blockers
 
@@ -120,15 +122,15 @@ progress:
 |--------|-------|
 | Phases Completed | 5 / 11 |
 | Plans Created | 24 |
-| Plans Executed | 27 |
-| Requirements Covered | 28 / 39 |
+| Plans Executed | 29 |
+| Requirements Covered | 30 / 39 |
 | API Endpoints Implemented | 47 / ~60+ |
 
 ---
-*Last updated: 2026-07-05*
+*Last updated: 2026-07-10*
 
 ## Session
 
-**Last session:** 2026-07-08T14:08:01Z
-**Stopped at:** Plan 06-02 complete
-**Resume file:** .planning/phases/06-comment-search/06-03-PLAN.md
+**Last session:** 2026-07-10T12:22:46Z
+**Stopped at:** Plan 06-05 complete
+**Resume file:** .planning/phases/06-comment-search/06-05-SUMMARY.md
