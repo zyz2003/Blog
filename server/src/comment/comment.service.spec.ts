@@ -376,7 +376,7 @@ describe('CommentService', () => {
       });
 
       const comment = makeComment({ id: 42, email: 'test@example.com' });
-      const result = service.toResponseDTO(comment, null, null, true);
+      const result = await service.toResponseDTO(comment, null, null, true);
 
       // Should have public ID (generated via Sqids)
       expect(result.id).toBeTruthy();

@@ -4,7 +4,6 @@ import {
   Logger,
   BadRequestException,
   NotFoundException,
-  forwardRef,
 } from '@nestjs/common';
 import { DRIZZLE } from '../database/database.module';
 import { CommentRepository, CreateCommentParams } from './comment.repository';
@@ -28,9 +27,6 @@ import { v4 as uuidv4 } from 'uuid';
 import * as crypto from 'crypto';
 import * as path from 'path';
 import * as fs from 'fs/promises';
-
-// Regex matching src="anzhiyu://file/ID" in HTML content
-const htmlInternalURIRegex = /src="anzhiyu:\/\/file\/([a-zA-Z0-9_-]+)"/g;
 
 // QQ email pattern for extracting QQ number
 const qqEmailRegex = /^([1-9]\d{4,10})@qq\.com$/;
@@ -239,7 +235,7 @@ export class CommentService {
     }
 
     // 13. Return response DTO
-    return this.toResponseDTO(newComment, parentComment, replyToComment, false);
+    return await this.toResponseDTO(newComment, parentComment, replyToComment, false);
   }
 
   // ============================================================
@@ -250,13 +246,16 @@ export class CommentService {
    * Convert a comment record to API response DTO.
    * Per D-138: includes all Go dto.Response fields.
    * Per D-207: admin-only fields only when isAdminView=true.
+   *
+   * This method is async because renderHTMLURLs requires async file lookups.
+   * Matches Go toResponseDTO which calls renderHTMLURLs at line 965.
    */
-  toResponseDTO(
+  async toResponseDTO(
     c: any,
     parent: any | null,
     replyTo: any | null,
     isAdminView: boolean,
-  ): any {
+  ): Promise<any> {
     if (!c) return null;
 
     // 1. Generate public ID
@@ -271,10 +270,14 @@ export class CommentService {
       renderedContentHtml = c.contentHtml;
     }
 
-    // 3. Render image URLs (async but we handle it synchronously for now)
-    // renderHTMLURLs is async; for toResponseDTO used in list operations,
-    // we'll handle it separately in the list methods.
-    // Here we just use the already-rendered HTML.
+    // 3. Render image URLs — replace anzhiyu://file/ with signed download URLs
+    // Per Go line 965: renderedContentHTML, err = s.renderHTMLURLs(ctx, renderedContentHTML)
+    try {
+      renderedContentHtml = await this.renderHTMLURLs(renderedContentHtml);
+    } catch {
+      this.logger.warn(`渲染评论 ${publicID} 的HTML链接失败`);
+      renderedContentHtml = c.contentHtml;
+    }
 
     // 4. Compute emailMd5 and detect QQ email
     let emailMd5 = c.emailMd5 || '';
@@ -309,11 +312,26 @@ export class CommentService {
     const showRegion =
       this.settingsService.get('comment_show_region') === 'true';
 
-    // 7. Get avatar URL per Go lines 1001-100990-1009
+    // 7. Get avatar URL per Go lines 1002-1009
     let avatarUrl: string | null = null;
-    // Avatar lookup requires user record — for now, we skip custom avatar
-    // since comments don't always have an associated user record loaded.
-    // This will be enhanced when user joins are added.
+    if (c.userId) {
+      try {
+        const user = await this.findUserById(c.userId);
+        if (user && user.avatar) {
+          let avatar = user.avatar;
+          // Relative path: prepend gravatar base URL per Go line 1005-1008
+          if (!avatar.startsWith('http://') && !avatar.startsWith('https://')) {
+            const gravatarBase = (this.settingsService.get('gravatar_url') || '').replace(/\/+$/, '');
+            if (gravatarBase) {
+              avatar = gravatarBase + '/' + avatar.replace(/^\/+/, '');
+            }
+          }
+          avatarUrl = avatar;
+        }
+      } catch {
+        // Avatar lookup failed — leave as null
+      }
+    }
 
     // 8. Build response
     const resp: any = {
@@ -558,7 +576,7 @@ export class CommentService {
     const rootResponses: any[] = [];
 
     for (const root of paginatedRoots) {
-      const rootResp = this.toResponseDTO(root, null, null, false);
+      const rootResp = await this.toResponseDTO(root, null, null, false);
       const descendants = descendantsMap.get(root.id) || [];
 
       rootResp.total_children = descendants.length;
@@ -603,17 +621,17 @@ export class CommentService {
       }
 
       // Map children to ResponseDTO with parent and replyTo from commentMap
-      const childResponses = previewChildren.map((child: any) => {
+      const childResponses: any[] = [];
+      for (const child of previewChildren) {
         const parent = child.parentId ? commentMap.get(child.parentId) : null;
         let replyTo = child.replyToId
           ? commentMap.get(child.replyToId)
           : null;
-        // Backward compatibility: if no replyToId, use parent
         if (!replyTo && parent) {
           replyTo = parent;
         }
-        return this.toResponseDTO(child, parent, replyTo, false);
-      });
+        childResponses.push(await this.toResponseDTO(child, parent, replyTo, false));
+      }
 
       rootResp.children = childResponses;
       rootResponses.push(rootResp);
@@ -663,7 +681,8 @@ export class CommentService {
     }
 
     // Map to ResponseDTO
-    const responses = comments.map((comment: any) => {
+    const responses: any[] = [];
+    for (const comment of comments) {
       const parent = comment.parentId
         ? commentMap.get(comment.parentId)
         : null;
@@ -674,8 +693,8 @@ export class CommentService {
       if (!replyTo && parent) {
         replyTo = parent;
       }
-      return this.toResponseDTO(comment, parent, replyTo, false);
-    });
+      responses.push(await this.toResponseDTO(comment, parent, replyTo, false));
+    }
 
     return {
       list: responses,
@@ -812,7 +831,8 @@ export class CommentService {
     }
 
     // 7. Map to ResponseDTO
-    const childResponses = paginatedDescendants.map((child: any) => {
+    const childResponses: any[] = [];
+    for (const child of paginatedDescendants) {
       const parent = child.parentId ? commentMap.get(child.parentId) : null;
       let replyTo = child.replyToId
         ? commentMap.get(child.replyToId)
@@ -820,8 +840,8 @@ export class CommentService {
       if (!replyTo && parent) {
         replyTo = parent;
       }
-      return this.toResponseDTO(child, parent, replyTo, false);
-    });
+      childResponses.push(await this.toResponseDTO(child, parent, replyTo, false));
+    }
 
     return {
       list: childResponses,
@@ -871,7 +891,7 @@ export class CommentService {
       throw new BadRequestException(ErrorCodes.COMMENT_NOT_FOUND);
     }
     const updated = await this.repo.setPin(decoded.dbID, isPinned);
-    return this.toResponseDTO(updated, null, null, true);
+    return await this.toResponseDTO(updated, null, null, true);
   }
 
   /**
@@ -883,7 +903,7 @@ export class CommentService {
       throw new BadRequestException(ErrorCodes.COMMENT_NOT_FOUND);
     }
     const updated = await this.repo.updateStatus(decoded.dbID, status);
-    return this.toResponseDTO(updated, null, null, true);
+    return await this.toResponseDTO(updated, null, null, true);
   }
 
   /**
@@ -902,7 +922,7 @@ export class CommentService {
       newContent,
       contentHtml,
     );
-    return this.toResponseDTO(updated, null, null, true);
+    return await this.toResponseDTO(updated, null, null, true);
   }
 
   /**
@@ -944,7 +964,7 @@ export class CommentService {
     }
 
     const updated = await this.repo.updateCommentInfo(decoded.dbID, updateData);
-    return this.toResponseDTO(updated, null, null, true);
+    return await this.toResponseDTO(updated, null, null, true);
   }
 
   /**
@@ -1055,9 +1075,10 @@ export class CommentService {
 
     const { list, total } = await this.repo.adminList(filters);
 
-    const responses = list.map((comment: any) =>
-      this.toResponseDTO(comment, null, null, true),
-    );
+    const responses: any[] = [];
+    for (const comment of list) {
+      responses.push(await this.toResponseDTO(comment, null, null, true));
+    }
 
     return {
       list: responses,
@@ -1066,6 +1087,123 @@ export class CommentService {
       page: filters.page,
       pageSize: filters.pageSize,
     };
+  }
+
+  // ============================================================
+  // QQ Info & IP Location — matches Go service.go lines 1334-1600
+  // ============================================================
+
+  /**
+   * Get QQ nickname and avatar by QQ number.
+   * Per Go service.go GetIPLocation: calls third-party API with Bearer token auth.
+   * Returns { nickname, avatar } matching Go QQInfoResponse.
+   */
+  async getQQInfo(qqNumber: string, referer: string): Promise<{ nickname: string; avatar: string }> {
+    // Validate QQ number format per Go line 1344
+    if (!/^[1-9]\d{4,10}$/.test(qqNumber)) {
+      throw new BadRequestException('无效的QQ号格式');
+    }
+
+    const apiUrl = this.settingsService.get('comment_qq_api_url') || '';
+    const apiKey = this.settingsService.get('comment_qq_api_key') || '';
+
+    if (!apiUrl || !apiKey) {
+      throw new BadRequestException('QQ信息查询API未配置');
+    }
+
+    try {
+      const url = `${apiUrl}?qq=${encodeURIComponent(qqNumber)}`;
+      const headers: Record<string, string> = {
+        Authorization: `Bearer ${apiKey}`,
+      };
+      if (referer) {
+        headers['Referer'] = referer;
+      }
+
+      const response = await fetch(url, { headers, signal: AbortSignal.timeout(10000) });
+      if (!response.ok) {
+        throw new BadRequestException('获取QQ信息失败');
+      }
+
+      const data = (await response.json()) as any;
+      if (data.code === 200 && data.data) {
+        return {
+          nickname: data.data.nick || data.data.nickname || '',
+          avatar: data.data.avatar || data.data.img || '',
+        };
+      }
+
+      throw new BadRequestException('获取QQ信息失败');
+    } catch (error) {
+      if (error instanceof BadRequestException) throw error;
+      throw new BadRequestException('获取QQ信息失败');
+    }
+  }
+
+  /**
+   * Get IP location info (full structure matching Go IPLocationResponse).
+   * Per Go service.go GetIPLocation lines 1578-1600: returns flat object with
+   * IP, country, province, city, ISP, latitude, longitude, address.
+   * For LAN/private IPs, falls back to default rectangle from settings.
+   */
+  async getIPLocation(ip: string, referer: string): Promise<any> {
+    const isPrivate = this.geoipService.isPrivateIP(ip);
+
+    if (isPrivate) {
+      // Return default coordinates for LAN IPs per Go lines 580-588
+      const defaults = this.geoipService.getDefaultCoordinates();
+      const rectangle = this.settingsService.get('sidebar.weather.rectangle') || '';
+      const result: any = {
+        ip,
+        country: '局域网',
+        province: '局域网',
+        city: '',
+        isp: '',
+        latitude: defaults.latitude ? String(defaults.latitude) : '',
+        longitude: defaults.longitude ? String(defaults.longitude) : '',
+        address: '',
+      };
+      if (rectangle) {
+        result.default_rectangle = rectangle;
+      }
+      return result;
+    }
+
+    try {
+      const location = await this.geoipService.lookup(ip, referer);
+      if (location) {
+        return {
+          ip,
+          country: location.country || '',
+          province: location.province || '',
+          city: location.city || '',
+          isp: location.isp || '',
+          latitude: location.latitude ? String(location.latitude) : '',
+          longitude: location.longitude ? String(location.longitude) : '',
+          address: location.address || [location.country, location.province, location.city].filter(Boolean).join('') || '',
+        };
+      }
+    } catch {
+      this.logger.warn(`IP location lookup failed for IP: ${ip}`);
+    }
+
+    // Fallback: default coordinates
+    const defaults = this.geoipService.getDefaultCoordinates();
+    const rectangle = this.settingsService.get('sidebar.weather.rectangle') || '';
+    const result: any = {
+      ip,
+      country: '',
+      province: '',
+      city: '',
+      isp: '',
+      latitude: defaults.latitude ? String(defaults.latitude) : '',
+      longitude: defaults.longitude ? String(defaults.longitude) : '',
+      address: '',
+    };
+    if (rectangle) {
+      result.default_rectangle = rectangle;
+    }
+    return result;
   }
 
   // ============================================================

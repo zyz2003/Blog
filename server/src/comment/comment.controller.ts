@@ -70,6 +70,38 @@ export class CommentController {
   }
 
   /**
+   * GET /api/public/comments/qq-info
+   * Get QQ nickname and avatar by QQ number.
+   * Matches Go GetQQInfo (router.go line 258).
+   * MUST be declared before @Get(':id/children') to avoid 'qq-info' captured as :id.
+   */
+  @Get('qq-info')
+  async getQQInfo(@Query('qq') qq: string, @Req() req: any) {
+    if (!qq) {
+      return { nickname: '', avatar: '' };
+    }
+    const referer = req.headers['referer'] || '';
+    return this.commentService.getQQInfo(qq, referer);
+  }
+
+  /**
+   * GET /api/public/comments/ip-location
+   * Get IP geolocation info (full structure matching Go IPLocationResponse).
+   * Matches Go GetIPLocation (router.go line 265).
+   * MUST be declared before @Get(':id/children') to avoid 'ip-location' captured as :id.
+   */
+  @Get('ip-location')
+  async getIPLocation(@Req() req: any) {
+    const ip =
+      req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+      req.ip ||
+      req.connection?.remoteAddress ||
+      '';
+    const referer = req.headers['referer'] || '';
+    return this.commentService.getIPLocation(ip, referer);
+  }
+
+  /**
    * GET /api/public/comments/:id/children
    * List children of a comment with preview mode.
    * Matches Go ListChildren (router.go line 263).
