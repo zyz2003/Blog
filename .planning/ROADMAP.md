@@ -30,7 +30,7 @@ Phases 10-11 complete. Scheduled tasks running, migration tool available, end-to
 | 04 | Page & Public API | 4/4 | Complete    | 2026-07-04 |
 | 05 | File Upload & Media | 5/5 | Complete    | 2026-07-05 |
 | 06 | Comment & Search | 5/5 | Complete    | 2026-07-10 |
-| 07 | Statistics & Links | Visitor tracking and analytics dashboard; friend link CRUD with health check | P1 | 5 plans |
+| 07 | Statistics & Links | 1/5 | In Progress|  |
 | 08 | Album & Doc Series | Photo album CRUD with categories; document series CRUD for ordered article collections | P2 | TBD |
 | 09 | SEO & Music & Notifications | RSS/Sitemap XML feeds; music playlist API; notification management; subscriber management | P2 | TBD |
 | 10 | Scheduled Tasks | Cron jobs for history cleanup, temp data cleanup, statistics aggregation, view sync, thumbnail generation, link health check, scheduled publishing, and backup | P2 | TBD |
@@ -251,7 +251,7 @@ Plans:
 
 **Success Criteria:**
 
-- Visitor logs recorded automatically with user agent, IP, referrer via statistics middleware
+- Visitor logs recorded via POST /api/public/statistics/visit (frontend active reporting per D-160)
 - Admin can view trend statistics (daily/weekly/monthly) at /api/statistics
 - Device/browser/OS breakdown analytics available
 - Visitors can view public statistics at /api/public/statistics
@@ -259,12 +259,12 @@ Plans:
 - Public friend links visible at /api/public/links
 - Link health check task runs on schedule (background)
 
-**Plans:** 5 plans
+**Plans:** 1/5 plans executed
 
 **Wave 1** (parallel)
 
-- [ ] 07-01-PLAN.md — StatisticsRepository + 11 DTOs + UA parser + visitor dedup + error codes
-- [ ] 07-02-PLAN.md — LinkRepository + 17 DTOs + LinkApplyRateLimiter + EntityTypeLink + error codes
+- [x] 07-01-PLAN.md — StatisticsRepository + 11 DTOs + UA parser + visitor dedup + all Phase 07 error codes
+- [ ] 07-02-PLAN.md — LinkRepository + 17 DTOs + LinkApplyRateLimiter + EntityTypeLink
 
 **Wave 2** *(blocked on 07-01)*
 
