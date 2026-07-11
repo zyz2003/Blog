@@ -54,7 +54,7 @@ describe('JwtAuthGuard', () => {
     expect(result).toBe(true);
   });
 
-  it('should not return true when no @Public() is present', () => {
+  it('should not return true when no @Public() is present', async () => {
     const mockContext = {
       switchToHttp: () => ({
         getRequest: () => ({ headers: {} }),
@@ -64,10 +64,15 @@ describe('JwtAuthGuard', () => {
       getClass: () => class {},
     } as any;
 
-    // Without @Public(), guard should not short-circuit to true
-    // It will delegate to AuthGuard('jwt') which needs passport strategy
-    // We just verify it doesn't return true (meaning @Public() was not found)
+    // Without @Public(), guard delegates to AuthGuard('jwt') via super.canActivate().
+    // In a unit test without Passport strategy registered, this returns a rejecting Promise.
+    // We just verify it doesn't short-circuit to true (meaning @Public() was not found).
     const result = guard.canActivate(mockContext);
+    // result is a Promise that rejects (no Passport strategy) — catch the rejection
+    // to prevent unhandled rejection, then verify it wasn't boolean true
+    if (result instanceof Promise) {
+      await result.catch(() => {}); // swallow the expected rejection
+    }
     expect(result).not.toBe(true);
   });
 });
@@ -112,7 +117,7 @@ describe('JwtAuthOptionalGuard', () => {
     expect(result).toBe(true);
   });
 
-  it('should not return true for valid Bearer format (delegates to AuthGuard)', () => {
+  it('should not return true for valid Bearer format (delegates to AuthGuard)', async () => {
     const mockContext = {
       switchToHttp: () => ({
         getRequest: () => ({ headers: { authorization: 'Bearer some-token' } }),
@@ -121,8 +126,12 @@ describe('JwtAuthOptionalGuard', () => {
     } as any;
 
     // With Bearer token present, guard delegates to AuthGuard('jwt')
-    // It should not short-circuit to true
+    // In a unit test without Passport, this returns a rejecting Promise.
+    // Catch the rejection to prevent unhandled error, verify it didn't short-circuit.
     const result = guard.canActivate(mockContext);
+    if (result instanceof Promise) {
+      await result.catch(() => {}); // swallow the expected rejection
+    }
     expect(result).not.toBe(true);
   });
 });

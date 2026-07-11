@@ -32,8 +32,10 @@ async function bootstrap() {
   );
 
   // Initialize Sqids encoder with seed from settings table
-  // Must run after SettingsService.onModuleInit() loads cache
+  // Must run after SettingsService cache is loaded.
+  // ensureLoaded() is idempotent — no-ops if onModuleInit already completed.
   const settingsService = app.get(SettingsService);
+  await settingsService.ensureLoaded();
   const idSeed = settingsService.get('id_seed');
   if (idSeed) {
     initSqidsEncoderWithSeed(idSeed);

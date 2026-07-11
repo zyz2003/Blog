@@ -43,7 +43,7 @@ export class DirectLinkController {
 export class DirectLinkPublicController {
   constructor(private readonly service: DirectLinkService) {}
 
-  @Get(':publicID/*')
+  @Get(':publicID/*path')
   @Public()
   async handleDirectDownload(
     @Param('publicID') publicID: string,

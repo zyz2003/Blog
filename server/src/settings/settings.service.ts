@@ -25,11 +25,24 @@ export class SettingsService implements OnModuleInit {
   private readonly logger = new Logger(SettingsService.name);
   private cache = new Map<string, string>();
   private configVersion = 0;
+  private loaded = false;
 
   constructor(@Inject(DRIZZLE) private readonly db: any) {}
 
   async onModuleInit(): Promise<void> {
-    await this.loadCache();
+    await this.ensureLoaded();
+  }
+
+  /**
+   * Ensure the settings cache is loaded.
+   * Safe to call multiple times — no-ops if already loaded.
+   * Used by main.ts to guarantee cache is ready before Sqids init.
+   */
+  async ensureLoaded(): Promise<void> {
+    if (!this.loaded) {
+      await this.loadCache();
+      this.loaded = true;
+    }
   }
 
   private async loadCache(): Promise<void> {

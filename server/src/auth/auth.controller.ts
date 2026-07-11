@@ -31,7 +31,7 @@ export class AuthController {
   @Post('login')
   async login(@Body() dto: LoginRequestDto) {
     // Verify captcha before checking credentials (matches Go: captcha verified first)
-    this.captchaService.verify({
+    await this.captchaService.verify({
       image_captcha_id: dto.image_captcha_id,
       image_captcha_answer: dto.image_captcha_answer,
     });
