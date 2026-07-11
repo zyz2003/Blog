@@ -116,6 +116,22 @@ export const ErrorCodes = {
   COMMENT_ANONYMOUS_NO_REPLY: '匿名评论不允许被回复',
   COMMENT_ANONYMOUS_EMAIL_MISMATCH: '匿名评论邮箱验证失败',
   COMMENT_NOT_FOUND: '评论不存在',
+
+  // Phase 07 - Statistics error messages
+  STAT_INVALID_DATE: '日期格式错误',
+  STAT_VISIT_RECORD_FAILED: '记录访问失败',
+
+  // Phase 07 - Link error messages
+  LINK_NOT_FOUND: '友链不存在',
+  LINK_URL_EXISTS: '该网站已申请过友链',
+  LINK_CATEGORY_NOT_FOUND: '友链分类不存在',
+  LINK_CATEGORY_IN_USE: '友链分类正在使用中，无法删除',
+  LINK_TAG_NOT_FOUND: '友链标签不存在',
+  LINK_TAG_IN_USE: '友链标签正在使用中，无法删除',
+  LINK_SITESHOT_REQUIRED: '卡片样式的友链必须提供网站快照',
+  LINK_APPLY_RATE_LIMITED: '友链申请太频繁，请明天再试',
+  LINK_IMPORT_LIMIT_EXCEEDED: '导入友链数量超过限制',
+  LINK_HEALTH_CHECK_RUNNING: '健康检查正在进行中',
 } as const;
 
 export type ErrorCode = keyof typeof ErrorCodes;
