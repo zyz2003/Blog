@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { UAParser } from 'ua-parser-js';
-import type { IUAParser } from 'ua-parser-js';
 import { createHash } from 'crypto';
 
 /**
@@ -38,7 +37,7 @@ export class UAParserService {
 
     // Cache miss or expired — parse UA
     // ua-parser-js v2: UAParser is a named export, call directly as function
-    const result: IUAParser.IResult = UAParser(userAgent);
+    const result = UAParser(userAgent);
 
     const browser = result.browser?.name || 'Other';
     const os = result.os?.name || 'Other';

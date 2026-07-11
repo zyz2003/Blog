@@ -253,7 +253,7 @@ export class LinkService {
         linkDtos.push(await this.toLinkResponseDTO(row.link, row.category, row.tag));
       }
 
-      (catDto as any).links = linkDtos;
+      catDto.links = linkDtos;
       result.push(catDto);
     }
 
