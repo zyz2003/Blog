@@ -39,6 +39,7 @@
     "sharp": "^0.35.3",
     "sqids": "0.3.0",
     "svg-captcha": "^1.4.0",
+    "ua-parser-js": "^2.0.10",
     "uuid": "^14.0.1"
   },
   "devDependencies": {
