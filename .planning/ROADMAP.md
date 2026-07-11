@@ -30,7 +30,7 @@ Phases 10-11 complete. Scheduled tasks running, migration tool available, end-to
 | 04 | Page & Public API | 4/4 | Complete    | 2026-07-04 |
 | 05 | File Upload & Media | 5/5 | Complete    | 2026-07-05 |
 | 06 | Comment & Search | 5/5 | Complete    | 2026-07-10 |
-| 07 | Statistics & Links | Visitor tracking and analytics dashboard; friend link CRUD with health check | P1 | TBD |
+| 07 | Statistics & Links | Visitor tracking and analytics dashboard; friend link CRUD with health check | P1 | 5 plans |
 | 08 | Album & Doc Series | Photo album CRUD with categories; document series CRUD for ordered article collections | P2 | TBD |
 | 09 | SEO & Music & Notifications | RSS/Sitemap XML feeds; music playlist API; notification management; subscriber management | P2 | TBD |
 | 10 | Scheduled Tasks | Cron jobs for history cleanup, temp data cleanup, statistics aggregation, view sync, thumbnail generation, link health check, scheduled publishing, and backup | P2 | TBD |
@@ -259,7 +259,24 @@ Plans:
 - Public friend links visible at /api/public/links
 - Link health check task runs on schedule (background)
 
-**Plans:** TBD
+**Plans:** 5 plans
+
+**Wave 1** (parallel)
+
+- [ ] 07-01-PLAN.md — StatisticsRepository + 11 DTOs + UA parser + visitor dedup + error codes
+- [ ] 07-02-PLAN.md — LinkRepository + 17 DTOs + LinkApplyRateLimiter + EntityTypeLink + error codes
+
+**Wave 2** *(blocked on 07-01)*
+
+- [ ] 07-03-PLAN.md — StatisticsService (7 methods) + StatisticsController (7 endpoints) + StatisticsModule wiring
+
+**Wave 3** *(blocked on 07-02)*
+
+- [ ] 07-04-PLAN.md — LinkService (22+ methods) + LinkController (25 endpoints) + LinkModule wiring
+
+**Wave 4** *(blocked on 07-03, 07-04)*
+
+- [ ] 07-05-PLAN.md — AppModule wiring, schema push verification, integration tests
 
 ---
 
