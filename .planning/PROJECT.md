@@ -12,17 +12,17 @@
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] NestJS 后端框架搭建，项目结构与原 Go 后端分层对应 — Phase 01
+- [x] Drizzle ORM + SQLite 数据层，替代 PostgreSQL + Redis — Phase 01
+- [x] 用户认证 API 兼容：管理员登录、JWT、权限控制 — Phase 02
+- [x] 核心 API 兼容：文章/页面 CRUD、分类、标签、Markdown 编辑 — Phase 03-04
+- [x] 媒体管理 API 兼容：图片上传、缩略图生成、文件管理 — Phase 05
+- [x] 访客分析 API 兼容：访客统计、趋势、来源、设备分析 — Phase 07
+- [x] 后端监听端口 8091（与原 Go 后端一致） — Phase 01
 
 ### Active
 
-- [ ] NestJS 后端框架搭建，项目结构与原 Go 后端分层对应（controller/service/repository）
-- [ ] Drizzle ORM + SQLite 数据层，替代 PostgreSQL + Redis
-- [ ] 核心 API 兼容：文章/页面 CRUD、分类、标签、Markdown 编辑
-- [ ] 媒体管理 API 兼容：图片上传、缩略图生成、文件管理
-- [ ] 用户认证 API 兼容：管理员登录、JWT、权限控制
-- [ ] 访客分析 API 兼容：访客统计、趋势、来源、设备分析
-- [ ] 后端监听端口 8091（与原 Go 后端一致）
+- [ ] 友链管理 API 兼容：友链 CRUD、分类、标签、申请、审核、健康检查 — Phase 07 implemented, pending frontend validation
 - [ ] 数据迁移工具：从原 PostgreSQL 导入数据到 SQLite
 
 ### Out of Scope
@@ -78,4 +78,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-28 after initialization*
+*Last updated: 2026-07-11 after Phase 07 completion*
