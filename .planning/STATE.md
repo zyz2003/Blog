@@ -4,17 +4,17 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 07
 current_phase_name: Statistics & Links
-current_plan: 1
+current_plan: 4
 status: executing
-stopped_at: Phase 07 context gathered
-last_updated: "2026-07-11T07:48:40.702Z"
+stopped_at: Completed 07-03-PLAN.md
+last_updated: "2026-07-11T08:27:13.481Z"
 last_activity: 2026-07-11
 last_activity_desc: Phase 07 execution started
 progress:
   total_phases: 11
   completed_phases: 6
   total_plans: 34
-  completed_plans: 32
+  completed_plans: 33
   percent: 55
 ---
 
@@ -40,7 +40,7 @@ progress:
 | 04 | Page & Public API | Complete | 4 | 2026-07-04 |
 | 05 | File Upload & Media | Complete | 5 | 2026-07-05 |
 | 06 | Comment & Search | Executing | 5 | 2026-07-10 |
-| 07 | Statistics & Links | Not Started | 0 | 2026-06-28 |
+| 07 | Statistics & Links | In Progress | 3 | 2026-07-11 |
 | 08 | Album & Doc Series | Not Started | 0 | 2026-06-28 |
 | 09 | SEO & Music & Notifications | Not Started | 0 | 2026-06-28 |
 | 10 | Scheduled Tasks | Not Started | 0 | 2026-06-28 |
@@ -99,6 +99,10 @@ progress:
 | D-114 | ServeStaticModule for data/uploads at /uploads | Provides direct URL access for article images | 05 |
 | D-143 | GeoIPService injected from WeatherModule into CommentService | Replaces @Optional() HTTP fallback per D-143 | 06 |
 | D-151 | FTS5 index hooks in ArticleService CRUD (try-catch) | Index failure never blocks article operations | 06 |
+| D-160 | recordVisit fires async processing and returns immediately | Fire-and-forget via unawaited Promise, matches Go worker pool | 07 |
+| D-164 | Full RecordVisit pipeline: IP extraction, dedup, UA parse, GeoIP, async DB writes | Matches Go processVisitTask async processing | 07 |
+| D-168 | getBasicStatistics enriches today/yesterday from visitor_logs | Accuracy before daily aggregation runs, matches Go enrichTodayYesterdayFromVisitorLogs | 07 |
+| D-169 | StatisticsController: 2 public endpoints (@Public()) + 5 admin endpoints | Matches Go public/admin route split | 07 |
 
 ## Blockers
 
@@ -122,15 +126,15 @@ progress:
 |--------|-------|
 | Phases Completed | 5 / 11 |
 | Plans Created | 24 |
-| Plans Executed | 29 |
+| Plans Executed | 33 |
 | Requirements Covered | 30 / 39 |
-| API Endpoints Implemented | 47 / ~60+ |
+| API Endpoints Implemented | 54 / ~60+ |
 
 ---
-*Last updated: 2026-07-10*
+*Last updated: 2026-07-11*
 
 ## Session
 
-**Last session:** 2026-07-11T07:48:40.694Z
-**Stopped at:** Phase 07 context gathered
-**Resume file:** .planning/phases/07-statistics-links/07-CONTEXT.md
+**Last session:** 2026-07-11T08:18:46Z
+**Stopped at:** Completed 07-03-PLAN.md
+**Resume file:** .planning/phases/07-statistics-links/07-03-SUMMARY.md
