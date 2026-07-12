@@ -31,7 +31,7 @@ Phases 10-11 complete. Scheduled tasks running, migration tool available, end-to
 | 05 | File Upload & Media | 5/5 | Complete    | 2026-07-05 |
 | 06 | Comment & Search | 5/5 | Complete    | 2026-07-10 |
 | 07 | Statistics & Links | 5/5 | Complete    | 2026-07-11 |
-| 08 | Album & Doc Series | Photo album CRUD with categories; document series CRUD for ordered article collections | P2 | TBD |
+| 08 | Album & Doc Series | 5/5 | Complete    | 2026-07-12 |
 | 09 | SEO & Music & Notifications | RSS/Sitemap XML feeds; music playlist API; notification management; subscriber management | P2 | TBD |
 | 10 | Scheduled Tasks | Cron jobs for history cleanup, temp data cleanup, statistics aggregation, view sync, thumbnail generation, link health check, scheduled publishing, and backup | P2 | TBD |
 | 11 | Migration & Integration | PostgreSQL-to-SQLite migration tool; full end-to-end API compatibility testing against Go backend responses | Final | TBD |
@@ -295,7 +295,24 @@ Plans:
 - Visitors can browse public doc series at /api/public/doc-series
 - Album view count tracking works
 
-**Plans:** TBD
+**Plans:** 5/5 plans complete
+
+**Wave 1** (parallel)
+
+- [x] 08-01-PLAN.md — AlbumRepository, AlbumCategoryRepository, DocSeriesRepository + all DTOs + error codes
+- [x] 08-02-PLAN.md — AlbumService (CreateOrRestore, BatchImport, Export/Import, applyDefaults) + AlbumCategoryService
+
+**Wave 2** *(blocked on 08-01)*
+
+- [x] 08-03-PLAN.md — DocSeriesService (CRUD, name uniqueness, article association, docCount sync)
+
+**Wave 3** *(blocked on 08-01, 08-02, 08-03)*
+
+- [x] 08-04-PLAN.md — AlbumController, AlbumCategoryController, PublicAlbumController, DocSeriesController + Module wiring
+
+**Wave 4** *(blocked on 08-04)*
+
+- [x] 08-05-PLAN.md — Integration tests, schema verification, API compatibility spot-check
 
 ---
 

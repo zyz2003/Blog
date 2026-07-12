@@ -4,17 +4,18 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 08
 current_phase_name: Album & Doc Series
-current_plan: Not started
+current_plan: 6
 status: executing
-stopped_at: Phase 8 context gathered
-last_updated: "2026-07-11T15:17:04.695Z"
-last_activity: 2026-07-11
+stopped_at: Plan 08-05 complete
+last_updated: "2026-07-12T09:38:00Z"
+last_activity: 2026-07-12
+last_activity_desc: Plan 08-05 complete — integration tests + schema verification
 progress:
   total_phases: 11
   completed_phases: 7
-  total_plans: 34
-  completed_plans: 35
-  percent: 64
+  total_plans: 39
+  completed_plans: 40
+  percent: 65
 ---
 
 # STATE: anheyu-app NestJS + SQLite Backend
@@ -24,10 +25,10 @@ progress:
 | Field | Value |
 |-------|-------|
 | Milestone | M2 - Full Feature Parity |
-| Phase | 08 — Album & Doc Series |
-| Current Plan | Not started |
-| Status | Executing Phase 07 |
-| Last Activity | 2026-07-11 |
+| Phase | 08 (Album & Doc Series) — EXECUTING |
+| Current Plan | 6 (all 5 plans complete) |
+| Status | Phase 08 complete |
+| Last Activity | 2026-07-12 — Plan 08-05 complete |
 
 ## Phase Status
 
@@ -40,7 +41,7 @@ progress:
 | 05 | File Upload & Media | Complete | 5 | 2026-07-05 |
 | 06 | Comment & Search | Executing | 5 | 2026-07-10 |
 | 07 | Statistics & Links | In Progress | 3 | 2026-07-11 |
-| 08 | Album & Doc Series | Not Started | 0 | 2026-06-28 |
+| 08 | Album & Doc Series | Complete | 5 | 2026-07-12 |
 | 09 | SEO & Music & Notifications | Not Started | 0 | 2026-06-28 |
 | 10 | Scheduled Tasks | Not Started | 0 | 2026-06-28 |
 | 11 | Migration & Integration | Not Started | 0 | 2026-06-28 |
@@ -102,6 +103,12 @@ progress:
 | D-164 | Full RecordVisit pipeline: IP extraction, dedup, UA parse, GeoIP, async DB writes | Matches Go processVisitTask async processing | 07 |
 | D-168 | getBasicStatistics enriches today/yesterday from visitor_logs | Accuracy before daily aggregation runs, matches Go enrichTodayYesterdayFromVisitorLogs | 07 |
 | D-169 | StatisticsController: 2 public endpoints (@Public()) + 5 admin endpoints | Matches Go public/admin route split | 07 |
+| D-200 | Album FK onDelete set null matches Go backend | Go ent schema OnDelete: schema.SetNull | 08 |
+| D-201 | Controllers return { data, message } for Chinese success messages | Go backend returns Chinese messages | 08 |
+| D-202 | DocSeries update uses excludeDbId for name uniqueness | Previous get-and-compare had logic error | 08 |
+| D-203 | aspectRatio persisted to DB on create | Was computed but not stored | 08 |
+| D-204 | All Phase 08 tests use consistent Sqids seed | Prevents global singleton conflict | 08 |
+| D-169 | StatisticsController: 2 public endpoints (@Public()) + 5 admin endpoints | Matches Go public/admin route split | 07 |
 
 ## Blockers
 
@@ -134,9 +141,9 @@ progress:
 
 ## Session
 
-**Last session:** 2026-07-11T15:17:04.686Z
-**Stopped at:** Phase 8 context gathered
-**Resume file:** .planning/phases/08-album-doc-series/08-CONTEXT.md
+**Last session:** 2026-07-12T09:38:00Z
+**Stopped at:** Plan 08-05 complete
+**Resume file:** .planning/phases/08-album-doc-series/08-05-SUMMARY.md
 
 ## Performance Metrics
 
