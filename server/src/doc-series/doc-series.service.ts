@@ -119,19 +119,13 @@ export class DocSeriesService {
   ): Promise<DocSeriesResponseDto> {
     // If name is being updated, check uniqueness excluding self
     if (dto.name !== undefined) {
-      const exists = await this.docSeriesRepo.existsByName(dto.name);
+      // Decode publicID to get dbID for exclusion
+      const { dbID } = decodePublicID(publicID);
+      const exists = await this.docSeriesRepo.existsByName(dto.name, dbID);
       if (exists) {
-        // Get current series to compare name
-        const current = await this.docSeriesRepo.getById(publicID);
-        if (!current) {
-          throw new NotFoundException(ErrorCodes.DOCSERIES_NOT_FOUND);
-        }
-        // If the existing name belongs to a different series, reject
-        if ((current as any).name !== dto.name) {
-          throw new BadRequestException(
-            `系列名称 '${dto.name}' 已存在`,
-          );
-        }
+        throw new BadRequestException(
+          `系列名称 '${dto.name}' 已存在`,
+        );
       }
     }
 

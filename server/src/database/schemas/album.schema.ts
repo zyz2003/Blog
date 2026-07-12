@@ -26,7 +26,7 @@ export const albums = sqliteTable('albums', {
   aspectRatio: text('aspect_ratio'),
   fileHash: text('file_hash').unique(),
   displayOrder: integer('display_order').notNull().default(0),
-  categoryId: integer('category_id').references(() => albumCategories.id),
+  categoryId: integer('category_id').references(() => albumCategories.id, { onDelete: 'set null' }),
   title: text('title'),
   description: text('description'),
   location: text('location'),

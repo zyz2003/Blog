@@ -75,6 +75,6 @@ export class PublicAlbumController {
     @Query() query: AlbumStatQueryDto,
   ) {
     await this.albumService.incrementAlbumStat(id, query.type);
-    return null;
+    return { data: null, message: '更新成功' };
   }
 }

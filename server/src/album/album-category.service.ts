@@ -83,7 +83,6 @@ export class AlbumCategoryService {
     if (!deleted) {
       throw new ConflictException(ErrorCodes.ALBUM_CATEGORY_IN_USE);
     }
-    return null;
   }
 
   /**

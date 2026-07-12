@@ -92,7 +92,7 @@ export class AlbumController {
       createdAt: dto.created_at ? new Date(dto.created_at) : undefined,
       publishedAt: dto.published_at === null ? null : dto.published_at ? new Date(dto.published_at) : undefined,
     });
-    return null;
+    return { data: null, message: '添加成功' };
   }
 
   /**
@@ -137,7 +137,7 @@ export class AlbumController {
       location: dto.location,
       publishedAt: dto.published_at === null ? null : dto.published_at ? new Date(dto.published_at) : undefined,
     });
-    return null;
+    return { data: null, message: '更新成功' };
   }
 
   /**
@@ -149,7 +149,7 @@ export class AlbumController {
   @Delete('albums/delete/:id')
   async deleteAlbum(@Param('id', ParseIntPipe) id: number) {
     await this.albumService.deleteAlbum(id);
-    return null;
+    return { data: null, message: '删除成功' };
   }
 
   /**

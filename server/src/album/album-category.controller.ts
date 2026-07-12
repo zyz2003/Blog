@@ -93,6 +93,6 @@ export class AlbumCategoryController {
   @Delete('album-categories/:id')
   async deleteCategory(@Param('id', ParseIntPipe) id: number) {
     await this.albumCategoryService.deleteCategory(id);
-    return null;
+    return { data: null, message: '删除成功' };
   }
 }

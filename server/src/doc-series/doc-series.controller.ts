@@ -137,6 +137,6 @@ export class DocSeriesController {
   @UseGuards(AdminGuard)
   async delete(@Param('id') id: string) {
     await this.docSeriesService.delete(id);
-    return null;
+    return { data: null, message: '删除成功' };
   }
 }

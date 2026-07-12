@@ -181,11 +181,11 @@ export class AlbumService {
       params.width ?? 0,
       params.height ?? 0,
     );
+    albumParams.aspectRatio = aspectRatio;
 
     // Build a mutable album-like object for applyDefaultAlbumParams
     const albumLike: any = {
       ...albumParams,
-      aspectRatio,
     };
 
     // 5. Apply defaults before DB insert
@@ -247,7 +247,6 @@ export class AlbumService {
       throw new NotFoundException(ErrorCodes.ALBUM_NOT_FOUND);
     }
     await this.albumRepo.delete(id);
-    return null;
   }
 
   /**
@@ -353,7 +352,6 @@ export class AlbumService {
     } else {
       throw new BadRequestException(ErrorCodes.ALBUM_STAT_TYPE_INVALID);
     }
-    return null;
   }
 
   /**

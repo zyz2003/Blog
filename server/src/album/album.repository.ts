@@ -22,6 +22,7 @@ export interface CreateAlbumParams {
   location?: string;
   publishedAt?: Date | null;
   createdAt?: Date;
+  aspectRatio?: string;
 }
 
 export interface FindAlbumsOptions {
@@ -60,6 +61,7 @@ export class AlbumRepository {
       height: params.height ?? null,
       fileSize: params.fileSize ?? null,
       format: params.format ?? null,
+      aspectRatio: params.aspectRatio ?? null,
       fileHash: params.fileHash,
       displayOrder: params.displayOrder ?? 0,
       categoryId: params.categoryId ?? null,
