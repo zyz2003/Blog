@@ -14,8 +14,8 @@ import { settings } from '../src/database/schemas/setting.schema';
 import { albumCategories } from '../src/database/schemas/album-category.schema';
 import { docSeries } from '../src/database/schemas/doc-series.schema';
 
-const TEST_SEED = 'api-compat-test-seed';
-const TEST_JWT_SECRET = 'api-compat-test-jwt-secret';
+const TEST_SEED = 'phase08-integration-test-seed';
+const TEST_JWT_SECRET = 'phase08-test-jwt-secret';
 
 /**
  * Task 8: API Compatibility Spot-Check

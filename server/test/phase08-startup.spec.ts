@@ -15,7 +15,7 @@ describe('AppModule Startup Verification', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    initSqidsEncoderWithSeed('startup-test-seed');
+    initSqidsEncoderWithSeed('phase08-integration-test-seed');
 
     const moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
