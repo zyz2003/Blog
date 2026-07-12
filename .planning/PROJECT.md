@@ -18,6 +18,7 @@
 - [x] 核心 API 兼容：文章/页面 CRUD、分类、标签、Markdown 编辑 — Phase 03-04
 - [x] 媒体管理 API 兼容：图片上传、缩略图生成、文件管理 — Phase 05
 - [x] 访客分析 API 兼容：访客统计、趋势、来源、设备分析 — Phase 07
+- [x] 相册与文档系列 API 兼容：相册 CRUD + 分类 + 批量导入导出 + CreateOrRestore 去重；文档系列 CRUD + 文章关联 — Phase 08
 - [x] 后端监听端口 8091（与原 Go 后端一致） — Phase 01
 
 ### Active
@@ -78,4 +79,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-07-11 after Phase 07 completion*
+*Last updated: 2026-07-12 after Phase 08 completion*
