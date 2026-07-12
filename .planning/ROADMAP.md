@@ -31,7 +31,7 @@ Phases 10-11 complete. Scheduled tasks running, migration tool available, end-to
 | 05 | File Upload & Media | 5/5 | Complete    | 2026-07-05 |
 | 06 | Comment & Search | 5/5 | Complete    | 2026-07-10 |
 | 07 | Statistics & Links | 5/5 | Complete    | 2026-07-11 |
-| 08 | Album & Doc Series | 5/5 | Complete   | 2026-07-12 |
+| 08 | Album & Doc Series | 5/5 | Complete    | 2026-07-12 |
 | 09 | SEO & Music & Notifications | RSS/Sitemap XML feeds; music playlist API; notification management; subscriber management | P2 | TBD |
 | 10 | Scheduled Tasks | Cron jobs for history cleanup, temp data cleanup, statistics aggregation, view sync, thumbnail generation, link health check, scheduled publishing, and backup | P2 | TBD |
 | 11 | Migration & Integration | PostgreSQL-to-SQLite migration tool; full end-to-end API compatibility testing against Go backend responses | Final | TBD |
