@@ -78,6 +78,33 @@ export class PostTagService {
   }
 
   /**
+   * FindOrCreate — for each tag name, check if exists, if not create it.
+   * Matches Go tagRepo.FindOrCreate used in AlbumService.CreateAlbum.
+   * Uses findByName for each tag; creates with auto-generated slug if not found.
+   * Returns array of tag records (DB rows). Errors are caught per-tag but not thrown.
+   */
+  async findOrCreate(tagNames: string[]): Promise<any[]> {
+    const results: any[] = [];
+    for (const name of tagNames) {
+      if (!name || !name.trim()) continue;
+      try {
+        let tag = await this.repository.findByName(name.trim());
+        if (!tag) {
+          tag = await this.repository.create({
+            name: name.trim(),
+            slug: this.generateSlug(name.trim()),
+          });
+        }
+        results.push(tag);
+      } catch {
+        // Log error but don't fail — matches Go behavior:
+        // fmt.Printf("处理新图片标签时发生错误: %v\n", err)
+      }
+    }
+    return results;
+  }
+
+  /**
    * Convert database row to API response shape matching Go PostTagResponse.
    * Fields: id (Sqids), created_at, updated_at, name, slug, count
    */
