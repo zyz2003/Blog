@@ -132,6 +132,23 @@ export const ErrorCodes = {
   LINK_APPLY_RATE_LIMITED: '友链申请太频繁，请明天再试',
   LINK_IMPORT_LIMIT_EXCEEDED: '导入友链数量超过限制',
   LINK_HEALTH_CHECK_RUNNING: '健康检查正在进行中',
+
+  // Phase 08 - Album error messages
+  ALBUM_NOT_FOUND: '相册不存在',
+  ALBUM_FILE_HASH_EXISTS: '这张图片已存在',
+  ALBUM_CATEGORY_NOT_FOUND: '相册分类不存在',
+  ALBUM_CATEGORY_NAME_EXISTS: '分类名称已存在',
+  ALBUM_CATEGORY_IN_USE: '该分类下还有相册，无法删除',
+  ALBUM_BATCH_IMPORT_FAILED: '批量导入失败',
+  ALBUM_EXPORT_FAILED: '导出失败',
+  ALBUM_IMPORT_FAILED: '导入失败',
+  ALBUM_IMPORT_FILE_INVALID: '不支持的文件格式',
+  ALBUM_STAT_TYPE_INVALID: '无效的统计类型',
+
+  // Phase 08 - DocSeries error messages
+  DOCSERIES_NOT_FOUND: '系列不存在',
+  DOCSERIES_NAME_EXISTS: '系列名称已存在',
+  DOCSERIES_HAS_DOCS: '无法删除，该系列下还有文档',
 } as const;
 
 export type ErrorCode = keyof typeof ErrorCodes;
