@@ -331,7 +331,26 @@ Plans:
 - Visitors can subscribe at /api/public/subscribe and unsubscribe via token
 - All XML endpoints return valid, well-formed XML with correct content types
 
-**Plans:** TBD
+**Plans:** 7 plans
+
+**Wave 1** (parallel, no dependencies)
+
+- [ ] 09-01-PLAN.md — RSS module: RssService, RssController, XML generation, 1-hour cache, Content-Type switching
+- [ ] 09-02-PLAN.md — Sitemap module: SitemapService, SitemapController, XML/robots.txt generation, no cache
+- [ ] 09-03-PLAN.md — EmailService: shared SMTP email service with nodemailer, verification/push email templates
+
+**Wave 2** (parallel, no cross-dependencies)
+
+- [ ] 09-04-PLAN.md — Music module: MusicService, MusicController, metings API proxy, quality fallback, 5-min cache
+- [ ] 09-05-PLAN.md — Notification module: NotificationService, NotificationController, notifications table, in-app notifications, default type init
+
+**Wave 3** (depends on 09-03)
+
+- [ ] 09-06-PLAN.md — Subscriber module: SubscriberService, SubscriberController, verification codes, CaptchaService, EmailService
+
+**Wave 4** (depends on all prior)
+
+- [ ] 09-07-PLAN.md — Cross-module integration: ArticleService RSS cache invalidation, CommentService notification hook, AppModule wiring, schema push
 
 ---
 
