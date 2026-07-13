@@ -12,12 +12,11 @@ import {
   UseInterceptors,
   UploadedFile,
   ParseIntPipe,
-  HttpCode,
-  HttpStatus,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
-import { AlbumService, ImportAlbumResult } from './album.service';
+import { AlbumService } from './album.service';
 import { FindAlbumsQueryDto } from './dto/find-albums-query.dto';
 import { CreateAlbumDto } from './dto/create-album-request.dto';
 import { UpdateAlbumDto } from './dto/update-album-request.dto';
@@ -89,7 +88,7 @@ export class AlbumController {
       title: dto.title,
       description: dto.description,
       location: dto.location,
-      createdAt: dto.created_at ? new Date(dto.created_at) : undefined,
+      createdAt: dto.created_at ? (() => { const d = new Date(dto.created_at); return isNaN(d.getTime()) ? undefined : d; })() : undefined,
       publishedAt: dto.published_at === null ? null : dto.published_at ? new Date(dto.published_at) : undefined,
     });
     return { data: null, message: '添加成功' };
@@ -206,7 +205,7 @@ export class AlbumController {
     @Body() formFields: ImportAlbumsQueryDto,
   ) {
     if (!file) {
-      throw new Error('未选择文件');
+      throw new BadRequestException('未选择文件');
     }
 
     const req = {

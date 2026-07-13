@@ -3,6 +3,7 @@ import { DRIZZLE } from '../database/database.module';
 import { docSeries } from '../database/schemas/doc-series.schema';
 import { articles } from '../database/schemas/article.schema';
 import { decodePublicID, generatePublicID, EntityType } from '../common/utils/sqids.util';
+import { toISODateString } from '../common/utils/time.util';
 import { isNull, eq, and, desc, asc, sql } from 'drizzle-orm';
 
 export interface CreateDocSeriesParams {
@@ -180,7 +181,7 @@ export class DocSeriesRepository {
       title: row.title,
       abbrlink: row.abbrlink,
       doc_sort: row.docSort,
-      created_at: row.createdAt,
+      created_at: toISODateString(row.createdAt),
     }));
 
     return {

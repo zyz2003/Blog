@@ -8,7 +8,6 @@ import {
 import { AlbumRepository, CreateAlbumParams, FindAlbumsOptions } from './album.repository';
 import { AlbumCategoryRepository } from './album-category.repository';
 import { SettingsService } from '../settings/settings.service';
-import { ThumbnailService } from '../thumbnail/thumbnail.service';
 import { PostTagService } from '../post-tag/post-tag.service';
 import { ErrorCodes } from '../common/constants/error-codes';
 import { toISODateString } from '../common/utils/time.util';
@@ -114,7 +113,6 @@ export class AlbumService {
     private readonly albumRepo: AlbumRepository,
     private readonly albumCategoryRepo: AlbumCategoryRepository,
     private readonly settingsService: SettingsService,
-    private readonly thumbnailService: ThumbnailService,
     private readonly postTagService: PostTagService,
   ) {}
 
@@ -275,6 +273,8 @@ export class AlbumService {
       thumbParam?: string;
       bigParam?: string;
       tags?: string[];
+      width?: number;
+      height?: number;
       displayOrder?: number;
       title?: string;
       description?: string;
@@ -288,23 +288,29 @@ export class AlbumService {
       throw new NotFoundException(ErrorCodes.ALBUM_NOT_FOUND);
     }
 
-    // 2-3. Update fields from params
-    const updateData: Partial<CreateAlbumParams> = {
-      imageUrl: params.imageUrl,
-      bigImageUrl: params.bigImageUrl ?? '',
-      downloadUrl: params.downloadUrl ?? '',
-      thumbParam: params.thumbParam ?? '',
-      bigParam: params.bigParam ?? '',
-      tags: (params.tags || []).join(','),
-      title: params.title ?? '',
-      description: params.description ?? '',
-      location: params.location ?? '',
-      publishedAt: params.publishedAt ?? null,
-      categoryId: params.categoryId ?? null,
-    };
+    // 2-3. Only include fields that are explicitly provided (partial update per Go pointer types)
+    const updateData: Partial<CreateAlbumParams> = {};
 
-    if (params.displayOrder !== undefined) {
-      updateData.displayOrder = params.displayOrder;
+    if (params.imageUrl !== undefined) updateData.imageUrl = params.imageUrl;
+    if (params.bigImageUrl !== undefined) updateData.bigImageUrl = params.bigImageUrl;
+    if (params.downloadUrl !== undefined) updateData.downloadUrl = params.downloadUrl;
+    if (params.thumbParam !== undefined) updateData.thumbParam = params.thumbParam;
+    if (params.bigParam !== undefined) updateData.bigParam = params.bigParam;
+    if (params.tags !== undefined) updateData.tags = params.tags.join(',');
+    if (params.displayOrder !== undefined) updateData.displayOrder = params.displayOrder;
+    if (params.title !== undefined) updateData.title = params.title;
+    if (params.description !== undefined) updateData.description = params.description;
+    if (params.location !== undefined) updateData.location = params.location;
+    if (params.publishedAt !== undefined) updateData.publishedAt = params.publishedAt;
+    if (params.categoryId !== undefined) updateData.categoryId = params.categoryId;
+
+    // Recompute aspectRatio if width or height changed
+    if (params.width !== undefined || params.height !== undefined) {
+      const w = params.width ?? album.width ?? 0;
+      const h = params.height ?? album.height ?? 0;
+      updateData.aspectRatio = this.getSimplifiedAspectRatioString(w, h);
+      if (params.width !== undefined) updateData.width = params.width;
+      if (params.height !== undefined) updateData.height = params.height;
     }
 
     // 4. Call repo update
@@ -316,7 +322,16 @@ export class AlbumService {
     // 5. Apply defaults on result
     this.applyDefaultAlbumParams(updated);
 
-    // 6. Return updated album
+    // 6. Ensure tags exist in tag table (matches Go UpdateAlbum)
+    if (params.tags && params.tags.length > 0) {
+      try {
+        await this.postTagService.findOrCreate(params.tags);
+      } catch (err) {
+        this.logger.warn(`处理更新图片标签时发生错误: ${err}`);
+      }
+    }
+
+    // 7. Return updated album
     return updated;
   }
 
@@ -327,11 +342,7 @@ export class AlbumService {
   async findAlbums(params: FindAlbumsOptions) {
     const result = await this.albumRepo.findListByOptions(params);
 
-    // Apply defaults on each item
-    for (const album of result.items) {
-      this.applyDefaultAlbumParams(album);
-    }
-
+    // toResponseDTO already applies read-time defaults (bigImageUrl, downloadUrl fallbacks)
     return {
       list: result.items.map((album: any) => this.toResponseDTO(album)),
       total: result.total,
@@ -561,11 +572,7 @@ export class AlbumService {
     // If no albumIds specified, export all
     let albumsToExport: any[];
     if (!albumIds || albumIds.length === 0) {
-      const allResult = await this.albumRepo.findListByOptions({
-        page: 1,
-        pageSize: 100000,
-      });
-      albumsToExport = allResult.items;
+      albumsToExport = await this.albumRepo.findAll();
     } else {
       albumsToExport = [];
       for (const id of albumIds) {
@@ -736,21 +743,6 @@ export class AlbumService {
         `[导入相册] 处理第 ${idx + 1}/${result.total_count} 个相册`,
       );
 
-      // Check dedup via effectiveAlbumFileHash
-      const importKey = this.effectiveAlbumFileHash(
-        albumData.file_hash,
-        albumData.image_url,
-      );
-      if (req.skipExisting && importKey) {
-        if (existingHashesMap.has(importKey)) {
-          this.logger.log(
-            `[导入相册] 跳过已存在的相册: key=${importKey}`,
-          );
-          result.skipped_count++;
-          continue;
-        }
-      }
-
       // Validate categoryId
       let categoryId: number | null = albumData.category_id ?? null;
       if (categoryId == null) {
@@ -788,6 +780,45 @@ export class AlbumService {
         if (!isNaN(d.getTime())) {
           publishedAt = d;
         }
+      }
+
+      // Check dedup via effectiveAlbumFileHash
+      const importKey = this.effectiveAlbumFileHash(
+        albumData.file_hash,
+        albumData.image_url,
+      );
+      if (importKey && existingHashesMap.has(importKey)) {
+        if (req.overwriteExisting) {
+          // Overwrite existing album instead of skipping
+          const existingId = existingHashesMap.get(importKey);
+          try {
+            await this.updateAlbum(existingId, {
+              categoryId,
+              imageUrl: albumData.image_url,
+              bigImageUrl: albumData.big_image_url,
+              downloadUrl: albumData.download_url,
+              thumbParam: albumData.thumb_param,
+              bigParam: albumData.big_param,
+              tags,
+              displayOrder: albumData.display_order,
+              title: albumData.title,
+              description: albumData.description,
+              location: albumData.location,
+              publishedAt,
+            });
+            result.success_count++;
+            this.logger.log(`[导入相册] 覆盖已存在的相册: ID=${existingId}`);
+          } catch (err) {
+            result.failed_count++;
+            result.errors.push(`覆盖相册失败 (ID=${existingId}): ${err.message || err}`);
+          }
+          continue;
+        }
+        this.logger.log(
+          `[导入相册] 跳过已存在的相册: key=${importKey}`,
+        );
+        result.skipped_count++;
+        continue;
       }
 
       // Create album

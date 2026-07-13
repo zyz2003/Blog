@@ -103,20 +103,4 @@ export class AlbumCategoryRepository {
       .where(eq(albumCategories.id, id));
     return true;
   }
-
-  /**
-   * Get all categories for import validation.
-   * Returns all categories as name→id map for FK validation during import.
-   */
-  async findAllForImport() {
-    const allCategories = await this.db
-      .select()
-      .from(albumCategories);
-
-    const categoryMap = new Map<string, any>();
-    for (const cat of allCategories) {
-      categoryMap.set(cat.name, cat);
-    }
-    return categoryMap;
-  }
 }

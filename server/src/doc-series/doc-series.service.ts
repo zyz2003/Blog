@@ -2,11 +2,9 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
-  Inject,
 } from '@nestjs/common';
 import { DocSeriesRepository } from './doc-series.repository';
-import { DRIZZLE } from '../database/database.module';
-import { decodePublicID, EntityType } from '../common/utils/sqids.util';
+import { decodePublicID } from '../common/utils/sqids.util';
 import { toISODateString } from '../common/utils/time.util';
 import { ErrorCodes } from '../common/constants/error-codes';
 import { CreateDocSeriesRequestDto } from './dto/create-doc-series-request.dto';
@@ -21,7 +19,6 @@ import { DocSeriesWithArticlesDto } from './dto/doc-series-with-articles.dto';
 export class DocSeriesService {
   constructor(
     private readonly docSeriesRepo: DocSeriesRepository,
-    @Inject(DRIZZLE) private readonly db: any,
   ) {}
 
   /**
@@ -156,9 +153,9 @@ export class DocSeriesService {
       throw new NotFoundException(ErrorCodes.DOCSERIES_NOT_FOUND);
     }
 
-    if ((series as any).docCount > 0) {
+    if (series.docCount > 0) {
       throw new BadRequestException(
-        `无法删除，该系列下还有 ${(series as any).docCount} 篇文档`,
+        `无法删除，该系列下还有 ${series.docCount} 篇文档`,
       );
     }
 

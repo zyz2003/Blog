@@ -115,6 +115,7 @@ export class AlbumRepository {
           height: params.height ?? existing.height,
           fileSize: params.fileSize ?? existing.fileSize,
           format: params.format ?? existing.format,
+          aspectRatio: params.aspectRatio ?? existing.aspectRatio,
           displayOrder: params.displayOrder ?? existing.displayOrder,
           categoryId: params.categoryId ?? existing.categoryId,
           title: params.title ?? existing.title,
@@ -151,24 +152,6 @@ export class AlbumRepository {
   async update(id: number, data: Partial<CreateAlbumParams>) {
     const updateData: Record<string, any> = { ...data, updatedAt: new Date() };
 
-    // Map DTO field names to schema field names
-    if ('imageUrl' in data) updateData.imageUrl = data.imageUrl;
-    if ('bigImageUrl' in data) updateData.bigImageUrl = data.bigImageUrl;
-    if ('downloadUrl' in data) updateData.downloadUrl = data.downloadUrl;
-    if ('thumbParam' in data) updateData.thumbParam = data.thumbParam;
-    if ('bigParam' in data) updateData.bigParam = data.bigParam;
-    if ('tags' in data) updateData.tags = data.tags;
-    if ('width' in data) updateData.width = data.width;
-    if ('height' in data) updateData.height = data.height;
-    if ('fileSize' in data) updateData.fileSize = data.fileSize;
-    if ('format' in data) updateData.format = data.format;
-    if ('displayOrder' in data) updateData.displayOrder = data.displayOrder;
-    if ('categoryId' in data) updateData.categoryId = data.categoryId;
-    if ('title' in data) updateData.title = data.title;
-    if ('description' in data) updateData.description = data.description;
-    if ('location' in data) updateData.location = data.location;
-    if ('publishedAt' in data) updateData.publishedAt = data.publishedAt;
-
     const [album] = await this.db
       .update(albums)
       .set(updateData)
@@ -199,7 +182,7 @@ export class AlbumRepository {
     const result = await this.db
       .update(albums)
       .set({ deletedAt: new Date() })
-      .where(inArray(albums.id, ids))
+      .where(and(inArray(albums.id, ids), isNull(albums.deletedAt)))
       .returning();
     return result.length;
   }
@@ -271,6 +254,17 @@ export class AlbumRepository {
       .offset((page - 1) * pageSize);
 
     return { items, total };
+  }
+
+  /**
+   * Get all active albums without pagination (for export).
+   * Filters by deletedAt IS NULL.
+   */
+  async findAll() {
+    return this.db
+      .select()
+      .from(albums)
+      .where(isNull(albums.deletedAt));
   }
 
   /**

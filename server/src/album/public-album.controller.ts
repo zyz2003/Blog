@@ -6,13 +6,13 @@ import {
   Query,
   ParseIntPipe,
   UseGuards,
-  BadRequestException,
 } from '@nestjs/common';
 import { Public } from '../common/decorators/public.decorator';
 import { JwtAuthOptionalGuard } from '../common/guards/jwt-auth-optional.guard';
 import { AlbumService } from './album.service';
 import { AlbumCategoryService } from './album-category.service';
 import { AlbumStatQueryDto } from './dto/album-stat-query.dto';
+import { FindAlbumsQueryDto } from './dto/find-albums-query.dto';
 
 /**
  * PublicAlbumController — public endpoints for album browsing.
@@ -40,14 +40,14 @@ export class PublicAlbumController {
    * Default pageSize=12 (not 10 like admin endpoint).
    */
   @Get('public/albums')
-  async getPublicAlbums(@Query() query: any) {
+  async getPublicAlbums(@Query() query: FindAlbumsQueryDto) {
     return this.albumService.findAlbums({
-      page: query.page ? parseInt(query.page, 10) : 1,
-      pageSize: query.pageSize ? parseInt(query.pageSize, 10) : 12,
-      categoryId: query.categoryId ? parseInt(query.categoryId, 10) : undefined,
+      page: query.page || 1,
+      pageSize: query.pageSize || 12,
+      categoryId: query.categoryId,
       tag: query.tag,
-      createdAtStart: query.createdAt?.[0] || (Array.isArray(query['createdAt[0]']) ? query['createdAt[0]'] : query['createdAt[0]']),
-      createdAtEnd: query.createdAt?.[1] || (Array.isArray(query['createdAt[1]']) ? query['createdAt[1]'] : query['createdAt[1]']),
+      createdAtStart: query.createdAt?.[0],
+      createdAtEnd: query.createdAt?.[1],
       sort: query.sort || 'display_order_asc',
     });
   }
