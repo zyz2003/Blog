@@ -32,7 +32,7 @@ Phases 10-11 complete. Scheduled tasks running, migration tool available, end-to
 | 06 | Comment & Search | 5/5 | Complete    | 2026-07-10 |
 | 07 | Statistics & Links | 5/5 | Complete    | 2026-07-11 |
 | 08 | Album & Doc Series | 5/5 | Complete    | 2026-07-12 |
-| 09 | SEO & Music & Notifications | RSS/Sitemap XML feeds; music playlist API; notification management; subscriber management | P2 | TBD |
+| 09 | SEO & Music & Notifications | 7/7 | Complete    | 2026-07-14 |
 | 10 | Scheduled Tasks | Cron jobs for history cleanup, temp data cleanup, statistics aggregation, view sync, thumbnail generation, link health check, scheduled publishing, and backup | P2 | TBD |
 | 11 | Migration & Integration | PostgreSQL-to-SQLite migration tool; full end-to-end API compatibility testing against Go backend responses | Final | TBD |
 
@@ -331,26 +331,26 @@ Plans:
 - Visitors can subscribe at /api/public/subscribe and unsubscribe via token
 - All XML endpoints return valid, well-formed XML with correct content types
 
-**Plans:** 7 plans
+**Plans:** 7/7 plans complete
 
 **Wave 1** (parallel, no dependencies)
 
-- [ ] 09-01-PLAN.md — RSS module: RssService, RssController, XML generation, 1-hour cache, Content-Type switching
-- [ ] 09-02-PLAN.md — Sitemap module: SitemapService, SitemapController, XML/robots.txt generation, no cache
-- [ ] 09-03-PLAN.md — EmailService: shared SMTP email service with nodemailer, verification/push email templates
+- [x] 09-01-PLAN.md — RSS module: RssService, RssController, XML generation, 1-hour cache, Content-Type switching
+- [x] 09-02-PLAN.md — Sitemap module: SitemapService, SitemapController, XML/robots.txt generation, no cache
+- [x] 09-03-PLAN.md — EmailService: shared SMTP email service with nodemailer, verification/push email templates
 
 **Wave 2** (parallel, no cross-dependencies)
 
 - [x] 09-04-PLAN.md — Music module: MusicService, MusicController, metings API proxy, quality fallback, 5-min cache
-- [ ] 09-05-PLAN.md — Notification module: NotificationService, NotificationController, notifications table, in-app notifications, default type init
+- [x] 09-05-PLAN.md — Notification module: NotificationService, NotificationController, notifications table, in-app notifications, default type init
 
 **Wave 3** (depends on 09-03)
 
-- [ ] 09-06-PLAN.md — Subscriber module: SubscriberService, SubscriberController, verification codes, CaptchaService, EmailService
+- [x] 09-06-PLAN.md — Subscriber module: SubscriberService, SubscriberController, verification codes, CaptchaService, EmailService
 
 **Wave 4** (depends on all prior)
 
-- [ ] 09-07-PLAN.md — Cross-module integration: ArticleService RSS cache invalidation, CommentService notification hook, AppModule wiring, schema push
+- [x] 09-07-PLAN.md — Cross-module integration: ArticleService RSS cache invalidation, CommentService notification hook, AppModule wiring, schema push
 
 ---
 
