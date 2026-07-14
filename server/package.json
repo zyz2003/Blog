@@ -28,6 +28,7 @@
     "date-fns": "^4.4.0",
     "date-fns-tz": "^3.2.0",
     "drizzle-orm": "0.45.2",
+    "fast-xml-parser": "^5.10.0",
     "isomorphic-dompurify": "^3.18.0",
     "joi": "17.13.3",
     "jsonwebtoken": "^9.0.3",
