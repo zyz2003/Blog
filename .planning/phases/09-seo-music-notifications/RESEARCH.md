@@ -862,27 +862,12 @@ const DEFAULT_NOTIFICATION_TYPES = [
 - A6: VERIFIED by reading Go constant file `pkg/constant/setting.go` line 360: `KeyMusicAPIBaseURL = "music.api.base_url"`
 - A7: Go code reads it via `settingSvc.Get("MUSIC_PLAYER_PLAYLIST_ID")` which checks the settings table, not env vars
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **HTTP client choice for MusicService**
-   - What we know: Go uses `http.Client` with custom TLS transport. NestJS needs equivalent.
-   - What's unclear: Whether `axios` is already installed in the project.
-   - Recommendation: Check `package.json`. If axios exists, use it. If not, use Node.js built-in `https` module to avoid adding a dependency.
-
-2. **HTML stripping for RSS description**
-   - What we know: Go uses `bluemonday.StripTagsPolicy()` for HTML stripping.
-   - What's unclear: Whether `sanitize-html` or similar is already available.
-   - Recommendation: Check `package.json`. If not available, implement a simple regex-based strip (`text.replace(/<[^>]*>/g, '')`) which is sufficient for RSS descriptions.
-
-3. **Sitemap XML serialization approach**
-   - What we know: Go uses `xml.MarshalIndent`. Per D-216, NestJS should use an XML library.
-   - What's unclear: Which XML library to use.
-   - Recommendation: Use `fast-xml-parser` if already available, otherwise use manual string building (same as RSS) for consistency and format control.
-
-4. **ArticleService ↔ RssService circular dependency resolution**
-   - What we know: Both services need each other (RssService needs ArticleService for article data, ArticleService needs RssService for cache invalidation).
-   - What's unclear: Best pattern in the existing codebase.
-   - Recommendation: Use `forwardRef()` + `@Inject(forwardRef(() => RssService))` in ArticleService. This is the simplest NestJS pattern for circular dependencies.
+1. **HTTP client choice for MusicService** — RESOLVED: Use Node.js native `https` module. No need to add axios dependency.
+2. **HTML stripping for RSS description** — RESOLVED: Use simple regex-based strip (`text.replace(/<[^>]*>/g, '')`). Sufficient for RSS descriptions; no extra dependency needed.
+3. **Sitemap XML serialization approach** — RESOLVED: Per D-216, install `fast-xml-parser` and use `XMLBuilder` for Sitemap XML serialization. RSS continues to use manual string building for exact format match.
+4. **ArticleService ↔ RssService circular dependency resolution** — RESOLVED: Use `forwardRef()` + `@Inject(forwardRef(() => RssService))` in ArticleService. Simplest NestJS pattern for circular dependencies.
 
 ## Environment Availability
 
