@@ -162,6 +162,14 @@ export const ErrorCodes = {
   NOTIFICATION_TYPE_NOT_FOUND: '通知类型不存在',
   NOTIFICATION_NOT_FOUND: '通知不存在',
   NOTIFICATION_CONFIG_UPDATE_FAILED: '通知配置更新失败',
+
+  // Phase 09 - Subscriber error messages
+  SUBSCRIBER_ALREADY_SUBSCRIBED: '该邮箱已订阅',
+  SUBSCRIBER_NOT_FOUND: '订阅不存在',
+  SUBSCRIBER_TOKEN_INVALID: '订阅不存在或令牌无效',
+  SUBSCRIBER_CODE_EXPIRED: '验证码已过期',
+  SUBSCRIBER_CODE_INVALID: '验证码错误',
+  SUBSCRIBER_EMAIL_INVALID: '邮箱格式无效',
 } as const;
 
 export type ErrorCode = keyof typeof ErrorCodes;
