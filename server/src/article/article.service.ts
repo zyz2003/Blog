@@ -5,12 +5,14 @@ import {
   BadRequestException,
   Inject,
   Logger,
+  forwardRef,
 } from '@nestjs/common';
 import { ArticleRepository, calculatePostStats, diffIDs } from './article.repository';
 import { PostCategoryRepository } from '../post-category/post-category.repository';
 import { PostTagRepository } from '../post-tag/post-tag.repository';
 import { ArticleHistoryService } from '../article-history/article-history.service';
 import { SearchService } from '../search/search.service';
+import { RssService } from '../rss/rss.service';
 import { DRIZZLE } from '../database/database.module';
 import { articles } from '../database/schemas/article.schema';
 import { generatePublicID, decodePublicID, EntityType } from '../common/utils/sqids.util';
@@ -50,6 +52,8 @@ export class ArticleService {
     private readonly tagRepo: PostTagRepository,
     private readonly historyService: ArticleHistoryService,
     private readonly searchService: SearchService,
+    @Inject(forwardRef(() => RssService))
+    private readonly rssService: RssService,
     @Inject(DRIZZLE) private readonly db: any,
   ) {}
 
@@ -259,6 +263,14 @@ export class ArticleService {
       }
     }
 
+    // RSS cache invalidation per D-215
+    try {
+      this.rssService.invalidateCache();
+    } catch (e) {
+      this.logger.warn(`RSS cache invalidation failed: ${e}`);
+      // Cache invalidation failure must not block article creation
+    }
+
     return this.toApiResponse(articleWithRelations, false, true);
   }
 
@@ -412,6 +424,14 @@ export class ArticleService {
       // FTS5 index failure must not block article update
     }
 
+    // RSS cache invalidation per D-215
+    try {
+      this.rssService.invalidateCache();
+    } catch (e) {
+      this.logger.warn(`RSS cache invalidation failed: ${e}`);
+      // Cache invalidation failure must not block article update
+    }
+
     return this.toApiResponse(updated, false, true);
   }
 
@@ -439,6 +459,14 @@ export class ArticleService {
     } catch (e) {
       this.logger.warn(`FTS5 index delete failed for article ${dbID}: ${e}`);
       // FTS5 index failure must not block article deletion
+    }
+
+    // RSS cache invalidation per D-215
+    try {
+      this.rssService.invalidateCache();
+    } catch (e) {
+      this.logger.warn(`RSS cache invalidation failed: ${e}`);
+      // Cache invalidation failure must not block article deletion
     }
 
     return null;

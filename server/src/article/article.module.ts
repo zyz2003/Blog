@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { DatabaseModule } from '../database/database.module';
 import { ArticleController } from './article.controller';
 import { PublicArticleController } from './public-article.controller';
@@ -10,6 +10,7 @@ import { ArticleHistoryModule } from '../article-history/article-history.module'
 import { StoragePolicyModule } from '../storage-policy/storage-policy.module';
 import { ThumbnailModule } from '../thumbnail/thumbnail.module';
 import { SearchModule } from '../search/search.module';
+import { RssModule } from '../rss/rss.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { SearchModule } from '../search/search.module';
     StoragePolicyModule,
     ThumbnailModule,
     SearchModule,
+    forwardRef(() => RssModule),
   ],
   controllers: [ArticleController, PublicArticleController],
   providers: [ArticleService, ArticleRepository],

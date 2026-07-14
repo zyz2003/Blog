@@ -4,6 +4,7 @@ import { SettingsModule } from '../settings/settings.module';
 import { StoragePolicyModule } from '../storage-policy/storage-policy.module';
 import { FileModule } from '../file/file.module';
 import { WeatherModule } from '../weather/weather.module';
+import { NotificationModule } from '../notification/notification.module';
 import { CommentController } from './comment.controller';
 import { CommentAdminController } from './comment-admin.controller';
 import { CommentService } from './comment.service';
@@ -20,6 +21,7 @@ import { CommentRateLimiter } from './comment-rate-limiter';
  * - FileModule: provides UploadService and FileService for comment image uploads
  *   and signed URL generation. Uses forwardRef to handle potential circular dependency.
  * - WeatherModule: provides GeoIPService for IP location lookup per D-143
+ * - NotificationModule: provides NotificationService for in-app notification on comment reply per D-219
  */
 @Module({
   imports: [
@@ -28,6 +30,7 @@ import { CommentRateLimiter } from './comment-rate-limiter';
     StoragePolicyModule,
     forwardRef(() => FileModule),
     WeatherModule,
+    NotificationModule,
   ],
   controllers: [CommentController, CommentAdminController],
   providers: [CommentService, CommentRepository, CommentRateLimiter],

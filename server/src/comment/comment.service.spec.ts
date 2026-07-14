@@ -56,6 +56,12 @@ const mockGeoIPService = {
   getDefaultCoordinates: vi.fn(),
 } as any;
 
+const mockNotificationService = {
+  shouldNotifyUser: vi.fn(),
+  findNotificationTypeByCode: vi.fn(),
+  createNotification: vi.fn(),
+} as any;
+
 const mockDb = {
   select: vi.fn().mockReturnThis(),
   from: vi.fn().mockReturnThis(),
@@ -118,6 +124,7 @@ function createService() {
     mockStoragePolicyService,
     mockFileService,
     mockGeoIPService,
+    mockNotificationService,
     mockDb,
   );
 }

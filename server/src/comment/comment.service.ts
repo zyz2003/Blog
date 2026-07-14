@@ -4,6 +4,7 @@ import {
   Logger,
   BadRequestException,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import { DRIZZLE } from '../database/database.module';
 import { CommentRepository, CreateCommentParams } from './comment.repository';
@@ -13,6 +14,7 @@ import { UploadService } from '../file/upload.service';
 import { StoragePolicyService } from '../storage-policy/storage-policy.service';
 import { FileService } from '../file/file.service';
 import { GeoIPService } from '../weather/geoip.service';
+import { NotificationService } from '../notification/notification.service';
 import { renderCommentMarkdown } from './comment-markdown';
 import {
   generatePublicID,
@@ -50,6 +52,7 @@ export class CommentService {
     private readonly policyService: StoragePolicyService,
     private readonly fileService: FileService,
     private readonly geoipService: GeoIPService,
+    private readonly notificationService: NotificationService,
     @Inject(DRIZZLE) private readonly db: any,
   ) {}
 
@@ -234,7 +237,16 @@ export class CommentService {
       this.firePushooNotification(newComment, parentComment, req, ip);
     }
 
-    // 13. Return response DTO
+    // 13. In-app notification for comment reply per D-219
+    // If the comment is a reply (replyToDbId is not null) and the reply target has a userId (not a guest),
+    // check if the user has comment_reply notification enabled and create an in-app notification.
+    if (replyToDbId && replyToComment?.userId) {
+      this.fireCommentReplyNotification(replyToComment.userId, req.nickname).catch(
+        (err) => this.logger.warn(`In-app notification failed: ${err}`),
+      );
+    }
+
+    // 14. Return response DTO
     return await this.toResponseDTO(newComment, parentComment, replyToComment, false);
   }
 
@@ -1241,6 +1253,37 @@ export class CommentService {
     } catch {
       this.logger.warn('查询管理员列表失败');
       return null;
+    }
+  }
+
+  /**
+   * Fire in-app notification for comment reply per D-219.
+   * Fire-and-forget: checks if the reply target user has comment_reply notification enabled,
+   * then creates an in-app notification record.
+   */
+  private async fireCommentReplyNotification(
+    replyToUserId: number,
+    replierNickname: string,
+  ): Promise<void> {
+    try {
+      const shouldNotify = await this.notificationService.shouldNotifyUser(
+        replyToUserId,
+        'comment_reply',
+        'push',
+      );
+      if (!shouldNotify) return;
+
+      const commentReplyType = await this.notificationService.findNotificationTypeByCode('comment_reply');
+      if (!commentReplyType) return;
+
+      await this.notificationService.createNotification({
+        userId: replyToUserId,
+        notificationTypeId: commentReplyType.id,
+        title: '评论回复通知',
+        content: `${replierNickname} 回复了您的评论`,
+      });
+    } catch (err) {
+      this.logger.warn(`In-app notification creation failed: ${err}`);
     }
   }
 
