@@ -341,7 +341,7 @@ Plans:
 
 **Wave 2** (parallel, no cross-dependencies)
 
-- [ ] 09-04-PLAN.md — Music module: MusicService, MusicController, metings API proxy, quality fallback, 5-min cache
+- [x] 09-04-PLAN.md — Music module: MusicService, MusicController, metings API proxy, quality fallback, 5-min cache
 - [ ] 09-05-PLAN.md — Notification module: NotificationService, NotificationController, notifications table, in-app notifications, default type init
 
 **Wave 3** (depends on 09-03)
