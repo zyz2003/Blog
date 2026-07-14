@@ -32,3 +32,4 @@ export * from './url-stat.schema';
 export * from './tag.schema';
 export * from './article-post-category-pivot.schema';
 export * from './article-post-tag-pivot.schema';
+export * from './notification.schema';

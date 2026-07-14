@@ -157,6 +157,11 @@ export const ErrorCodes = {
   MUSIC_INVALID_NETEASE_ID: '无效的网易云音乐ID',
   MUSIC_SONG_RESOURCE_FAILED: '获取歌曲资源失败',
   MUSIC_PLAYLIST_FETCH_FAILED: '获取播放列表失败',
+
+  // Phase 09 - Notification error messages
+  NOTIFICATION_TYPE_NOT_FOUND: '通知类型不存在',
+  NOTIFICATION_NOT_FOUND: '通知不存在',
+  NOTIFICATION_CONFIG_UPDATE_FAILED: '通知配置更新失败',
 } as const;
 
 export type ErrorCode = keyof typeof ErrorCodes;
