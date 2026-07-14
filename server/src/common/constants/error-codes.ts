@@ -149,6 +149,9 @@ export const ErrorCodes = {
   DOCSERIES_NOT_FOUND: '系列不存在',
   DOCSERIES_NAME_EXISTS: '系列名称已存在',
   DOCSERIES_HAS_DOCS: '无法删除，该系列下还有文档',
+
+  // Phase 09 - RSS error messages
+  RSS_GENERATE_GENERATE_FAILED: 'RSS生成失败',
 } as const;
 
 export type ErrorCode = keyof typeof ErrorCodes;
