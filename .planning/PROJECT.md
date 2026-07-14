@@ -19,6 +19,7 @@
 - [x] 媒体管理 API 兼容：图片上传、缩略图生成、文件管理 — Phase 05
 - [x] 访客分析 API 兼容：访客统计、趋势、来源、设备分析 — Phase 07
 - [x] 相册与文档系列 API 兼容：相册 CRUD + 分类 + 批量导入导出 + CreateOrRestore 去重；文档系列 CRUD + 文章关联 — Phase 08
+- [x] SEO/音乐/通知 API 兼容：RSS feed、Sitemap、音乐代理、邮件服务、通知系统、订阅管理 — Phase 09
 - [x] 后端监听端口 8091（与原 Go 后端一致） — Phase 01
 
 ### Active
