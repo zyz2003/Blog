@@ -152,6 +152,11 @@ export const ErrorCodes = {
 
   // Phase 09 - RSS error messages
   RSS_GENERATE_GENERATE_FAILED: 'RSS生成失败',
+
+  // Phase 09 - Music error messages
+  MUSIC_INVALID_NETEASE_ID: '无效的网易云音乐ID',
+  MUSIC_SONG_RESOURCE_FAILED: '获取歌曲资源失败',
+  MUSIC_PLAYLIST_FETCH_FAILED: '获取播放列表失败',
 } as const;
 
 export type ErrorCode = keyof typeof ErrorCodes;
