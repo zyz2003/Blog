@@ -65,7 +65,7 @@
 - **D-187:** 相册使用 Phase 01 已定义的 `albums` 表 Schema（album.schema.ts），包含完整字段：id, created_at, updated_at, deleted_at, image_url, big_image_url, download_url, thumb_param, big_param, tags, view_count, download_count, width, height, file_size, format, aspect_ratio, file_hash(unique), display_order, category_id, title, description, location, published_at。无需修改 Schema
 
 ### 相册分类数据模型
-- **D-188:** 相册分类使用 Phase 01 已定义的 `album_categories` 表 Schema（album-category.schema.ts），包含字段：id, created_at, updated_at, name, description, cover_url, sort, password。Go 后端 AlbumCategory DTO 包含 id/name/description/cover_url/sort/password + 关联相册数量 album_count
+- **D-188:** 相册分类使用 Phase 01 已定义的 `album_categories` 表 Schema（album-category.schema.ts），包含字段：id, name, description, display_order。Go 后端 AlbumCategory DTO 包含 id/name/description/displayOrder。**注意：** 经 Go 源码验证，AlbumCategory 无 cover_url/sort/password/album_count 字段（原 CONTEXT.md 记录有误，已按 RESEARCH.md 修正）
 
 ### DocSeries 数据模型
 - **D-189:** DocSeries 使用 Phase 01 已定义的 `doc_series` 表 Schema（doc-series.schema.ts），包含字段：id, created_at, updated_at, name, description, cover_url, sort, doc_count。DocSeries ID 使用 Sqids 编码（需新增 EntityTypeDocSeries 常量）。doc_count 在文章关联/取消关联时同步更新
@@ -74,7 +74,7 @@
 - **D-190:** 完整复刻 Go 后端相册 CreateOrRestore 去重逻辑：1) 根据 fileHash 查找已有记录 → 2) 如果存在且未删除（StatusExisted），返回"图片已存在"错误 → 3) 如果存在且已软删除（StatusRestored），恢复记录并更新字段 → 4) 如果不存在（StatusCreated），创建新记录。fileHash 是唯一约束
 
 ### 相册默认值填充
-- **D-191:** 完整复刻 Go 后端 applyDefaultAlbumParams：1) 如果 image_url 为空但 big_image_url 不为空，image_url = big_image_url → 2) 如果 big_image_url 为空但 image_url 不为空，big_image_url = image_url → 3) 如果 download_url 为空，download_url = image_url → 4) 如果 published_at 为空，published_at = created_at → 5) 计算 aspect_ratio（宽高比简化字符串）
+- **D-191:** 完整复刻 Go 后端 applyDefaultAlbumParams：1) 如果 big_image_url 为空，big_image_url = image_url → 2) 如果 download_url 为空，download_url = image_url → 3) 如果 thumb_param 为空，从设置读取默认缩略图参数 → 4) 如果 big_param 为空，从设置读取默认大图参数。**注意：** 经 Go 源码验证，Go 后端不做 image_url←big_image_url 反向填充，也不做 published_at←created_at 默认值（原 CONTEXT.md 记录有误，已按 RESEARCH.md 修正）
 
 ### 相册查询筛选
 - **D-192:** 完整复刻 Go 后端 FindAlbums 查询参数：page, pageSize, categoryId, tag, start(开始日期), end(结束日期), sort(排序方式)。支持按分类筛选、按标签筛选、按时间范围筛选、按排序字段排序
@@ -83,7 +83,7 @@
 - **D-193:** DocSeries 公开端点与 Go 后端一致：GET /api/public/doc-series 返回系列列表（分页），GET /api/public/doc-series/:id 返回系列详情，GET /api/public/doc-series/:id/articles 返回系列+文章列表（DocSeriesWithArticles 结构，包含 articles 数组，每项有 id/title/abbrlink/doc_sort/created_at）
 
 ### DocSeries 文章关联管理
-- **D-194:** DocSeries 文章关联通过 article 表的 doc_series_id + doc_sort 字段管理。创建/更新系列时可以指定关联文章列表（文章 ID + doc_sort），DocSeriesService 负责更新 article 表的 doc_series_id 和 doc_sort 字段。删除系列时清空关联文章的 doc_series_id 和 doc_sort
+- **D-194:** DocSeries 文章关联通过 article 表的 doc_series_id + doc_sort 字段管理。文章关联/取消关联通过文章 CRUD 端点管理（文章有 doc_series_id + doc_sort 字段），DocSeries 端点本身不处理文章关联。删除系列时如果 docCount > 0 则拒绝删除（不清空关联文章）。**注意：** 经 Go 源码验证，Go 后端 CreateDocSeriesRequest/UpdateDocSeriesRequest 不包含文章列表字段，文章关联由文章端点管理（原 CONTEXT.md 记录有误，已按 RESEARCH.md 修正）
 
 ### Module 组织
 - **D-195:** AlbumModule 单模块组织：包含 AlbumController（管理端点）、AlbumCategoryController（分类端点）、AlbumService、AlbumCategoryService、AlbumRepository、AlbumCategoryRepository。公开端点在 PublicController 中（与 Go 后端 public handler 一致）
