@@ -53,7 +53,7 @@ export class SubscriberService {
     }
 
     // Delete code after successful verification (one-time use)
-    this.cache.delete(cacheKey);
+    // WR-05 fix: Delete code AFTER DB operations succeed to prevent code loss on DB failure
 
     // Step 2: Check if subscriber already exists
     const existing = await this.repo.findByEmail(email);
@@ -62,16 +62,19 @@ export class SubscriberService {
       // Create new subscriber with generated token
       const token = this.generateToken();
       await this.repo.create({ email, isActive: true, token });
+      this.cache.delete(cacheKey);
       return;
     }
 
     if (existing.isActive) {
-      // Already subscribed
+      // Already subscribed — still delete code to prevent reuse
+      this.cache.delete(cacheKey);
       throw new ConflictException(ErrorCodes.SUBSCRIBER_ALREADY_SUBSCRIBED);
     }
 
     // Reactivate inactive subscriber
     await this.repo.updateIsActive(existing.id, true);
+    this.cache.delete(cacheKey);
   }
 
   /**
@@ -123,45 +126,51 @@ export class SubscriberService {
 
   /**
    * Notify all active subscribers about a new article.
-   * Per Go NotifyArticlePublished: send emails asynchronously with 100ms delay.
+   * Per Go NotifyArticlePublished: fire-and-forget (goroutine in Go).
    *
+   * WR-04 fix: Use fire-and-forget pattern matching Go's goroutine —
+   * each email is sent asynchronously without blocking the caller.
    * - Get active subscribers
-   * - For each subscriber, send email with unsubscribe link
-   * - 100ms delay between emails to prevent SMTP rate limiting
+   * - For each subscriber, send email asynchronously with 100ms delay
    * - Wrap each email send in try-catch, log failures but continue
    * - If SMTP not configured, silently skip (EmailService handles this)
    */
-  async notifyArticlePublished(article: {
+  notifyArticlePublished(article: {
     title: string;
     url: string;
-  }): Promise<void> {
-    const activeSubscribers = await this.repo.findActiveSubscribers();
-
-    if (activeSubscribers.length === 0) {
-      return;
-    }
-
-    const siteURL =
-      this.settingsService.get('SITE_URL') || 'https://blog.anheyu.com';
-
-    for (const subscriber of activeSubscribers) {
+  }): void {
+    // Fire-and-forget: do not await — matches Go goroutine behavior
+    (async () => {
       try {
-        const unsubscribeUrl = `${siteURL}/api/public/unsubscribe/${subscriber.token}`;
-        await this.emailService.sendArticlePushEmail(
-          subscriber.email,
-          article.title,
-          article.url,
-          unsubscribeUrl,
-        );
-      } catch (error) {
-        this.logger.error(
-          `Failed to send article push email to ${subscriber.email}: ${error}`,
-        );
-      }
+        const activeSubscribers = await this.repo.findActiveSubscribers();
 
-      // 100ms delay between emails to prevent SMTP rate limiting
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
+        if (activeSubscribers.length === 0) {
+          return;
+        }
+
+        const siteURL =
+          this.settingsService.get('SITE_URL') || 'https://blog.anheyu.com';
+
+        for (const subscriber of activeSubscribers) {
+          // Send each email in try-catch, don't await to avoid blocking
+          this.emailService.sendArticlePushEmail(
+            subscriber.email,
+            article.title,
+            article.url,
+            `${siteURL}/api/public/unsubscribe/${subscriber.token}`,
+          ).catch((error) => {
+            this.logger.error(
+              `Failed to send article push email to ${subscriber.email}: ${error}`,
+            );
+          });
+
+          // 100ms delay between emails to prevent SMTP rate limiting
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+      } catch (error) {
+        this.logger.error(`Failed to notify subscribers: ${error}`);
+      }
+    })();
   }
 
   /**

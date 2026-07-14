@@ -167,7 +167,7 @@ export const ErrorCodes = {
   SUBSCRIBER_ALREADY_SUBSCRIBED: '该邮箱已订阅',
   SUBSCRIBER_NOT_FOUND: '订阅不存在',
   SUBSCRIBER_TOKEN_INVALID: '订阅不存在或令牌无效',
-  SUBSCRIBER_CODE_EXPIRED: '验证码已过期',
+  SUBSCRIBER_CODE_EXPIRED: '验证码已过期或无效',
   SUBSCRIBER_CODE_INVALID: '验证码错误',
   SUBSCRIBER_EMAIL_INVALID: '邮箱格式无效',
 } as const;

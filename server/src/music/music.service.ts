@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import { Inject, Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
 import { SettingsService } from '../settings/settings.service';
 import { MemoryCache } from '../common/cache/memory-cache.util';
 import { ErrorCodes } from '../common/constants/error-codes';
@@ -160,27 +160,43 @@ export class MusicService {
   /**
    * Fetch song resources (audio URL + lyrics) with quality fallback.
    * Per D-209: validate NeteaseID, try exhigh first, fallback to standard.
+   * CR-01 fix: Single combined check matching Go backend — try exhigh,
+   * if error OR empty URL, fallback to standard once.
+   * CR-02 fix: Invalid NeteaseID returns 500 (InternalServerErrorException)
+   * matching Go backend which maps all service errors to 500.
    */
   async fetchSongResources(neteaseId: string): Promise<SongResourceResponse> {
     this.logger.log(`开始获取歌曲资源 - 网易云ID: ${neteaseId}`);
 
-    // Validate NeteaseID (per D-209)
+    // Validate NeteaseID (per D-209) — return 500 to match Go backend
     if (!this.isValidNeteaseID(neteaseId)) {
-      throw new BadRequestException(ErrorCodes.MUSIC_INVALID_NETEASE_ID);
+      throw new InternalServerErrorException(ErrorCodes.MUSIC_INVALID_NETEASE_ID);
     }
 
     // Try exhigh quality first
     this.logger.log(`尝试获取 exhigh 音质 - 网易云ID: ${neteaseId}`);
-    let response: SongResourceResponse;
+    let response: SongResourceResponse | null = null;
+    let exhighError = false;
+
     try {
       response = await this.fetchSongV1(neteaseId, 'exhigh');
     } catch (err) {
       this.logger.log(
         `exhigh 音质获取失败，尝试 standard 音质 - 网易云ID: ${neteaseId}`,
       );
-      // Fallback to standard quality
+      exhighError = true;
+    }
+
+    // If exhigh failed OR returned empty audioUrl, try standard once
+    if (exhighError || !response || response.audioUrl === '') {
+      this.logger.log(
+        `${exhighError ? 'exhigh 失败' : 'exhigh 返回空URL'}，尝试 standard 音质 - 网易云ID: ${neteaseId}`,
+      );
       try {
-        response = await this.fetchSongV1(neteaseId, 'standard');
+        const fallback = await this.fetchSongV1(neteaseId, 'standard');
+        if (fallback.audioUrl !== '') {
+          response = fallback;
+        }
       } catch (err2) {
         this.logger.error(
           `standard 音质获取失败 - 网易云ID: ${neteaseId}`,
@@ -191,33 +207,15 @@ export class MusicService {
       }
     }
 
-    // If exhigh returned empty audioUrl, try standard
-    if (response.audioUrl === '') {
-      this.logger.log(
-        `exhigh 音质返回空，尝试 standard 音质 - 网易云ID: ${neteaseId}`,
-      );
-      try {
-        const fallback = await this.fetchSongV1(neteaseId, 'standard');
-        if (fallback.audioUrl !== '') {
-          response = fallback;
-        }
-      } catch (err) {
-        this.logger.error(
-          `standard 音质获取失败 - 网易云ID: ${neteaseId}`,
-        );
-        throw new InternalServerErrorException(
-          ErrorCodes.MUSIC_SONG_RESOURCE_FAILED,
-        );
-      }
+    if (!response || response.audioUrl === '') {
+      this.logger.log(`所有音质都返回空URL - 网易云ID: ${neteaseId}`);
+      // Return empty response rather than throwing — matches Go behavior
+      return { audioUrl: '', lyricsText: '' };
     }
 
-    if (response.audioUrl === '') {
-      this.logger.log(`所有音质都返回空URL - 网易云ID: ${neteaseId}`);
-    } else {
-      this.logger.log(
-        `成功获取歌曲资源 - 网易云ID: ${neteaseId}, 有歌词: ${response.lyricsText !== ''}`,
-      );
-    }
+    this.logger.log(
+      `成功获取歌曲资源 - 网易云ID: ${neteaseId}, 有歌词: ${response.lyricsText !== ''}`,
+    );
 
     return response;
   }
@@ -383,7 +381,7 @@ export class MusicService {
         res.on('data', (chunk: Buffer) => chunks.push(chunk));
         res.on('end', () => {
           const body = Buffer.concat(chunks).toString('utf-8');
-          if (res.statusCode && res.statusCode >= 300) {
+          if (res.statusCode && (res.statusCode < 200 || res.statusCode >= 300)) {
             reject(new Error(`HTTP ${res.statusCode}: ${body.slice(0, 200)}`));
           } else {
             resolve(body);
@@ -432,7 +430,7 @@ export class MusicService {
         res.on('data', (chunk: Buffer) => chunks.push(chunk));
         res.on('end', () => {
           const responseBody = Buffer.concat(chunks).toString('utf-8');
-          if (res.statusCode && res.statusCode >= 300) {
+          if (res.statusCode && (res.statusCode < 200 || res.statusCode >= 300)) {
             reject(
               new Error(`HTTP ${res.statusCode}: ${responseBody.slice(0, 200)}`),
             );

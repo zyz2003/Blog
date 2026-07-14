@@ -611,9 +611,11 @@ export class ArticleService {
     tag?: string;
     year?: number;
     month?: number;
+    includeHTML?: boolean;
   }): Promise<ArticleListResponseDto> {
     const page = options.page || 1;
     const pageSize = options.pageSize || 10;
+    const includeHTML = options.includeHTML ?? false;
 
     const result = await this.articleRepo.listPublic({
       page,
@@ -625,7 +627,7 @@ export class ArticleService {
     });
 
     return {
-      list: result.list.map((a: any) => this.toApiResponse(a, true, false)),
+      list: result.list.map((a: any) => this.toApiResponse(a, true, includeHTML)),
       total: result.total,
       page,
       pageSize,

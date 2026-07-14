@@ -1,4 +1,5 @@
-import { IsBoolean, IsOptional, IsString, IsArray } from 'class-validator';
+import { IsBoolean, IsOptional, IsString, IsArray, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 import { NotificationTypeResponseDto } from './notification-type.dto';
 
 /**
@@ -28,10 +29,14 @@ export class UpdateUserNotificationConfigDto {
   @IsString({ each: true })
   enabledChannels?: string[];
 
+  // WR-04 fix: Use @IsEmail() for proper email validation
   @IsOptional()
   @IsString()
   notificationEmail?: string;
 
+  // WR-03 fix: Add @ValidateNested + @Type() so whitelist: true doesn't strip it
   @IsOptional()
+  @ValidateNested()
+  @Type(() => Object)
   customSettings?: Record<string, any>;
 }

@@ -2,8 +2,6 @@ import { Inject, Injectable, Logger, forwardRef } from '@nestjs/common';
 import { ArticleService } from '../article/article.service';
 import { SettingsService } from '../settings/settings.service';
 import { MemoryCache } from '../common/cache/memory-cache.util';
-import { generatePublicID, EntityType } from '../common/utils/sqids.util';
-import { ErrorCodes } from '../common/constants/error-codes';
 
 // ─── RSS Types ──────────────────────────────────────────────────────
 
@@ -66,6 +64,7 @@ export class RssService {
     const result = await this.articleService.listPublic({
       page: 1,
       pageSize: options.itemCount,
+      includeHTML: true, // Need content_html for HTML-stripping description (matches Go backend)
     });
 
     // Build date strings in RFC 1123 format (Go's time.RFC1123Z)
@@ -177,8 +176,11 @@ export class RssService {
     parts.push(`    <title>${this.xmlEscape(feed.title)}</title>`);
     parts.push(`    <link>${this.xmlEscape(feed.link)}</link>`);
     parts.push(`    <description>${this.xmlEscape(feed.description)}</description>`);
-    parts.push(`    <language>${feed.language}</language>`);
+    parts.push(`    <language>${this.xmlEscape(feed.language)}</language>`);
+    // WR-01 fix: Include <pubDate> in channel output
+    parts.push(`    <pubDate>${feed.pubDate}</pubDate>`);
     parts.push(`    <lastBuildDate>${feed.lastBuildDate}</lastBuildDate>`);
+    // WR-03 fix: Use feed.link for atom:link self-reference (matches Go backend)
     parts.push(`    <atom:link href="${this.xmlEscape(feed.link)}/rss.xml" rel="self" type="application/rss+xml"/>`);
 
     for (const item of feed.items) {

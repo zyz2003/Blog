@@ -76,9 +76,10 @@ export class SitemapService {
     await this.addPages(items, baseURL);
 
     // 4. Link page (static URL entry, no LinkService data needed)
+    // CR-02 fix: Go backend sets LastModified: time.Now() for all static pages
     items.push({
       url: `${baseURL}/link`,
-      lastModified: null,
+      lastModified: new Date(),
       changeFreq: 'weekly',
       priority: 0.6,
     });
@@ -86,25 +87,25 @@ export class SitemapService {
     // 5. Common pages
     items.push({
       url: `${baseURL}/archives`,
-      lastModified: null,
+      lastModified: new Date(),
       changeFreq: 'daily',
       priority: 0.7,
     });
     items.push({
       url: `${baseURL}/categories`,
-      lastModified: null,
+      lastModified: new Date(),
       changeFreq: 'weekly',
       priority: 0.6,
     });
     items.push({
       url: `${baseURL}/tags`,
-      lastModified: null,
+      lastModified: new Date(),
       changeFreq: 'weekly',
       priority: 0.6,
     });
     items.push({
       url: `${baseURL}/about`,
-      lastModified: null,
+      lastModified: new Date(),
       changeFreq: 'monthly',
       priority: 0.5,
     });
@@ -113,9 +114,11 @@ export class SitemapService {
     return {
       urls: items.map((item) => ({
         loc: item.url,
-        lastmod: item.lastModified ? item.lastModified.toISOString() : '',
+        // WR-02 fix: Match Go backend date format (no milliseconds, timezone offset)
+        lastmod: item.lastModified ? this.formatLastmod(item.lastModified) : '',
         changefreq: item.changeFreq,
-        priority: item.priority.toFixed(1),
+        // WR-03 fix: Match Go float32 formatting (drop trailing zeros)
+        priority: this.formatPriority(item.priority),
       })),
     };
   }
@@ -150,14 +153,21 @@ export class SitemapService {
   /**
    * Generate robots.txt content.
    * Matches Go GenerateRobots (pkg/service/sitemap/service.go).
+   * CR-01 fix: Include Chinese comments, blank line separators, and trailing newline matching Go backend.
+   * WR-01 fix: No xmlEscape — robots.txt is plain text, not XML.
    */
   generateRobots(): string {
     const baseURL = this.getBaseURL();
     return [
       'User-agent: *',
       'Allow: /',
+      '',
+      '# 禁止访问管理后台',
       'Disallow: /admin/',
-      `Sitemap: ${this.xmlEscape(baseURL)}/sitemap.xml`,
+      '',
+      '# 站点地图',
+      `Sitemap: ${baseURL}/sitemap.xml`,
+      '',
     ].join('\n');
   }
 
@@ -183,7 +193,7 @@ export class SitemapService {
     try {
       const result = await this.articleService.listPublic({
         page: 1,
-        pageSize: 1000,
+        pageSize: 10000, // CR-03 fix: Match Go backend's 10000 page size
       });
 
       for (const article of result.list) {
@@ -273,18 +283,23 @@ export class SitemapService {
   }
 
   /**
-   * Escape XML entities.
-   * Same 5-entity replacement as RSS module (& MUST be first).
-   * Used by generateRobots() for the Sitemap URL in the template.
-   * generateXML() uses the XML library's built-in escaping.
+   * Format date for sitemap lastmod matching Go backend.
+   * Go uses time.Now().Format(time.RFC3339) which produces "2006-01-02T15:04:05Z"
+   * (no milliseconds). toISOString() includes milliseconds, so we strip them.
    */
-  private xmlEscape(s: string): string {
-    if (!s) return '';
-    return s
-      .replace(/&/g, '&amp;') // MUST be first to avoid double-escaping
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&apos;');
+  private formatLastmod(date: Date): string {
+    // Remove milliseconds from ISO string: "2024-01-01T12:00:00.123Z" → "2024-01-01T12:00:00Z"
+    return date.toISOString().replace(/\.\d{3}Z$/, 'Z');
+  }
+
+  /**
+   * Format priority matching Go float32 formatting.
+   * Go's float32 drops trailing zeros: 1.0 → "1", 0.9 → "0.9", 0.5 → "0.5"
+   */
+  private formatPriority(priority: number): string {
+    const str = priority.toFixed(1);
+    // Drop trailing ".0" for whole numbers
+    if (str.endsWith('.0')) return str.slice(0, -2);
+    return str;
   }
 }

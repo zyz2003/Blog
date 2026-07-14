@@ -14,10 +14,11 @@ export class RssController {
    * GET /rss.xml — RSS 2.0 feed with Content-Type application/rss+xml.
    * Matches Go GetRSSFeed for /rss.xml path.
    * Uses @Res() to bypass global ResponseInterceptor (per D-216).
+   * CR-02 fix: Use async/await to prevent unhandled promise rejections.
    */
   @Get('rss.xml')
-  getRSSFeed(@Req() req: Request, @Res() res: Response): void {
-    this.handleFeedRequest(req, res, 'application/rss+xml; charset=utf-8');
+  async getRSSFeed(@Req() req: Request, @Res() res: Response): Promise<void> {
+    await this.handleFeedRequest(req, res, 'application/rss+xml; charset=utf-8');
   }
 
   /**
@@ -25,8 +26,8 @@ export class RssController {
    * Matches Go GetRSSFeed for /feed.xml path.
    */
   @Get('feed.xml')
-  getFeedXml(@Req() req: Request, @Res() res: Response): void {
-    this.handleFeedRequest(req, res, 'application/rss+xml; charset=utf-8');
+  async getFeedXml(@Req() req: Request, @Res() res: Response): Promise<void> {
+    await this.handleFeedRequest(req, res, 'application/rss+xml; charset=utf-8');
   }
 
   /**
@@ -34,8 +35,8 @@ export class RssController {
    * Matches Go GetRSSFeed for /atom.xml path.
    */
   @Get('atom.xml')
-  getAtomXml(@Req() req: Request, @Res() res: Response): void {
-    this.handleFeedRequest(req, res, 'application/atom+xml; charset=utf-8');
+  async getAtomXml(@Req() req: Request, @Res() res: Response): Promise<void> {
+    await this.handleFeedRequest(req, res, 'application/atom+xml; charset=utf-8');
   }
 
   /**

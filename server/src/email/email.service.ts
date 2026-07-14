@@ -1,5 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SettingsService } from '../settings/settings.service';
+import {
+  verificationEmailTemplate,
+  articlePushEmailTemplate,
+} from './email.templates';
 import * as nodemailer from 'nodemailer';
 
 /**
@@ -16,18 +20,21 @@ export class EmailService {
 
   /**
    * Lazy-init nodemailer transporter.
-   * Reads SMTP config from SettingsService. Returns null if SMTP not configured.
-   * Caches the transporter for reuse.
+   * Reads SMTP config from SettingsService using Go backend setting keys.
+   * Returns null if SMTP not configured.
+   * Caches the transporter for reuse (WR-01: cache invalidated on config change is
+   * deferred since SettingsService has no change notification — restart picks up changes).
    */
   private getTransporter(): nodemailer.Transporter | null {
     if (this.transporter) {
       return this.transporter;
     }
 
-    const host = this.settingsService.get('smtp.host');
-    const port = this.settingsService.get('smtp.port');
-    const user = this.settingsService.get('smtp.user');
-    const pass = this.settingsService.get('smtp.pass');
+    // CR-01 fix: Use Go backend setting keys (SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD)
+    const host = this.settingsService.get('SMTP_HOST');
+    const port = this.settingsService.get('SMTP_PORT');
+    const user = this.settingsService.get('SMTP_USERNAME');
+    const pass = this.settingsService.get('SMTP_PASSWORD');
 
     // If any required field is missing, SMTP is not configured
     if (!host || !port || !user || !pass) {
@@ -48,37 +55,46 @@ export class EmailService {
     }
   }
 
-  /**
-   * Send verification code email for subscriber verification.
-   * Per D-206: silently skips when SMTP is not configured.
-   */
-  async sendVerificationEmail(email: string, code: string): Promise<void> {
-    const transporter = this.getTransporter();
-    if (!transporter) {
-      return;
-    }
-
+  /** Read common email config: appName and smtpFrom */
+  private getEmailConfig(): { appName: string; smtpFrom: string } {
     const appName =
       this.settingsService.get('APP_NAME') || 'Anheyu Blog';
     const smtpFrom =
-      this.settingsService.get('smtp.from') ||
-      this.settingsService.get('smtp.user');
+      this.settingsService.get('SMTP_SENDER_EMAIL') ||
+      this.settingsService.get('SMTP_USERNAME');
+    return { appName, smtpFrom };
+  }
+
+  /**
+   * Send verification code email for subscriber verification.
+   * Per D-206: silently skips when SMTP is not configured.
+   * WR-03 fix: Returns boolean indicating success (Go backend returns errors to caller).
+   */
+  async sendVerificationEmail(email: string, code: string): Promise<boolean> {
+    const transporter = this.getTransporter();
+    if (!transporter) {
+      return false;
+    }
+
+    const { appName, smtpFrom } = this.getEmailConfig();
 
     try {
       await transporter.sendMail({
         from: `"${appName}" <${smtpFrom}>`,
         to: email,
-        subject: `${appName} - 邮箱验证码`,
+        subject: `${appName} - 邮箱验证码: ${code}`,
         html: verificationEmailTemplate({
           appName,
           code,
           expiryMinutes: 5,
         }),
       });
+      return true;
     } catch (error) {
       this.logger.error(
         `Failed to send verification email to ${email}: ${error}`,
       );
+      return false;
     }
   }
 
@@ -91,17 +107,13 @@ export class EmailService {
     articleTitle: string,
     articleUrl: string,
     unsubscribeUrl: string,
-  ): Promise<void> {
+  ): Promise<boolean> {
     const transporter = this.getTransporter();
     if (!transporter) {
-      return;
+      return false;
     }
 
-    const appName =
-      this.settingsService.get('APP_NAME') || 'Anheyu Blog';
-    const smtpFrom =
-      this.settingsService.get('smtp.from') ||
-      this.settingsService.get('smtp.user');
+    const { appName, smtpFrom } = this.getEmailConfig();
 
     try {
       await transporter.sendMail({
@@ -115,10 +127,12 @@ export class EmailService {
           unsubscribeUrl,
         }),
       });
+      return true;
     } catch (error) {
       this.logger.error(
         `Failed to send article push email to ${email}: ${error}`,
       );
+      return false;
     }
   }
 
@@ -126,17 +140,13 @@ export class EmailService {
    * Generic send method for future use.
    * Same SMTP config and silent-skip logic.
    */
-  async sendMail(to: string, subject: string, html: string): Promise<void> {
+  async sendMail(to: string, subject: string, html: string): Promise<boolean> {
     const transporter = this.getTransporter();
     if (!transporter) {
-      return;
+      return false;
     }
 
-    const appName =
-      this.settingsService.get('APP_NAME') || 'Anheyu Blog';
-    const smtpFrom =
-      this.settingsService.get('smtp.from') ||
-      this.settingsService.get('smtp.user');
+    const { appName, smtpFrom } = this.getEmailConfig();
 
     try {
       await transporter.sendMail({
@@ -145,14 +155,10 @@ export class EmailService {
         subject,
         html,
       });
+      return true;
     } catch (error) {
       this.logger.error(`Failed to send email to ${to}: ${error}`);
+      return false;
     }
   }
 }
-
-// Inline import for templates to keep email.service.ts self-contained
-import {
-  verificationEmailTemplate,
-  articlePushEmailTemplate,
-} from './email.templates';

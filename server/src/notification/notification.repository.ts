@@ -3,7 +3,7 @@ import { DRIZZLE } from '../database/database.module';
 import { notificationTypes } from '../database/schemas/notification-type.schema';
 import { userNotificationConfigs } from '../database/schemas/user-notification-config.schema';
 import { notifications } from '../database/schemas/notification.schema';
-import { eq, and, desc, sql, isNull } from 'drizzle-orm';
+import { eq, and, desc, sql } from 'drizzle-orm';
 
 @Injectable()
 export class NotificationRepository {
@@ -165,7 +165,15 @@ export class NotificationRepository {
       .where(whereClause);
 
     const list = await this.db
-      .select()
+      .select({
+        id: notifications.id,
+        notificationTypeId: notifications.notificationTypeId,
+        title: notifications.title,
+        content: notifications.content,
+        isRead: notifications.isRead,
+        readAt: notifications.readAt,
+        createdAt: notifications.createdAt,
+      })
       .from(notifications)
       .where(whereClause)
       .orderBy(desc(notifications.createdAt))

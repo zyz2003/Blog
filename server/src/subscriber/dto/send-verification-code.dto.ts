@@ -8,10 +8,11 @@ import {
  * SendVerificationCodeDto — matches Go SendVerificationCodeRequest.
  * Reference: pkg/handler/subscriber/handler.go
  *
- * Body: { email, turnstile_token?, geetest_challenge?, geetest_validate?,
- *         geetest_seccode?, image_captcha_id?, image_captcha_answer? }
+ * Body: { email, turnstile_token?, geetest_lot_number?, geetest_captcha_output?,
+ *         geetest_pass_token?, geetest_gen_time?, image_captcha_id?, image_captcha_answer? }
  *
  * Per D-207: CaptchaService verifies captcha params before sending code.
+ * CR-01 fix: Geetest field names updated to match Go backend and frontend.
  */
 export class SendVerificationCodeDto {
   @IsEmail({}, { message: '邮箱格式无效' })
@@ -23,15 +24,19 @@ export class SendVerificationCodeDto {
 
   @IsOptional()
   @IsString()
-  geetest_challenge?: string;
+  geetest_lot_number?: string;
 
   @IsOptional()
   @IsString()
-  geetest_validate?: string;
+  geetest_captcha_output?: string;
 
   @IsOptional()
   @IsString()
-  geetest_seccode?: string;
+  geetest_pass_token?: string;
+
+  @IsOptional()
+  @IsString()
+  geetest_gen_time?: string;
 
   @IsOptional()
   @IsString()

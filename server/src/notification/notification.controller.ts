@@ -5,12 +5,12 @@ import {
   Query,
   Param,
   Body,
+  ParseIntPipe,
   UseGuards,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { AdminGuard } from '../common/guards/admin.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { decodePublicID, EntityType } from '../common/utils/sqids.util';
+import { decodePublicID } from '../common/utils/sqids.util';
 import { NotificationService } from './notification.service';
 import { UpdateSimpleNotificationSettingsDto } from './dto/simple-notification-settings.dto';
 import { UpdateUserNotificationConfigDto } from './dto/user-notification-config.dto';
@@ -29,6 +29,9 @@ import { UpdateUserNotificationConfigDto } from './dto/user-notification-config.
  * - PUT /api/user/notifications/:id/read
  * - PUT /api/user/notifications/read-all
  * - GET /api/user/notifications/unread-count
+ *
+ * WR-02 fix: Removed redundant @UseGuards(JwtAuthGuard) — JwtAuthGuard is
+ * already registered as a global APP_GUARD in app.module.ts.
  */
 @Controller()
 export class NotificationController {
@@ -53,7 +56,7 @@ export class NotificationController {
    * Matches Go ListNotificationTypes (router.go notificationAdmin group).
    */
   @Get('notification/types')
-  @UseGuards(JwtAuthGuard, AdminGuard)
+  @UseGuards(AdminGuard)
   async listNotificationTypes() {
     return this.notificationService.listNotificationTypes();
   }
@@ -68,7 +71,6 @@ export class NotificationController {
    * Matches Go GetUserNotificationSettings.
    */
   @Get('user/notification-settings')
-  @UseGuards(JwtAuthGuard)
   async getUserNotificationSettings(@CurrentUser() user: any) {
     const userId = this.getUserId(user);
     return this.notificationService.getUserNotificationSettings(userId);
@@ -80,7 +82,6 @@ export class NotificationController {
    * Matches Go UpdateUserNotificationSettings.
    */
   @Put('user/notification-settings')
-  @UseGuards(JwtAuthGuard)
   async updateUserNotificationSettings(
     @CurrentUser() user: any,
     @Body() dto: UpdateSimpleNotificationSettingsDto,
@@ -99,7 +100,6 @@ export class NotificationController {
    * Matches Go GetUserNotificationConfigs.
    */
   @Get('user/notification-configs')
-  @UseGuards(JwtAuthGuard)
   async getUserNotificationConfigs(@CurrentUser() user: any) {
     const userId = this.getUserId(user);
     return this.notificationService.getUserNotificationConfigs(userId);
@@ -112,9 +112,9 @@ export class NotificationController {
   /**
    * GET /api/user/notifications
    * List in-app notifications with pagination and optional isRead filter.
+   * WR-05 fix: Validate page/pageSize bounds to prevent invalid offset calculations.
    */
   @Get('user/notifications')
-  @UseGuards(JwtAuthGuard)
   async listNotifications(
     @CurrentUser() user: any,
     @Query('page') page?: string,
@@ -122,9 +122,11 @@ export class NotificationController {
     @Query('isRead') isRead?: string,
   ) {
     const userId = this.getUserId(user);
+    const parsedPage = Math.max(1, parseInt(page || '1', 10) || 1);
+    const parsedPageSize = Math.min(100, Math.max(1, parseInt(pageSize || '10', 10) || 10));
     return this.notificationService.listNotifications(userId, {
-      page: page ? parseInt(page, 10) : 1,
-      pageSize: pageSize ? parseInt(pageSize, 10) : 10,
+      page: parsedPage,
+      pageSize: parsedPageSize,
       isRead: isRead !== undefined ? isRead === 'true' : undefined,
     });
   }
@@ -133,15 +135,15 @@ export class NotificationController {
    * PUT /api/user/notifications/:id/read
    * Mark a single notification as read.
    * User-scoped for security (T-09-11).
+   * WR-01 fix: Use ParseIntPipe for proper 400 on non-numeric ID.
    */
   @Put('user/notifications/:id/read')
-  @UseGuards(JwtAuthGuard)
   async markNotificationAsRead(
     @CurrentUser() user: any,
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
   ) {
     const userId = this.getUserId(user);
-    await this.notificationService.markNotificationAsRead(parseInt(id, 10), userId);
+    await this.notificationService.markNotificationAsRead(id, userId);
     return null;
   }
 
@@ -150,7 +152,6 @@ export class NotificationController {
    * Mark all unread notifications as read for current user.
    */
   @Put('user/notifications/read-all')
-  @UseGuards(JwtAuthGuard)
   async markAllNotificationsAsRead(@CurrentUser() user: any) {
     const userId = this.getUserId(user);
     await this.notificationService.markAllNotificationsAsRead(userId);
@@ -162,7 +163,6 @@ export class NotificationController {
    * Get unread notification count for current user.
    */
   @Get('user/notifications/unread-count')
-  @UseGuards(JwtAuthGuard)
   async getUnreadCount(@CurrentUser() user: any) {
     const userId = this.getUserId(user);
     return this.notificationService.getUnreadCount(userId);

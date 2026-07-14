@@ -4,7 +4,6 @@ import {
   Logger,
   BadRequestException,
   NotFoundException,
-  Optional,
 } from '@nestjs/common';
 import { DRIZZLE } from '../database/database.module';
 import { CommentRepository, CreateCommentParams } from './comment.repository';
@@ -240,10 +239,11 @@ export class CommentService {
     // 13. In-app notification for comment reply per D-219
     // If the comment is a reply (replyToDbId is not null) and the reply target has a userId (not a guest),
     // check if the user has comment_reply notification enabled and create an in-app notification.
-    if (replyToDbId && replyToComment?.userId) {
-      this.fireCommentReplyNotification(replyToComment.userId, req.nickname).catch(
-        (err) => this.logger.warn(`In-app notification failed: ${err}`),
-      );
+    // CR-01 fix: Skip self-notification — don't notify user about their own reply.
+    const replierUserId = claims?.user_id ? decodePublicID(claims.user_id).dbID : null;
+    if (replyToDbId && replyToComment?.userId && replyToComment.userId !== replierUserId) {
+      // Fire-and-forget: inner try-catch handles errors (WR-03 fix: no double error handling)
+      this.fireCommentReplyNotification(replyToComment.userId, req.nickname);
     }
 
     // 14. Return response DTO

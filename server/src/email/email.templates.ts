@@ -4,6 +4,29 @@
  */
 
 /**
+ * Escape HTML entities to prevent XSS injection in email templates.
+ */
+function escapeHtml(s: string): string {
+  if (!s) return '';
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
+ * Validate URL starts with http(s) to prevent javascript: URL injection.
+ */
+function sanitizeUrl(url: string): string {
+  if (!url) return '#';
+  const trimmed = url.trim();
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return '#';
+}
+
+/**
  * Verification code email template.
  * Displays 6-digit code prominently with expiry notice.
  */
@@ -19,7 +42,7 @@ export function verificationEmailTemplate(params: {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${appName} - 邮箱验证码</title>
+  <title>${escapeHtml(appName)} - 邮箱验证码</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; }
     .container { max-width: 480px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
@@ -35,15 +58,15 @@ export function verificationEmailTemplate(params: {
 <body>
   <div class="container">
     <div class="header">
-      <h1>${appName}</h1>
+      <h1>${escapeHtml(appName)}</h1>
     </div>
     <div class="content">
       <p class="code-label">您的验证码为：</p>
-      <div class="code-box">${code}</div>
+      <div class="code-box">${escapeHtml(code)}</div>
       <p class="expiry-notice">验证码将在 ${expiryMinutes} 分钟后过期，请尽快使用。</p>
     </div>
     <div class="footer">
-      ${appName}
+      ${escapeHtml(appName)}
     </div>
   </div>
 </body>
@@ -67,7 +90,7 @@ export function articlePushEmailTemplate(params: {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${appName} - 新文章发布</title>
+  <title>${escapeHtml(appName)} - 新文章发布</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; }
     .container { max-width: 480px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
@@ -87,16 +110,16 @@ export function articlePushEmailTemplate(params: {
 <body>
   <div class="container">
     <div class="header">
-      <h1>${appName}</h1>
+      <h1>${escapeHtml(appName)}</h1>
     </div>
     <div class="content">
       <p class="notice">新文章发布啦！</p>
-      <p class="article-title"><a href="${articleUrl}">${articleTitle}</a></p>
-      <a href="${articleUrl}" class="read-btn">阅读全文</a>
+      <p class="article-title"><a href="${sanitizeUrl(articleUrl)}">${escapeHtml(articleTitle)}</a></p>
+      <a href="${sanitizeUrl(articleUrl)}" class="read-btn">阅读全文</a>
     </div>
     <div class="footer">
-      ${appName}
-      <p class="unsubscribe"><a href="${unsubscribeUrl}">取消订阅</a></p>
+      ${escapeHtml(appName)}
+      <p class="unsubscribe"><a href="${sanitizeUrl(unsubscribeUrl)}">取消订阅</a></p>
     </div>
   </div>
 </body>
