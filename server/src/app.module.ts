@@ -31,6 +31,7 @@ import { SitemapModule } from './sitemap/sitemap.module';
 import { MusicModule } from './music/music.module';
 import { NotificationModule } from './notification/notification.module';
 import { SubscriberModule } from './subscriber/subscriber.module';
+import { EmailModule } from './email/email.module';
 import { ConfigFeatureModule } from './config-module/config.module';
 import { DatabaseModule } from './database/database.module';
 import { CommonModule } from './common/common.module';
@@ -82,6 +83,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     MusicModule,
     NotificationModule,
     SubscriberModule,
+    EmailModule,
     ConfigFeatureModule,
   ],
   providers: [
