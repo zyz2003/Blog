@@ -21,7 +21,7 @@ import { Public } from '../common/decorators/public.decorator';
  * Per D-208: subscribe and send-code endpoints have rate limiting (3/60s).
  * Response format is wrapped by global ResponseInterceptor as { code, data, message }.
  */
-@Controller('api/public')
+@Controller('public')
 @Public()
 export class SubscriberController {
   constructor(

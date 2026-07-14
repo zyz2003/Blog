@@ -10,7 +10,17 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // Global prefix matching Go backend router -- all routes are /api/*
-  app.setGlobalPrefix('api');
+  // Exclude RSS/Sitemap/robots.txt routes which are served at root (no /api/ prefix)
+  // matching Go backend routing: /rss.xml, /feed.xml, /atom.xml, /sitemap.xml, /robots.txt
+  app.setGlobalPrefix('api', {
+    exclude: [
+      'rss.xml',
+      'feed.xml',
+      'atom.xml',
+      'sitemap.xml',
+      'robots.txt',
+    ],
+  });
 
   // CORS configuration matching Go backend cors.go
   app.enableCors({

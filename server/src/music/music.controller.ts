@@ -10,7 +10,7 @@ import { Public } from '../common/decorators/public.decorator';
  * Both endpoints are @Public() (no auth required).
  * Response format is wrapped by global ResponseInterceptor as { code, data, message }.
  */
-@Controller('api/public/music')
+@Controller('public/music')
 @Public()
 export class MusicController {
   constructor(private readonly musicService: MusicService) {}
