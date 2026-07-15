@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ScheduleModule as NestScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD, APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
@@ -46,6 +47,8 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
       validationSchema,
     }),
     ThrottlerModule.forRoot([{ name: 'default', ttl: 60000, limit: 100 }]),
+    // Phase 10 — Scheduled Tasks: register NestJS schedule module before feature modules
+    NestScheduleModule.forRoot(),
     DatabaseModule,
     CommonModule,
     AuthModule,
