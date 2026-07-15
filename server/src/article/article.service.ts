@@ -46,6 +46,14 @@ const RESERVED_PATHS = [
 export class ArticleService {
   private readonly logger = new Logger(ArticleService.name);
 
+  /**
+   * In-memory view count map for batched DB sync.
+   * Key format: article:view_count:{publicId} (matches Go Redis key minus prefix).
+   * Per D-65 upgrade: replaces per-request DB increment with in-memory batching.
+   * Volatile — counts lost on crash (matches Go backend Redis behavior).
+   */
+  private viewCountMap = new Map<string, number>();
+
   constructor(
     private readonly articleRepo: ArticleRepository,
     private readonly categoryRepo: PostCategoryRepository,
@@ -728,8 +736,11 @@ export class ArticleService {
       throw new NotFoundException('文章未找到');
     }
 
-    // Increment view count (D-65: simple increment for Phase 03)
-    await this.articleRepo.incrementViewCount(article.id);
+    // Increment view count in-memory map (D-65 upgrade: batched sync per D-225)
+    // Matches Go cacheSvc.IncrBy(ArticleViewCountKey(publicID), 1)
+    const publicId = generatePublicID(article.id, EntityType.Article);
+    const key = `article:view_count:${publicId}`;
+    this.viewCountMap.set(key, (this.viewCountMap.get(key) ?? 0) + 1);
 
     // Find prev/next — returns raw chronological neighbors
     const { chronoNewer, chronoOlder } = await this.articleRepo.findPrevNextArticles(
@@ -783,6 +794,24 @@ export class ArticleService {
       is_doc: article.isDoc ?? false,
       doc_series_id: docSeriesId,
     };
+  }
+
+  // ─── View count map accessors (for SyncViewCountsJob) ────────────
+
+  /**
+   * Get the in-memory view count map.
+   * Used by SyncViewCountsJob to read and batch-sync to DB.
+   */
+  getViewCountMap(): Map<string, number> {
+    return this.viewCountMap;
+  }
+
+  /**
+   * Clear specific keys from the view count map after DB sync.
+   * Matches Go GetAndDeleteMany pattern.
+   */
+  clearViewCountKeys(keys: string[]): void {
+    keys.forEach((k) => this.viewCountMap.delete(k));
   }
 
   /**
