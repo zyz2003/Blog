@@ -113,7 +113,7 @@ describe('LinkService', () => {
       get: vi.fn(),
     } as any;
 
-    service = new LinkService(repo, rateLimiter, settingsService);
+    service = new LinkService(repo, rateLimiter, settingsService, { dispatchLinkCleanup: vi.fn() } as any);
   });
 
   // ─── Test 1: applyLink validates request, checks email repeat, checks URL exists,

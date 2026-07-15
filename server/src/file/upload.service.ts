@@ -13,6 +13,7 @@ import {
 import { DRIZZLE } from '../database/database.module';
 import { StoragePolicyService } from '../storage-policy/storage-policy.service';
 import { ThumbnailService } from '../thumbnail/thumbnail.service';
+import { ScheduleService } from '../schedule/schedule.service';
 import {
   generatePublicID,
   decodePublicID,
@@ -59,6 +60,9 @@ export class UploadService implements OnModuleInit, OnModuleDestroy {
     // forwardRef is needed because FileModule and ThumbnailModule use forwardRef on each other
     @Inject(forwardRef(() => ThumbnailService))
     private readonly thumbnailService: ThumbnailService,
+    // ScheduleService for on-demand thumbnail generation dispatch
+    // ScheduleModule is @Global, so no forwardRef needed
+    private readonly scheduleService: ScheduleService,
   ) {}
 
   async onModuleInit() {
@@ -363,20 +367,10 @@ export class UploadService implements OnModuleInit, OnModuleDestroy {
       );
     }
 
-    // 6. Trigger thumbnail generation per D-103
-    if (fileRecord && this.thumbnailService) {
-      try {
-        await this.thumbnailService.generateThumbnail(
-          fileRecord.id,
-          targetPath,
-          fileName,
-        );
-      } catch (error) {
-        // Per D-106: thumbnail failure does not block file upload
-        this.logger.warn(
-          `Thumbnail generation failed for ${fileName}: ${error.message}`,
-        );
-      }
+    // 6. Dispatch thumbnail generation via ScheduleService (fire-and-forget)
+    // Matches Go: articleSvc.UploadArticleImage() dispatches ThumbnailGenerationJob
+    if (fileRecord) {
+      this.scheduleService.dispatchThumbnailGeneration(fileRecord.id);
     }
   }
 
@@ -511,19 +505,10 @@ export class UploadService implements OnModuleInit, OnModuleDestroy {
         .returning();
     });
 
-    // Trigger thumbnail generation (try-catch per D-106)
-    if (fileRecord && this.thumbnailService) {
-      try {
-        await this.thumbnailService.generateThumbnail(
-          fileRecord.id,
-          targetPath,
-          fileName,
-        );
-      } catch (error) {
-        this.logger.warn(
-          `Thumbnail generation failed for ${fileName}: ${error.message}`,
-        );
-      }
+    // Dispatch thumbnail generation via ScheduleService (fire-and-forget)
+    // Matches Go: articleSvc.UploadArticleImage() dispatches ThumbnailGenerationJob
+    if (fileRecord) {
+      this.scheduleService.dispatchThumbnailGeneration(fileRecord.id);
     }
 
     return {

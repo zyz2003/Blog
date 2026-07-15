@@ -34,6 +34,6 @@ import { CommentRateLimiter } from './comment-rate-limiter';
   ],
   controllers: [CommentController, CommentAdminController],
   providers: [CommentService, CommentRepository, CommentRateLimiter],
-  exports: [CommentService],
+  exports: [CommentService, CommentRepository],
 })
 export class CommentModule {}

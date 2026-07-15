@@ -1,7 +1,8 @@
-import { Inject, Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Inject, Injectable, Logger, BadRequestException, forwardRef } from '@nestjs/common';
 import { LinkRepository, CreateLinkParams } from './link.repository';
 import { LinkApplyRateLimiter } from './link-apply-rate-limiter';
 import { SettingsService } from '../settings/settings.service';
+import { ScheduleService } from '../schedule/schedule.service';
 import {
   generatePublicID,
   decodePublicID,
@@ -74,6 +75,9 @@ export class LinkService {
     private readonly repo: LinkRepository,
     private readonly linkApplyRateLimiter: LinkApplyRateLimiter,
     private readonly settingsService: SettingsService,
+    // ScheduleService for on-demand link cleanup dispatch
+    // ScheduleModule is @Global, so no forwardRef needed
+    private readonly scheduleService: ScheduleService,
   ) {}
 
   // ============================================================
@@ -473,6 +477,10 @@ export class LinkService {
       throw new BadRequestException(ErrorCodes.INVALID_PUBLIC_ID);
     }
     await this.repo.softDelete([decoded.dbID]);
+
+    // Dispatch link cleanup after deletion
+    // Matches Go: linkSvc.Delete() dispatches LinkCleanupJob
+    this.scheduleService.dispatchLinkCleanup();
   }
 
   // ============================================================
@@ -514,6 +522,10 @@ export class LinkService {
       try {
         await this.repo.softDelete(validDbIds);
         result.success = validDbIds.length;
+
+        // Dispatch link cleanup after batch deletion
+        // Matches Go: linkSvc.Delete() dispatches LinkCleanupJob
+        this.scheduleService.dispatchLinkCleanup();
       } catch (error) {
         result.failed += validDbIds.length;
         for (const dbId of validDbIds) {

@@ -125,6 +125,7 @@ function createService() {
     mockFileService,
     mockGeoIPService,
     mockNotificationService,
+    { dispatchCommentNotification: vi.fn() } as any,
     mockDb,
   );
 }

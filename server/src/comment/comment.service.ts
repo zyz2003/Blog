@@ -4,6 +4,7 @@ import {
   Logger,
   BadRequestException,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common';
 import { DRIZZLE } from '../database/database.module';
 import { CommentRepository, CreateCommentParams } from './comment.repository';
@@ -14,6 +15,7 @@ import { StoragePolicyService } from '../storage-policy/storage-policy.service';
 import { FileService } from '../file/file.service';
 import { GeoIPService } from '../weather/geoip.service';
 import { NotificationService } from '../notification/notification.service';
+import { ScheduleService } from '../schedule/schedule.service';
 import { renderCommentMarkdown } from './comment-markdown';
 import {
   generatePublicID,
@@ -52,6 +54,9 @@ export class CommentService {
     private readonly fileService: FileService,
     private readonly geoipService: GeoIPService,
     private readonly notificationService: NotificationService,
+    // ScheduleService for on-demand comment notification dispatch
+    // ScheduleModule is @Global, so no forwardRef needed
+    private readonly scheduleService: ScheduleService,
     @Inject(DRIZZLE) private readonly db: any,
   ) {}
 
@@ -245,6 +250,11 @@ export class CommentService {
       // Fire-and-forget: inner try-catch handles errors (WR-03 fix: no double error handling)
       this.fireCommentReplyNotification(replyToComment.userId, req.nickname);
     }
+
+    // 14. Dispatch comment notification job (email + in-app)
+    // Matches Go: commentSvc.Create() dispatches CommentNotificationJob
+    // The job handles both admin notification and reply notification via email
+    this.scheduleService.dispatchCommentNotification(newComment.id);
 
     // 14. Return response DTO
     return await this.toResponseDTO(newComment, parentComment, replyToComment, false);

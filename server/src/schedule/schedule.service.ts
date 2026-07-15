@@ -1,6 +1,10 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit, Inject } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { StatisticsService } from '../statistics/statistics.service';
+import { ThumbnailGenerationJob } from './jobs/thumbnail-generation.job';
+import { CommentNotificationJob } from './jobs/comment-notification.job';
+import { LinkCleanupJob } from './jobs/link-cleanup.job';
+import { CleanupOrphanedItemsJob } from './jobs/cleanup-orphaned-items.job';
 
 /**
  * ScheduleService — core job execution infrastructure with panic-recovery and logging wrappers.
@@ -16,6 +20,10 @@ export class ScheduleService implements OnModuleInit {
 
   constructor(
     private readonly statisticsService: StatisticsService,
+    private readonly thumbnailGenerationJob: ThumbnailGenerationJob,
+    private readonly commentNotificationJob: CommentNotificationJob,
+    private readonly linkCleanupJob: LinkCleanupJob,
+    private readonly cleanupOrphanedItemsJob: CleanupOrphanedItemsJob,
   ) {}
 
   /**
@@ -79,6 +87,44 @@ export class ScheduleService implements OnModuleInit {
     this.runJob(jobName, fn).catch(() => {
       // Already handled by panicRecovery wrapper; this catch is a safety net
     });
+  }
+
+  /**
+   * Dispatch thumbnail generation for a file.
+   * Matches Go Broker.DispatchThumbnailGeneration (broker.go line 230).
+   */
+  dispatchThumbnailGeneration(fileId: number): void {
+    this.dispatch('ThumbnailGenerationJob', () => this.thumbnailGenerationJob.run(fileId));
+    this.logger.log(`Successfully queued thumbnail generation job for fileId=${fileId}`);
+  }
+
+  /**
+   * Dispatch comment notification for a new comment.
+   * Matches Go Broker.DispatchCommentNotification (broker.go line 133).
+   */
+  dispatchCommentNotification(commentId: number): void {
+    this.dispatch('CommentNotificationJob', () => this.commentNotificationJob.run(commentId));
+    this.logger.log(`Successfully queued comment notification job for commentId=${commentId}`);
+  }
+
+  /**
+   * Dispatch link cleanup for unused categories and tags.
+   * Matches Go Broker.DispatchLinkCleanup (broker.go line 252).
+   */
+  dispatchLinkCleanup(): void {
+    this.dispatch('LinkCleanupJob', () => this.linkCleanupJob.run());
+    this.logger.log('Successfully queued link cleanup job');
+  }
+
+  /**
+   * Dispatch orphaned items cleanup for unused tags and categories.
+   * Matches Go Broker.DispatchOrphanCleanup (broker.go line 140).
+   */
+  dispatchOrphanCleanup(): void {
+    this.dispatch('CleanupOrphanedItemsJob', async () => {
+      await this.cleanupOrphanedItemsJob.run();
+    });
+    this.logger.log('Successfully queued orphaned items cleanup job');
   }
 
   /**

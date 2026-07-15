@@ -253,6 +253,51 @@ export class SettingsService implements OnModuleInit {
     current[keys[keys.length - 1]] = value;
   }
 
+  /**
+   * Export all settings as a plain object.
+   * Matches Go ImportExportService.ExportConfig() which exports all settings as JSON.
+   * Used by BackupService for settings backup.
+   */
+  async exportAll(): Promise<Record<string, string>> {
+    await this.ensureLoaded();
+    const data: Record<string, string> = {};
+    this.cache.forEach((value, key) => {
+      data[key] = value;
+    });
+    return data;
+  }
+
+  /**
+   * Import settings from a plain object.
+   * Matches Go ImportExportService.ImportConfig() which reads JSON and upserts to DB.
+   * Used by BackupService for settings restore.
+   *
+   * Validates input, upserts each key-value pair, refreshes cache.
+   */
+  async importAll(data: Record<string, string>): Promise<void> {
+    if (!data || typeof data !== 'object' || Object.keys(data).length === 0) {
+      throw new Error('导入数据不能为空');
+    }
+
+    // Upsert each key-value pair (same logic as update())
+    for (const [key, value] of Object.entries(data)) {
+      await this.db
+        .insert(settings)
+        .values({ configKey: key, value: String(value) })
+        .onConflictDoUpdate({
+          target: settings.configKey,
+          set: { value: String(value) },
+        })
+        .run();
+    }
+
+    // Refresh cache from database
+    await this.loadCache();
+    this.loaded = true;
+
+    this.logger.log(`Settings import completed: ${Object.keys(data).length} keys imported`);
+  }
+
   private autoBackup(): void {
     try {
       const backupDir = path.join(process.cwd(), 'data', 'backups');

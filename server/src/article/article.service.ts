@@ -13,6 +13,7 @@ import { PostTagRepository } from '../post-tag/post-tag.repository';
 import { ArticleHistoryService } from '../article-history/article-history.service';
 import { SearchService } from '../search/search.service';
 import { RssService } from '../rss/rss.service';
+import { ScheduleService } from '../schedule/schedule.service';
 import { DRIZZLE } from '../database/database.module';
 import { articles } from '../database/schemas/article.schema';
 import { generatePublicID, decodePublicID, EntityType } from '../common/utils/sqids.util';
@@ -62,6 +63,9 @@ export class ArticleService {
     private readonly searchService: SearchService,
     @Inject(forwardRef(() => RssService))
     private readonly rssService: RssService,
+    // ScheduleService for on-demand orphan cleanup dispatch
+    // ScheduleModule is @Global, so no forwardRef needed
+    private readonly scheduleService: ScheduleService,
     @Inject(DRIZZLE) private readonly db: any,
   ) {}
 
@@ -440,6 +444,12 @@ export class ArticleService {
       // Cache invalidation failure must not block article update
     }
 
+    // Dispatch orphan cleanup when tags/categories change
+    // Matches Go: article changes dispatch CleanupOrphanedItemsJob
+    if (categoryDiff || tagDiff) {
+      this.scheduleService.dispatchOrphanCleanup();
+    }
+
     return this.toApiResponse(updated, false, true);
   }
 
@@ -476,6 +486,10 @@ export class ArticleService {
       this.logger.warn(`RSS cache invalidation failed: ${e}`);
       // Cache invalidation failure must not block article deletion
     }
+
+    // Dispatch orphan cleanup after article deletion
+    // Matches Go: article deletion dispatches CleanupOrphanedItemsJob
+    this.scheduleService.dispatchOrphanCleanup();
 
     return null;
   }

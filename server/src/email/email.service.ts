@@ -3,6 +3,8 @@ import { SettingsService } from '../settings/settings.service';
 import {
   verificationEmailTemplate,
   articlePushEmailTemplate,
+  commentReplyEmailTemplate,
+  commentAdminEmailTemplate,
 } from './email.templates';
 import * as nodemailer from 'nodemailer';
 
@@ -134,6 +136,115 @@ export class EmailService {
       );
       return false;
     }
+  }
+
+  /**
+   * Send comment notification email.
+   * Matches Go SendCommentNotification (email_service.go lines 173-370).
+   *
+   * Two scenarios matching Go:
+   * 1. Notify admin of new comment (when not admin's own comment)
+   * 2. Notify parent commenter of reply (when parent exists with email)
+   *
+   * Per Go: checks notify settings, avoids self-notification, avoids duplicate admin notification.
+   */
+  async sendCommentNotification(newComment: any, parentComment: any | null): Promise<boolean> {
+    const siteName = this.settingsService.get('APP_NAME') || 'Anheyu Blog';
+    let siteUrl = this.settingsService.get('SITE_URL') || 'https://anheyu.com';
+    // Sanitize siteURL matching Go
+    if (!siteUrl || siteUrl === 'https://' || siteUrl === 'http://') {
+      siteUrl = 'https://anheyu.com';
+    }
+    siteUrl = siteUrl.replace(/\/+$/, '');
+
+    const pageUrl = siteUrl + (newComment.targetPath || '');
+    const targetTitle = newComment.targetTitle || '一个页面';
+
+    const newCommenterEmail = newComment.email || '';
+    const newCommenterNick = newComment.nickname || '匿名';
+
+    // --- Scenario 1: Notify admin of new comment ---
+    const adminEmail = this.settingsService.get('front_desk.site_owner_email') || '';
+    const bloggerEmail = this.settingsService.get('comment_blogger_email') || '';
+    const primaryAdminEmail = bloggerEmail || adminEmail;
+
+    const notifyAdmin = this.settingsService.get('comment_notify_admin') === 'true';
+    const pushChannel = this.settingsService.get('pushoo_channel') || '';
+    const scMailNotify = this.settingsService.get('sc_mail_notify') === 'true';
+
+    // Email notification logic matching Go:
+    // 1. If no instant notification configured, send email
+    // 2. If instant notification configured but dual notification enabled, send email
+    // 3. If instant notification configured but dual notification disabled, skip email
+    const shouldSendEmail = notifyAdmin && (!pushChannel || scMailNotify);
+
+    const isAdminEmail = (email: string): boolean => {
+      if (!email) return false;
+      if (bloggerEmail && email.toLowerCase() === bloggerEmail.toLowerCase()) return true;
+      if (adminEmail && email.toLowerCase() === adminEmail.toLowerCase()) return true;
+      return false;
+    };
+
+    // Check if new comment is from admin
+    let isAdminComment = newComment.isAdminComment || false;
+    if (!isAdminComment && newCommenterEmail) {
+      isAdminComment = isAdminEmail(newCommenterEmail);
+    }
+
+    if (primaryAdminEmail && shouldSendEmail && !isAdminComment) {
+      try {
+        const subject = `${siteName} - 新评论: ${targetTitle}`;
+        const html = commentAdminEmailTemplate({
+          appName: siteName,
+          siteUrl,
+          pageUrl,
+          targetTitle,
+          commenterNick: newCommenterNick,
+          commentContent: newComment.content || '',
+        });
+        // Fire-and-forget matching Go: go func() { _ = s.send(...) }()
+        this.sendMail(primaryAdminEmail, subject, html);
+      } catch (error) {
+        this.logger.error(`Failed to send admin comment notification: ${error}`);
+      }
+    }
+
+    // --- Scenario 2: Notify parent commenter of reply ---
+    const notifyReply = this.settingsService.get('comment_notify_reply') === 'true';
+    const shouldSendReplyEmail = notifyReply && (!pushChannel || scMailNotify);
+
+    if (shouldSendReplyEmail && parentComment && parentComment.email) {
+      const parentEmail = parentComment.email;
+
+      // Skip self-reply
+      if (newCommenterEmail && newCommenterEmail.toLowerCase() === parentEmail.toLowerCase()) {
+        return true;
+      }
+
+      // Skip if parent is admin and already got admin notification
+      if (isAdminEmail(parentEmail) && shouldSendEmail && !isAdminComment) {
+        return true;
+      }
+
+      try {
+        const subject = `${siteName} - 新回复通知: ${targetTitle}`;
+        const html = commentReplyEmailTemplate({
+          appName: siteName,
+          siteUrl,
+          pageUrl,
+          targetTitle,
+          parentNick: parentComment.nickname || '评论者',
+          replyNick: newCommenterNick,
+          replyContent: newComment.content || '',
+        });
+        // Fire-and-forget matching Go
+        this.sendMail(parentEmail, subject, html);
+      } catch (error) {
+        this.logger.error(`Failed to send reply comment notification: ${error}`);
+      }
+    }
+
+    return true;
   }
 
   /**

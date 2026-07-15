@@ -5,3 +5,7 @@ export { LinkHealthCheckJob } from './link-health-check.job';
 export { ScheduledPublishJob } from './scheduled-publish.job';
 export { ArticleHistoryCleanupJob } from './article-history-cleanup.job';
 export { ScheduledBackupJob } from './scheduled-backup.job';
+export { ThumbnailGenerationJob } from './thumbnail-generation.job';
+export { CommentNotificationJob } from './comment-notification.job';
+export { LinkCleanupJob } from './link-cleanup.job';
+export { CleanupOrphanedItemsJob } from './cleanup-orphaned-items.job';
