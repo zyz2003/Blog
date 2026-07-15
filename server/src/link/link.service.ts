@@ -803,6 +803,84 @@ export class LinkService {
   }
 
   /**
+   * Force health check — bypasses is_running guard.
+   * Used by LinkHealthCheckJob (cron) which should always execute.
+   * Matches D-229: two entry points reuse same core logic.
+   */
+  async forceHealthCheck(): Promise<HealthCheckResult> {
+    const links = await this.repo.findLinksForHealthCheck();
+
+    const result: HealthCheckResult = {
+      total: links.length,
+      healthy: 0,
+      unhealthy: 0,
+      unhealthy_ids: [],
+    };
+
+    if (links.length === 0) return result;
+
+    const toInvalidIds: number[] = [];
+    const toApprovedIds: number[] = [];
+
+    // Process with max 10 concurrent
+    const CONCURRENCY = 10;
+    let activeCount = 0;
+    let index = 0;
+
+    await new Promise<void>((resolve) => {
+      const processNext = () => {
+        while (activeCount < CONCURRENCY && index < links.length) {
+          const link = links[index++];
+          activeCount++;
+
+          this.checkSingleLink(link.url)
+            .then((isHealthy) => {
+              if (isHealthy) {
+                result.healthy++;
+                if (link.status === 'INVALID') {
+                  toApprovedIds.push(link.id);
+                }
+              } else {
+                result.unhealthy++;
+                if (link.status === 'APPROVED') {
+                  toInvalidIds.push(link.id);
+                  result.unhealthy_ids.push(link.id);
+                }
+              }
+              activeCount--;
+              processNext();
+            })
+            .catch(() => {
+              result.unhealthy++;
+              if (link.status === 'APPROVED') {
+                toInvalidIds.push(link.id);
+                result.unhealthy_ids.push(link.id);
+              }
+              activeCount--;
+              processNext();
+            });
+        }
+
+        if (activeCount === 0 && index >= links.length) {
+          resolve();
+        }
+      };
+
+      processNext();
+    });
+
+    // Batch update statuses
+    for (const id of toInvalidIds) {
+      await this.repo.updateStatus(id, 'INVALID');
+    }
+    for (const id of toApprovedIds) {
+      await this.repo.updateStatus(id, 'APPROVED');
+    }
+
+    return result;
+  }
+
+  /**
    * Get current health check status.
    */
   getHealthCheckStatus(): HealthCheckStatusDto {

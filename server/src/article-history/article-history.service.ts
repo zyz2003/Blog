@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject, Logger } from '@nestjs/common';
 import { ArticleHistoryRepository } from './article-history.repository';
 import { DRIZZLE } from '../database/database.module';
+import { articleHistories } from '../database/schemas/article-history.schema';
 import { users } from '../database/schemas/user.schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { generatePublicID, decodePublicID, EntityType } from '../common/utils/sqids.util';
 import { toISODateString } from '../common/utils/time.util';
 import { ErrorCodes } from '../common/constants/error-codes';
@@ -12,6 +13,8 @@ const MAX_VERSIONS = 10;
 
 @Injectable()
 export class ArticleHistoryService {
+  private readonly logger = new Logger(ArticleHistoryService.name);
+
   constructor(
     private readonly historyRepo: ArticleHistoryRepository,
     @Inject(DRIZZLE) private readonly db: any,
@@ -199,6 +202,34 @@ export class ArticleHistoryService {
       change_note: history.changeNote ?? null,
       created_at: toISODateString(history.createdAt),
     };
+  }
+
+  /**
+   * Clean up old history versions for ALL articles.
+   * Queries all distinct article IDs, calls per-article cleanup.
+   * Matches Go CleanupAllOldVersions (article_history_service.go).
+   * Returns total number of articles cleaned.
+   */
+  async cleanupAllOldVersions(): Promise<number> {
+    // Get all distinct article IDs that have history records
+    const articleIds = await this.db
+      .selectDistinct({ articleId: articleHistories.articleId })
+      .from(articleHistories);
+
+    let cleanedCount = 0;
+    for (const row of articleIds) {
+      try {
+        await this.historyRepo.deleteOldVersions(row.articleId, MAX_VERSIONS);
+        cleanedCount++;
+      } catch (error) {
+        this.logger.warn(
+          `Failed to cleanup old versions for article ${row.articleId}: ${String(error)}`,
+        );
+        // Continue to next article — don't stop on single failure
+      }
+    }
+
+    return cleanedCount;
   }
 
   /**

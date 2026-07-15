@@ -38,7 +38,7 @@ import { findOrCreateParentPath } from './utils/parent-path';
 import { files } from '../database/schemas/file.schema';
 import { entities } from '../database/schemas/entity.schema';
 import { storagePolicies } from '../database/schemas/storage-policy.schema';
-import { eq, and, isNull, sql } from 'drizzle-orm';
+import { eq, and, isNull, isNotNull, lt, sql } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'path';
 import * as fs from 'fs/promises';
@@ -531,6 +531,49 @@ export class UploadService implements OnModuleInit, OnModuleDestroy {
       name: fileRecord.name,
       size: fileRecord.size,
     };
+  }
+
+  /**
+   * Clean up abandoned upload records in the database.
+   * Finds file_entity records with upload_session_id set and created_at > 24h ago,
+   * deletes the entity records and their disk files.
+   * Matches Go CleanupAbandonedUploads.
+   */
+  async cleanupAbandonedUploads(): Promise<number> {
+    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    // Find entity records where upload_session_id IS NOT NULL AND created_at < cutoff
+    // These are incomplete uploads that were never finalized
+    const abandoned = await this.db
+      .select()
+      .from(entities)
+      .where(
+        and(
+          isNotNull(entities.uploadSessionId),
+          lt(entities.createdAt, cutoff),
+        ),
+      );
+
+    if (abandoned.length === 0) return 0;
+
+    // Delete each abandoned entity and its disk file
+    for (const entity of abandoned) {
+      // Try to delete the physical file if source is set
+      if (entity.source) {
+        try {
+          await fs.unlink(entity.source);
+        } catch {
+          // File may not exist on disk — skip
+        }
+      }
+
+      // Delete the entity record
+      await this.db
+        .delete(entities)
+        .where(eq(entities.id, entity.id));
+    }
+
+    return abandoned.length;
   }
 
   /**
