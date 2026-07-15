@@ -33,7 +33,7 @@ Phases 10-11 complete. Scheduled tasks running, migration tool available, end-to
 | 07 | Statistics & Links | 5/5 | Complete    | 2026-07-11 |
 | 08 | Album & Doc Series | 5/5 | Complete    | 2026-07-12 |
 | 09 | SEO & Music & Notifications | 7/7 | Complete    | 2026-07-14 |
-| 10 | Scheduled Tasks | Cron jobs for history cleanup, temp data cleanup, statistics aggregation, view sync, thumbnail generation, link health check, scheduled publishing, and backup | P2 | TBD |
+| 10 | Scheduled Tasks | 1/4 | In Progress|  |
 | 11 | Migration & Integration | PostgreSQL-to-SQLite migration tool; full end-to-end API compatibility testing against Go backend responses | Final | TBD |
 
 ---
@@ -372,7 +372,23 @@ Plans:
 - Backup job exports configuration as JSON on schedule
 - All jobs use @nestjs/schedule with configurable intervals
 
-**Plans:** TBD
+**Plans:** 1/4 plans executed
+
+Plans:
+
+- [ ] PLAN.md
+
+**Wave 1** (no dependencies)
+
+- [x] 10-01-PLAN.md — ScheduleModule, ScheduleService with wrappers, 7 cron jobs, view count Map, startup catch-up
+
+**Wave 2** *(blocked on Wave 1)*
+
+- [x] 10-02-PLAN.md — On-demand dispatch (4 jobs), service extensions, SettingsService exportAll/importAll
+
+**Wave 3** *(blocked on Wave 2)*
+
+- [x] 10-03-PLAN.md — BackupService, BackupController (5 admin endpoints), ScheduledBackupJob wiring, integration
 
 ---
 
