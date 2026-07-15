@@ -33,7 +33,7 @@ Phases 10-11 complete. Scheduled tasks running, migration tool available, end-to
 | 07 | Statistics & Links | 5/5 | Complete    | 2026-07-11 |
 | 08 | Album & Doc Series | 5/5 | Complete    | 2026-07-12 |
 | 09 | SEO & Music & Notifications | 7/7 | Complete    | 2026-07-14 |
-| 10 | Scheduled Tasks | 2/4 | In Progress|  |
+| 10 | Scheduled Tasks | 3/4 | In Progress|  |
 | 11 | Migration & Integration | PostgreSQL-to-SQLite migration tool; full end-to-end API compatibility testing against Go backend responses | Final | TBD |
 
 ---
@@ -372,7 +372,7 @@ Plans:
 - Backup job exports configuration as JSON on schedule
 - All jobs use @nestjs/schedule with configurable intervals
 
-**Plans:** 2/4 plans executed
+**Plans:** 3/4 plans executed
 
 Plans:
 
