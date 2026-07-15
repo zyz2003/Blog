@@ -11,6 +11,7 @@ import { EmailModule } from '../email/email.module';
 import { CommentModule } from '../comment/comment.module';
 import { ThumbnailModule } from '../thumbnail/thumbnail.module';
 import { DatabaseModule } from '../database/database.module';
+import { BackupModule } from '../backup/backup.module';
 import {
   CleanupAbandonedUploadsJob,
   StatisticsAggregationJob,
@@ -39,6 +40,7 @@ import {
     CommentModule,
     ThumbnailModule,
     DatabaseModule,
+    BackupModule,
   ],
   providers: [
     ScheduleService,
