@@ -815,6 +815,72 @@ export class ArticleService {
   }
 
   /**
+   * Sync view counts from in-memory Map to database.
+   * Decodes publicIds, builds batch update map, calls repository.
+   * Used by SyncViewCountsJob — encapsulates repo access within service.
+   */
+  async syncViewCountsToDb(): Promise<{ syncedCount: number; clearedKeys: string[] }> {
+    const map = this.viewCountMap;
+    if (map.size === 0) return { syncedCount: 0, clearedKeys: [] };
+
+    const updates = new Map<number, number>();
+    const validKeys: string[] = [];
+    const ARTICLE_VIEW_COUNT_KEY_PREFIX = 'article:view_count:';
+
+    for (const [key, increment] of map) {
+      const publicId = key.startsWith(ARTICLE_VIEW_COUNT_KEY_PREFIX)
+        ? key.slice(ARTICLE_VIEW_COUNT_KEY_PREFIX.length)
+        : null;
+
+      if (!publicId) continue;
+
+      try {
+        const { dbID, entityType } = decodePublicID(publicId);
+        if (entityType !== EntityType.Article) continue;
+        updates.set(dbID, (updates.get(dbID) ?? 0) + increment);
+        validKeys.push(key);
+      } catch {
+        continue;
+      }
+    }
+
+    if (updates.size > 0) {
+      await this.articleRepo.batchUpdateViewCounts(updates);
+      this.clearViewCountKeys(validKeys);
+    }
+
+    return { syncedCount: updates.size, clearedKeys: validKeys };
+  }
+
+  /**
+   * Find articles that are scheduled to be published.
+   * Used by ScheduledPublishJob.
+   */
+  async findScheduledArticlesToPublish(): Promise<any[]> {
+    return this.articleRepo.findScheduledArticlesToPublish();
+  }
+
+  /**
+   * Publish a scheduled article and invalidate caches.
+   * Returns the article's publicId and abbrlink for cache invalidation.
+   */
+  async publishScheduledArticle(dbId: number): Promise<{ publicId: string; abbrlink: string | null }> {
+    await this.articleRepo.publishArticle(dbId);
+    const publicId = generatePublicID(dbId, EntityType.Article);
+
+    // Fetch article to get abbrlink for cache invalidation
+    let abbrlink: string | null = null;
+    try {
+      const article = await this.articleRepo.findById(dbId);
+      abbrlink = article?.abbrlink ?? null;
+    } catch {
+      // Article lookup failure should not block publish
+    }
+
+    return { publicId, abbrlink };
+  }
+
+  /**
    * Extract slug from URL path.
    * Matches Go extractSlugFromURL (handler.go lines 378-407).
    */

@@ -1,10 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { ScheduleService } from '../schedule.service';
-import { ArticleRepository } from '../../article/article.repository';
+import { ArticleService } from '../../article/article.service';
 import { RssService } from '../../rss/rss.service';
 import { MemoryCache } from '../../common/cache/memory-cache.util';
-import { generatePublicID, EntityType } from '../../common/utils/sqids.util';
 
 /**
  * ScheduledPublishJob — publishes scheduled articles when their time arrives.
@@ -18,7 +17,7 @@ export class ScheduledPublishJob {
 
   constructor(
     private readonly scheduleService: ScheduleService,
-    private readonly articleRepo: ArticleRepository,
+    private readonly articleService: ArticleService,
     private readonly rssService: RssService,
     private readonly memoryCache: MemoryCache,
   ) {}
@@ -26,7 +25,7 @@ export class ScheduledPublishJob {
   @Cron('* * * * *')
   async handleCron() {
     await this.scheduleService.runJob(ScheduledPublishJob.name, async () => {
-      const articles = await this.articleRepo.findScheduledArticlesToPublish();
+      const articles = await this.articleService.findScheduledArticlesToPublish();
 
       if (articles.length === 0) return;
 
@@ -37,13 +36,12 @@ export class ScheduledPublishJob {
 
       for (const article of articles) {
         try {
-          await this.articleRepo.publishArticle(article.id);
+          const { publicId, abbrlink } = await this.articleService.publishScheduledArticle(article.id);
 
           // Invalidate article-level caches
-          const publicId = generatePublicID(article.id, EntityType.Article);
           this.memoryCache.delete(`article:html:${publicId}`);
-          if (article.abbrlink) {
-            this.memoryCache.delete(`article:html:${article.abbrlink}`);
+          if (abbrlink) {
+            this.memoryCache.delete(`article:html:${abbrlink}`);
           }
 
           this.logger.log(
