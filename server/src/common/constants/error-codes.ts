@@ -170,6 +170,16 @@ export const ErrorCodes = {
   SUBSCRIBER_CODE_EXPIRED: '验证码已过期或无效',
   SUBSCRIBER_CODE_INVALID: '验证码错误',
   SUBSCRIBER_EMAIL_INVALID: '邮箱格式无效',
+
+  // Phase 10 - Backup error messages
+  BACKUP_CREATE_FAILED: '创建备份失败',
+  BACKUP_LIST_FAILED: '获取备份列表失败',
+  BACKUP_RESTORE_FAILED: '恢复备份失败',
+  BACKUP_DELETE_FAILED: '删除备份失败',
+  BACKUP_CLEAN_FAILED: '清理备份失败',
+  BACKUP_FILE_NOT_FOUND: '备份文件不存在',
+  BACKUP_FILENAME_INVALID: '无效的备份文件名',
+  BACKUP_KEEP_COUNT_INVALID: '保留数量无效',
 } as const;
 
 export type ErrorCode = keyof typeof ErrorCodes;
