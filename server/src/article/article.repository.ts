@@ -7,7 +7,7 @@ import { postCategories } from '../database/schemas/post-category.schema';
 import { postTags } from '../database/schemas/post-tag.schema';
 import { users } from '../database/schemas/user.schema';
 import { decodePublicID, EntityType } from '../common/utils/sqids.util';
-import { isNull, eq, and, desc, asc, like, sql, inArray, gt, lt } from 'drizzle-orm';
+import { isNull, eq, and, desc, asc, like, sql, inArray, gt, lt, isNotNull, lte } from 'drizzle-orm';
 
 /**
  * Calculate word count and reading time from Markdown content.
@@ -724,6 +724,58 @@ export class ArticleRepository {
     await this.db
       .update(articles)
       .set({ viewCount: sql`${articles.viewCount} + 1` })
+      .where(eq(articles.id, dbId));
+  }
+
+  /**
+   * Batch update view counts by incrementing.
+   * Accepts Map of dbId -> increment count.
+   * Matches Go UpdateViewCounts (article_repo.go).
+   */
+  async batchUpdateViewCounts(updates: Map<number, number>): Promise<void> {
+    if (updates.size === 0) return;
+
+    await this.db.transaction(async (tx: any) => {
+      for (const [dbId, increment] of updates) {
+        await tx
+          .update(articles)
+          .set({ viewCount: sql`${articles.viewCount} + ${increment}` })
+          .where(eq(articles.id, dbId));
+      }
+    });
+  }
+
+  /**
+   * Find articles that are scheduled to be published.
+   * Matches Go FindScheduledArticlesToPublish.
+   * Returns articles with status DRAFT or SCHEDULED where scheduledAt <= now.
+   */
+  async findScheduledArticlesToPublish(): Promise<any[]> {
+    return this.db
+      .select()
+      .from(articles)
+      .where(
+        and(
+          inArray(articles.status, ['DRAFT', 'SCHEDULED']),
+          isNotNull(articles.scheduledAt),
+          lte(articles.scheduledAt, new Date()),
+          isNull(articles.deletedAt),
+        ),
+      );
+  }
+
+  /**
+   * Publish a scheduled article by setting status to PUBLISHED.
+   * Matches Go PublishScheduledArticle.
+   */
+  async publishArticle(dbId: number): Promise<void> {
+    await this.db
+      .update(articles)
+      .set({
+        status: 'PUBLISHED',
+        scheduledAt: null,
+        updatedAt: new Date(),
+      })
       .where(eq(articles.id, dbId));
   }
 
