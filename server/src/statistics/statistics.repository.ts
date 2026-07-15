@@ -3,26 +3,8 @@ import { DRIZZLE } from '../database/database.module';
 import { visitorLogs } from '../database/schemas/visitor-log.schema';
 import { visitorStats } from '../database/schemas/visitor-stat.schema';
 import { urlStats } from '../database/schemas/url-stat.schema';
-import { eq, and, gte, lte, desc, sql } from 'drizzle-orm';
-
-/**
- * Get China timezone (UTC+8) day boundaries as Unix timestamps.
- * Matches Go backend: start of day = 00:00:00+08:00, end of day = 23:59:59+08:00.
- * Returns [startTimestamp, endTimestamp] in seconds.
- */
-function getChinaDayBounds(date: Date): [number, number] {
-  // Format date as YYYY-MM-DD in China timezone
-  const chinaOffset = 8 * 60 * 60 * 1000;
-  const chinaTime = new Date(date.getTime() + chinaOffset);
-  const dateStr = chinaTime.toISOString().slice(0, 10); // YYYY-MM-DD
-
-  // Start of day in China: YYYY-MM-DDT00:00:00+08:00
-  const startMs = new Date(`${dateStr}T00:00:00+08:00`).getTime() / 1000;
-  // End of day in China: YYYY-MM-DDT23:59:59+08:00
-  const endMs = new Date(`${dateStr}T23:59:59+08:00`).getTime() / 1000;
-
-  return [Math.floor(startMs), Math.floor(endMs)];
-}
+import { eq, and, gte, lte, desc, sql, isNotNull } from 'drizzle-orm';
+import { getChinaDayBounds } from '../common/utils/time.util';
 
 export interface CreateLogParams {
   visitorId: string;
@@ -319,5 +301,85 @@ export class StatisticsRepository {
       .offset((page - 1) * pageSize);
 
     return { list, total };
+  }
+
+  // ─── Aggregation methods (for StatisticsAggregationJob) ──────────
+
+  /**
+   * Aggregate daily statistics from visitor_logs using reconciliation mode.
+   * DELETE existing visitor_stats for date, then re-INSERT from visitor_logs.
+   * Matches Go AggregateDaily — ensures data accuracy regardless of real-time upsert state.
+   */
+  async aggregateDaily(date: Date): Promise<void> {
+    const [startTs, endTs] = getChinaDayBounds(date);
+
+    await this.db.transaction(async (tx: any) => {
+      // 1. Delete existing visitor_stats for this date
+      await tx
+        .delete(visitorStats)
+        .where(eq(visitorStats.date, date));
+
+      // 2. Re-aggregate from visitor_logs
+      const result = await tx
+        .select({
+          uniqueVisitors: sql<number>`COUNT(DISTINCT ${visitorLogs.visitorId})`,
+          totalViews: sql<number>`COUNT(*)`,
+          pageViews: sql<number>`COUNT(DISTINCT ${visitorLogs.urlPath})`,
+          bounceCount: sql<number>`SUM(CASE WHEN ${visitorLogs.isBounce} = 1 THEN 1 ELSE 0 END)`,
+        })
+        .from(visitorLogs)
+        .where(
+          and(
+            gte(visitorLogs.createdAt, sql`${startTs}`),
+            lte(visitorLogs.createdAt, sql`${endTs}`),
+          ),
+        );
+
+      const row = result[0];
+      if (!row || row.totalViews === 0) {
+        // No visitor_logs for this date — nothing to insert (already deleted)
+        return;
+      }
+
+      // 3. Insert aggregated row
+      await tx
+        .insert(visitorStats)
+        .values({
+          date,
+          uniqueVisitors: row.uniqueVisitors,
+          totalViews: row.totalViews,
+          pageViews: row.pageViews,
+          bounceCount: row.bounceCount ?? 0,
+        });
+    });
+  }
+
+  /**
+   * Get the last (most recent) date in visitor_stats.
+   * Returns null if no rows exist.
+   * Matches Go GetLastAggregatedDate.
+   */
+  async getLastStatDate(): Promise<Date | null> {
+    const [result] = await this.db
+      .select({ maxDate: sql<Date>`MAX(${visitorStats.date})` })
+      .from(visitorStats);
+
+    return result?.maxDate ?? null;
+  }
+
+  /**
+   * Get the first (earliest) created_at date in visitor_logs.
+   * Returns null if no rows exist.
+   * Matches Go GetFirstLogDate.
+   */
+  async getFirstLogDate(): Promise<Date | null> {
+    const [result] = await this.db
+      .select({ minDate: sql<number>`MIN(${visitorLogs.createdAt})` })
+      .from(visitorLogs);
+
+    if (!result?.minDate) return null;
+
+    // visitor_logs.createdAt is stored as Unix timestamp (integer)
+    return new Date(result.minDate * 1000);
   }
 }

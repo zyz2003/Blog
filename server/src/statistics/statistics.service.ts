@@ -11,36 +11,13 @@ import { UrlStatisticsDto } from './dto/url-statistics.dto';
 import { VisitorTrendDataDto } from './dto/visitor-trend-data.dto';
 import { StatisticsSummaryDto } from './dto/statistics-summary.dto';
 import { VisitorLogsResponseDto } from './dto/visitor-logs-response.dto';
+import {
+  getChinaNow,
+  startOfDayInChina,
+  endOfDayInChina,
+  formatDateChina,
+} from '../common/utils/time.util';
 import * as crypto from 'crypto';
-
-/**
- * China timezone helpers matching Go utils.NowInChina/StartOfDayInChina/EndOfDayInChina.
- */
-function nowInChina(): Date {
-  const utcNow = new Date();
-  const chinaOffset = 8 * 60 * 60 * 1000;
-  return new Date(utcNow.getTime() + chinaOffset);
-}
-
-function startOfDayInChina(date: Date): Date {
-  const chinaOffset = 8 * 60 * 60 * 1000;
-  const chinaTime = new Date(date.getTime() + chinaOffset);
-  const dateStr = chinaTime.toISOString().slice(0, 10);
-  return new Date(`${dateStr}T00:00:00+08:00`);
-}
-
-function endOfDayInChina(date: Date): Date {
-  const chinaOffset = 8 * 60 * 60 * 1000;
-  const chinaTime = new Date(date.getTime() + chinaOffset);
-  const dateStr = chinaTime.toISOString().slice(0, 10);
-  return new Date(`${dateStr}T23:59:59+08:00`);
-}
-
-function formatDateChina(date: Date): string {
-  const chinaOffset = 8 * 60 * 60 * 1000;
-  const chinaTime = new Date(date.getTime() + chinaOffset);
-  return chinaTime.toISOString().slice(0, 10);
-}
 
 /**
  * StatisticsService — core business logic for visitor statistics.
@@ -117,7 +94,7 @@ export class StatisticsService {
     (async () => {
       try {
         // a. Get today's date string in China timezone
-        const today = nowInChina();
+        const today = getChinaNow();
         const todayDateStr = formatDateChina(today);
 
         // b. UV dedup check
@@ -198,7 +175,7 @@ export class StatisticsService {
    * today/yesterday are enriched from visitor_logs for accuracy.
    */
   async getBasicStatistics(): Promise<VisitorStatisticsDto> {
-    const now = nowInChina();
+    const now = getChinaNow();
     const today = startOfDayInChina(now);
     const yesterday = startOfDayInChina(new Date(now.getTime() - 24 * 60 * 60 * 1000));
 
@@ -254,7 +231,7 @@ export class StatisticsService {
    * Default: last 7 days (China timezone, inclusive of today).
    */
   async getVisitorAnalytics(startDate?: string, endDate?: string): Promise<VisitorAnalyticsDto> {
-    const now = nowInChina();
+    const now = getChinaNow();
     const endDay = endOfDayInChina(now);
     const startDay = startOfDayInChina(new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000));
 
@@ -344,7 +321,7 @@ export class StatisticsService {
     if (clampedDays < 1) clampedDays = 1;
     if (clampedDays > 365) clampedDays = 365;
 
-    const now = nowInChina();
+    const now = getChinaNow();
     const endDay = startOfDayInChina(now);
     const startDay = startOfDayInChina(
       new Date(now.getTime() - (clampedDays - 1) * 24 * 60 * 60 * 1000),
@@ -414,7 +391,7 @@ export class StatisticsService {
     page?: number,
     pageSize?: number,
   ): Promise<VisitorLogsResponseDto> {
-    const now = nowInChina();
+    const now = getChinaNow();
     const defaultEnd = endOfDayInChina(now);
     const defaultStart = startOfDayInChina(
       new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
@@ -487,5 +464,34 @@ export class StatisticsService {
     }
 
     return request.ip || '';
+  }
+
+  // ─── Aggregation methods (for StatisticsAggregationJob + ScheduleService) ──
+
+  /**
+   * Aggregate daily statistics from visitor_logs.
+   * Delegates to repository. Uses reconciliation mode (DELETE + re-INSERT).
+   * Matches Go AggregateDaily.
+   */
+  async aggregateDaily(date: Date): Promise<void> {
+    await this.repo.aggregateDaily(date);
+  }
+
+  /**
+   * Get the last (most recent) date in visitor_stats.
+   * Returns null if no rows exist.
+   * Matches Go GetLastAggregatedDate.
+   */
+  async getLastStatDate(): Promise<Date | null> {
+    return this.repo.getLastStatDate();
+  }
+
+  /**
+   * Get the first (earliest) created_at date in visitor_logs.
+   * Returns null if no rows exist.
+   * Matches Go GetFirstLogDate.
+   */
+  async getFirstLogDate(): Promise<Date | null> {
+    return this.repo.getFirstLogDate();
   }
 }
