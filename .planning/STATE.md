@@ -4,17 +4,17 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 10
 current_phase_name: Scheduled Tasks
-status: executing
-stopped_at: Phase 10 context gathered
-last_updated: "2026-07-15T14:46:29.861Z"
-last_activity: 2026-07-15
+status: complete
+stopped_at: Phase 10 execution complete
+last_updated: "2026-07-16T11:08:00.000Z"
+last_activity: 2026-07-16
 progress:
   total_phases: 11
-  completed_phases: 9
-  total_plans: 50
-  completed_plans: 50
-  percent: 82
-current_plan: Not started
+  completed_phases: 10
+  total_plans: 53
+  completed_plans: 53
+  percent: 91
+current_plan: 10-03 Complete
 ---
 
 # STATE: anheyu-app NestJS + SQLite Backend
@@ -23,11 +23,11 @@ current_plan: Not started
 
 | Field | Value |
 |-------|-------|
-| Milestone | M2 - Full Feature Parity |
+| Milestone | M3 - Production Ready |
 | Phase | 10 — Scheduled Tasks |
-| Current Plan | 10-03 Complete | |
-| Status | Executing |
-| Last Activity | 2026-07-15 |
+| Current Plan | 10-03 Complete |
+| Status | Complete |
+| Last Activity | 2026-07-16 |
 
 ## Phase Status
 
@@ -38,11 +38,11 @@ current_plan: Not started
 | 03 | Article & Category & Tag | Complete | 5 | 2026-07-03 |
 | 04 | Page & Public API | Complete | 4 | 2026-07-04 |
 | 05 | File Upload & Media | Complete | 5 | 2026-07-05 |
-| 06 | Comment & Search | Executing | 5 | 2026-07-10 |
-| 07 | Statistics & Links | In Progress | 3 | 2026-07-11 |
+| 06 | Comment & Search | Complete | 5 | 2026-07-10 |
+| 07 | Statistics & Links | Complete | 5 | 2026-07-11 |
 | 08 | Album & Doc Series | Complete | 5 | 2026-07-12 |
-| 09 | SEO & Music & Notifications | Executing | 4 | 2026-07-14 |
-| 10 | Scheduled Tasks | Executing | 3 | 2026-07-15 |
+| 09 | SEO & Music & Notifications | Complete | 7 | 2026-07-14 |
+| 10 | Scheduled Tasks | Complete | 3 | 2026-07-16 |
 | 11 | Migration & Integration | Not Started | 0 | 2026-06-28 |
 
 ## Active Decisions
@@ -129,19 +129,19 @@ current_plan: Not started
 
 | Metric | Value |
 |--------|-------|
-| Phases Completed | 5 / 11 |
-| Plans Created | 24 |
-| Plans Executed | 33 |
-| Requirements Covered | 30 / 39 |
-| API Endpoints Implemented | 54 / ~60+ |
+| Phases Completed | 10 / 11 |
+| Plans Created | 53 |
+| Plans Executed | 53 |
+| Requirements Covered | 31 / 39 |
+| API Endpoints Implemented | 59 / ~65+ |
 
 ---
 *Last updated: 2026-07-11*
 
 ## Session
 
-**Last session:** 2026-07-15T14:46:29.852Z
-**Stopped at:** Phase 10 context gathered
+**Last session:** 2026-07-16T11:08:00.000Z
+**Stopped at:** Phase 10 execution complete
 **Resume file:** .planning/phases/10-scheduled-tasks/10-CONTEXT.md
 
 ## Performance Metrics
@@ -157,3 +157,7 @@ current_plan: Not started
 - [Phase 07]: D-182: LinkCategoryResponseDto.links added as optional array for grouped public link list per D-178
 - [Phase 09]: D-210: Node.js https with rejectUnauthorized:false for metings.qjqq.cn SSL bypass (matches Go InsecureSkipVerify)
 - [Phase 09]: D-211: Playlist cached 5 minutes in MemoryCache (key: music:playlist, TTL: 300000ms); song resources NOT cached
+- [Phase 10]: D-237: ScheduledPublishJob uses ArticleService instead of ArticleRepository (repo not exported from ArticleModule)
+- [Phase 10]: D-238: CommentNotificationJob only sends email for reply comments (parentId exists), matching Go logic
+- [Phase 10]: D-239: BackupService uses local time for filename timestamps (matches Go time.Now().Format)
+- [Phase 10]: D-240: ScheduleModule is @Global() so ScheduleService can be injected anywhere without explicit module import
