@@ -5,7 +5,7 @@ import { linkCategories } from '../../database/schemas/link-category.schema';
 import { linkTags } from '../../database/schemas/link-tag.schema';
 import { linkTagPivot } from '../../database/schemas/link-tag-pivot.schema';
 import { links } from '../../database/schemas/link.schema';
-import { eq, notInArray, sql, and, isNull } from 'drizzle-orm';
+import { eq, notInArray, inArray, sql, and, isNull } from 'drizzle-orm';
 
 /**
  * LinkCleanupJob — cleans up unused link categories and tags.
@@ -38,45 +38,27 @@ export class LinkCleanupJob {
     const excludeIds = this.getProtectedCategoryIDs();
 
     // 2. Clean up unused categories (excluding protected)
+    // Matches Go: DeleteAllUnusedExcluding(ctx, excludeIDs) — deletes only unused categories
     let deletedCategories = 0;
     try {
-      if (excludeIds.length > 0) {
-        // Find categories that have no links referencing them and are not in excludeIds
-        // Matches Go: DeleteAllUnusedExcluding(ctx, excludeIDs)
-        const unusedCategories = await this.db
-          .select({ id: linkCategories.id })
-          .from(linkCategories)
-          .where(
-            and(
-              notInArray(linkCategories.id, excludeIds),
-              // No links reference this category
-              sql`${linkCategories.id} NOT IN (SELECT ${links.categoryId} FROM ${links})`,
-            ),
-          );
-
-        if (unusedCategories.length > 0) {
-          const idsToDelete = unusedCategories.map((c: any) => c.id);
-          await this.db
-            .delete(linkCategories)
-            .where(notInArray(linkCategories.id, excludeIds.length > 0 ? [...excludeIds, ...idsToDelete] : idsToDelete));
-          deletedCategories = idsToDelete.length;
-        }
-      } else {
-        // No protected IDs — delete all unused
-        const unusedCategories = await this.db
-          .select({ id: linkCategories.id })
-          .from(linkCategories)
-          .where(
+      // Find categories that have no links referencing them and are not in excludeIds
+      const unusedCategories = await this.db
+        .select({ id: linkCategories.id })
+        .from(linkCategories)
+        .where(
+          and(
+            excludeIds.length > 0 ? notInArray(linkCategories.id, excludeIds) : undefined,
             sql`${linkCategories.id} NOT IN (SELECT ${links.categoryId} FROM ${links})`,
-          );
+          ),
+        );
 
-        if (unusedCategories.length > 0) {
-          const idsToDelete = unusedCategories.map((c: any) => c.id);
-          for (const id of idsToDelete) {
-            await this.db.delete(linkCategories).where(eq(linkCategories.id, id));
-          }
-          deletedCategories = idsToDelete.length;
-        }
+      if (unusedCategories.length > 0) {
+        const idsToDelete = unusedCategories.map((c: any) => c.id);
+        // Delete ONLY the identified unused categories (not everything else!)
+        await this.db
+          .delete(linkCategories)
+          .where(inArray(linkCategories.id, idsToDelete));
+        deletedCategories = idsToDelete.length;
       }
 
       if (deletedCategories > 0) {
@@ -101,10 +83,9 @@ export class LinkCleanupJob {
         );
 
       if (unusedTags.length > 0) {
-        for (const tag of unusedTags) {
-          await this.db.delete(linkTags).where(eq(linkTags.id, tag.id));
-        }
-        deletedTags = unusedTags.length;
+        const idsToDelete = unusedTags.map((t: any) => t.id);
+        await this.db.delete(linkTags).where(inArray(linkTags.id, idsToDelete));
+        deletedTags = idsToDelete.length;
       }
 
       if (deletedTags > 0) {

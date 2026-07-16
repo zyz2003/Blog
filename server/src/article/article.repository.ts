@@ -747,8 +747,8 @@ export class ArticleRepository {
 
   /**
    * Find articles that are scheduled to be published.
-   * Matches Go FindScheduledArticlesToPublish.
-   * Returns articles with status DRAFT or SCHEDULED where scheduledAt <= now.
+   * Matches Go FindScheduledArticlesToPublish — only SCHEDULED status, not DRAFT.
+   * Go: article.StatusEQ(article.StatusSCHEDULED) AND ScheduledAtLTE(now) AND ScheduledAtNotNil()
    */
   async findScheduledArticlesToPublish(): Promise<any[]> {
     return this.db
@@ -756,7 +756,7 @@ export class ArticleRepository {
       .from(articles)
       .where(
         and(
-          inArray(articles.status, ['DRAFT', 'SCHEDULED']),
+          eq(articles.status, 'SCHEDULED'),
           isNotNull(articles.scheduledAt),
           lte(articles.scheduledAt, new Date()),
           isNull(articles.deletedAt),
@@ -766,16 +766,32 @@ export class ArticleRepository {
 
   /**
    * Publish a scheduled article by setting status to PUBLISHED.
-   * Matches Go PublishScheduledArticle.
+   * Matches Go PublishScheduledArticle — also sets created_at = scheduled_at
+   * so the article's display timestamp matches the user's intended publish time.
+   * Go: updater.SetCreatedAt(*articleEntity.ScheduledAt)
    */
   async publishArticle(dbId: number): Promise<void> {
+    // First get the article to read scheduledAt for created_at update
+    const [article] = await this.db
+      .select()
+      .from(articles)
+      .where(eq(articles.id, dbId));
+
+    const updateData: any = {
+      status: 'PUBLISHED',
+      scheduledAt: null,
+      updatedAt: new Date(),
+    };
+
+    // Set createdAt to scheduledAt so display time matches user intent
+    // Matches Go: if articleEntity.ScheduledAt != nil { updater.SetCreatedAt(*articleEntity.ScheduledAt) }
+    if (article?.scheduledAt) {
+      updateData.createdAt = article.scheduledAt;
+    }
+
     await this.db
       .update(articles)
-      .set({
-        status: 'PUBLISHED',
-        scheduledAt: null,
-        updatedAt: new Date(),
-      })
+      .set(updateData)
       .where(eq(articles.id, dbId));
   }
 

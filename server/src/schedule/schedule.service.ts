@@ -18,6 +18,13 @@ import { CleanupOrphanedItemsJob } from './jobs/cleanup-orphaned-items.job';
 export class ScheduleService implements OnModuleInit {
   private readonly logger = new Logger(ScheduleService.name);
 
+  /**
+   * Track currently running jobs to prevent concurrent execution.
+   * Matches Go cron.DelayIfStillRunning — if a job is still running when
+   * the next cron tick fires, skip the new execution.
+   */
+  private readonly runningJobs = new Set<string>();
+
   constructor(
     private readonly statisticsService: StatisticsService,
     private readonly thumbnailGenerationJob: ThumbnailGenerationJob,
@@ -68,13 +75,26 @@ export class ScheduleService implements OnModuleInit {
   }
 
   /**
-   * Run a job with both wrappers chained: panicRecovery -> logging -> fn.
-   * Matches Go cron.WithChain(NewPanicRecoveryWrapper, NewLoggingWrapper).
+   * Run a job with all wrappers chained: delayIfStillRunning -> panicRecovery -> logging -> fn.
+   * Matches Go cron.WithChain(NewPanicRecoveryWrapper, NewLoggingWrapper, DelayIfStillRunning).
+   *
+   * If the same job is already running, skip this execution (DelayIfStillRunning).
    */
   async runJob(jobName: string, fn: () => Promise<void>): Promise<void> {
-    await this.wrapWithPanicRecovery(jobName, async () => {
-      await this.wrapWithLogging(jobName, fn);
-    });
+    // DelayIfStillRunning guard — skip if same job is already executing
+    if (this.runningJobs.has(jobName)) {
+      this.logger.log(`Job [${jobName}] still running, skipping this execution`);
+      return;
+    }
+
+    this.runningJobs.add(jobName);
+    try {
+      await this.wrapWithPanicRecovery(jobName, async () => {
+        await this.wrapWithLogging(jobName, fn);
+      });
+    } finally {
+      this.runningJobs.delete(jobName);
+    }
   }
 
   /**

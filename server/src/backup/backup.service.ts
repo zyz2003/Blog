@@ -163,7 +163,12 @@ export class BackupService {
     }
 
     const content = fs.readFileSync(backupPath, 'utf-8');
-    const data = JSON.parse(content);
+    let data: Record<string, string>;
+    try {
+      data = JSON.parse(content);
+    } catch {
+      throw new Error('备份文件格式无效，请确保文件为有效的JSON格式');
+    }
 
     await this.settingsService.importAll(data);
 

@@ -32,13 +32,16 @@ export function toISODateString(
 }
 
 /**
- * Get current time adjusted to China timezone (UTC+8) context.
- * Matches Go utils.NowInChina().
+ * Get current time in China timezone context.
+ * Matches Go utils.NowInChina() — returns the same moment, viewed in China timezone.
+ *
+ * IMPORTANT: JavaScript Date objects are always UTC internally. This function
+ * returns the current moment (same as new Date()), but the returned Date should
+ * be used with startOfDayInChina(), endOfDayInChina(), or formatToChinaTime()
+ * to get China-local values. Do NOT add offset to the Date object itself.
  */
 export function getChinaNow(): Date {
-  const utcNow = new Date();
-  const chinaOffset = 8 * 60 * 60 * 1000;
-  return new Date(utcNow.getTime() + chinaOffset);
+  return new Date();
 }
 
 /**
@@ -46,9 +49,14 @@ export function getChinaNow(): Date {
  * Matches Go utils.StartOfDayInChina(now).AddDate(0, 0, -1).
  */
 export function getChinaYesterday(): Date {
-  const now = getChinaNow();
-  const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-  return startOfDayInChina(yesterday);
+  // Get today's date in China timezone, then subtract one day
+  const now = new Date();
+  const zoned = toZonedTime(now, 'Asia/Shanghai');
+  const chinaDateStr = format(zoned, 'yyyy-MM-dd', { timeZone: 'Asia/Shanghai' });
+  // Parse yesterday in China timezone
+  const [y, m, d] = chinaDateStr.split('-').map(Number);
+  const yesterdayChina = new Date(y, m - 1, d - 1); // local date for yesterday in China
+  return startOfDayInChina(yesterdayChina);
 }
 
 /**
@@ -56,9 +64,8 @@ export function getChinaYesterday(): Date {
  * Matches Go utils.StartOfDayInChina(date).
  */
 export function startOfDayInChina(date: Date): Date {
-  const chinaOffset = 8 * 60 * 60 * 1000;
-  const chinaTime = new Date(date.getTime() + chinaOffset);
-  const dateStr = chinaTime.toISOString().slice(0, 10);
+  const zoned = toZonedTime(date, 'Asia/Shanghai');
+  const dateStr = format(zoned, 'yyyy-MM-dd', { timeZone: 'Asia/Shanghai' });
   return new Date(`${dateStr}T00:00:00+08:00`);
 }
 
@@ -67,9 +74,8 @@ export function startOfDayInChina(date: Date): Date {
  * Matches Go utils.EndOfDayInChina(date).
  */
 export function endOfDayInChina(date: Date): Date {
-  const chinaOffset = 8 * 60 * 60 * 1000;
-  const chinaTime = new Date(date.getTime() + chinaOffset);
-  const dateStr = chinaTime.toISOString().slice(0, 10);
+  const zoned = toZonedTime(date, 'Asia/Shanghai');
+  const dateStr = format(zoned, 'yyyy-MM-dd', { timeZone: 'Asia/Shanghai' });
   return new Date(`${dateStr}T23:59:59+08:00`);
 }
 
@@ -88,7 +94,6 @@ export function getChinaDayBounds(date: Date): [number, number] {
  * Format a date as YYYY-MM-DD in China timezone.
  */
 export function formatDateChina(date: Date): string {
-  const chinaOffset = 8 * 60 * 60 * 1000;
-  const chinaTime = new Date(date.getTime() + chinaOffset);
-  return chinaTime.toISOString().slice(0, 10);
+  const zoned = toZonedTime(date, 'Asia/Shanghai');
+  return format(zoned, 'yyyy-MM-dd', { timeZone: 'Asia/Shanghai' });
 }

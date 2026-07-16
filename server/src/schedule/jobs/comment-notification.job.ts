@@ -1,16 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EmailService } from '../../email/email.service';
-import { NotificationService } from '../../notification/notification.service';
 import { CommentRepository } from '../../comment/comment.repository';
-import { SettingsService } from '../../settings/settings.service';
 
 /**
- * CommentNotificationJob — sends email and in-app notification for comment replies.
+ * CommentNotificationJob — sends email notification for comment replies.
  * On-demand job dispatched via ScheduleService.dispatchCommentNotification().
  * Matches Go CommentNotificationJob (job_comment_notification.go).
  *
  * Per Go: fetches comment by ID, checks for parent, sends email notification.
- * Dual notification: email (new, matching Go) + in-app (existing via NotificationService).
+ * In-app notification is handled separately by CommentService.fireCommentReplyNotification().
  */
 @Injectable()
 export class CommentNotificationJob {
@@ -18,9 +16,7 @@ export class CommentNotificationJob {
 
   constructor(
     private readonly emailService: EmailService,
-    private readonly notificationService: NotificationService,
     private readonly commentRepo: CommentRepository,
-    private readonly settingsService: SettingsService,
   ) {}
 
   /**
