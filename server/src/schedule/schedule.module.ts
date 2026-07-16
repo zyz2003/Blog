@@ -12,6 +12,7 @@ import { CommentModule } from '../comment/comment.module';
 import { ThumbnailModule } from '../thumbnail/thumbnail.module';
 import { DatabaseModule } from '../database/database.module';
 import { BackupModule } from '../backup/backup.module';
+import { NotificationModule } from '../notification/notification.module';
 import {
   CleanupAbandonedUploadsJob,
   StatisticsAggregationJob,
@@ -41,6 +42,7 @@ import {
     ThumbnailModule,
     DatabaseModule,
     BackupModule,
+    NotificationModule,
   ],
   providers: [
     ScheduleService,
