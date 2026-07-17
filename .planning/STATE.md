@@ -4,18 +4,18 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 11
 current_phase_name: migration-integration
-current_plan: 2
+current_plan: 3
 status: executing
-stopped_at: Completed 11-01-PLAN.md
-last_updated: "2026-07-17T12:56:58Z"
+stopped_at: Completed 11-02-PLAN.md
+last_updated: "2026-07-17T13:35:27Z"
 last_activity: 2026-07-17
-last_activity_desc: Completed plan 11-01 (Migration CLI Tool)
+last_activity_desc: Completed plan 11-02 (API Compat Test Infrastructure)
 progress:
   total_phases: 11
   completed_phases: 9
   total_plans: 56
-  completed_plans: 51
-  percent: 82
+  completed_plans: 52
+  percent: 84
 ---
 
 # STATE: anheyu-app NestJS + SQLite Backend
@@ -26,9 +26,9 @@ progress:
 |-------|-------|
 | Milestone | M3 - Production Ready |
 | Phase | 11 (migration-integration) — EXECUTING |
-| Current Plan | 2 |
-| Status | Executing Phase 11 — Plan 01 complete |
-| Last Activity | 2026-07-17 — Completed 11-01 Migration CLI Tool |
+| Current Plan | 3 |
+| Status | Executing Phase 11 — Plan 02 complete |
+| Last Activity | 2026-07-17 — Completed 11-02 API Compat Test Infrastructure |
 
 ## Phase Status
 
@@ -132,7 +132,7 @@ progress:
 |--------|-------|
 | Phases Completed | 10 / 11 |
 | Plans Created | 58 |
-| Plans Executed | 54 |
+| Plans Executed | 55 |
 | Requirements Covered | 31 / 39 |
 | API Endpoints Implemented | 59 / ~65+ |
 
@@ -141,9 +141,9 @@ progress:
 
 ## Session
 
-**Last session:** 2026-07-17T12:56:58Z
-**Stopped at:** Completed 11-01-PLAN.md
-**Resume file:** .planning/phases/11-migration-integration/11-01-SUMMARY.md
+**Last session:** 2026-07-17T13:35:27Z
+**Stopped at:** Completed 11-02-PLAN.md
+**Resume file:** .planning/phases/11-migration-integration/11-02-SUMMARY.md
 
 ## Performance Metrics
 
@@ -165,3 +165,5 @@ progress:
 - [Phase 11]: D-241: No table name mappings needed — Go and NestJS use identical SQLite table names (article_post_categories, article_post_tags, link_tag_pivot)
 - [Phase 11]: D-242: Notifications table is NestJS-only, skipped during Go→NestJS migration
 - [Phase 11]: D-243: better-sqlite3 resolved via direct require path from server/node_modules for scripts/ directory
+- [Phase 11]: D-244: NestJS POST returns code 201 in response body (Go returns 200) — documented as known compat difference
+- [Phase 11]: D-245: Page service create() defaults markdownContent/customJs/customCss to empty string (not null) to match NOT NULL schema

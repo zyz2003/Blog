@@ -34,7 +34,7 @@ Phases 10-11 complete. Scheduled tasks running, migration tool available, end-to
 | 08 | Album & Doc Series | 5/5 | Complete    | 2026-07-12 |
 | 09 | SEO & Music & Notifications | 7/7 | Complete    | 2026-07-14 |
 | 10 | Scheduled Tasks | 3/3 | Complete | 2026-07-16 |
-| 11 | Migration & Integration | SQLite→SQLite migration tool; full end-to-end API compatibility testing against Go backend responses | Final | 1/5 Executing |
+| 11 | Migration & Integration | SQLite→SQLite migration tool; full end-to-end API compatibility testing against Go backend responses | Final | 2/5 Executing |
 
 ---
 
@@ -409,14 +409,14 @@ Plans:
 - Frontend connects to new backend and all features work without modification
 - `npm run dev` starts both frontend and backend successfully
 
-**Plans:** 1/5 complete
+**Plans:** 2/5 complete
 
 Plans:
 
 **Wave 1** (parallel, no cross-dependencies)
 
 - [x] 11-01-PLAN.md — Migration CLI tool: scripts/migrate.ts with FK-ordered table migration, timestamp conversion, auto-backup, and post-migration validation
-- [ ] 11-02-PLAN.md — API compat test infrastructure: shared helpers with typed TestContext, multipart upload helper, and 6 core module test files (auth, settings, version, user, article, page)
+- [x] 11-02-PLAN.md — API compat test infrastructure: shared helpers with typed TestContext, multipart upload helper, and 6 core module test files (auth, settings, version, user, article, page)
 
 **Wave 2** (depends on Wave 1)
 
