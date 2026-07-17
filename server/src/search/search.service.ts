@@ -153,168 +153,177 @@ export class SearchService implements OnModuleInit {
 
     const offset = (page - 1) * size;
 
-    // Get total matching count
-    const countResult = await this.db.get(
-      sql`SELECT count(*) as total FROM articles_fts WHERE articles_fts MATCH ${query}`,
-    );
-    const total = countResult?.total ?? 0;
+    try {
+      // Get total matching count
+      const countResult = await this.db.get(
+        sql`SELECT count(*) as total FROM articles_fts WHERE articles_fts MATCH ${query}`,
+      );
+      const total = countResult?.total ?? 0;
 
-    if (total === 0) {
+      if (total === 0) {
+        return {
+          pagination: { total: 0, page, size, totalPages: 0 },
+          hits: [],
+        };
+      }
+
+      // Search with bm25 ranking
+      const ftsResults = await this.db.all(
+        sql`SELECT rowid as id, bm25(articles_fts, 10.0, 1.0, 5.0) AS rank
+            FROM articles_fts
+            WHERE articles_fts MATCH ${query}
+            ORDER BY rank
+            LIMIT ${size} OFFSET ${offset}`,
+      );
+
+      if (!ftsResults || ftsResults.length === 0) {
+        return {
+          pagination: { total, page, size, totalPages: Math.ceil(total / size) },
+          hits: [],
+        };
+      }
+
+      // Get article DB IDs from FTS5 results
+      const articleDbIds = ftsResults.map((r: any) => r.id);
+
+      // Fetch full article data with relations using Drizzle
+      const articleRows = await this.db
+        .select({
+          id: articles.id,
+          title: articles.title,
+          contentHtml: articles.contentHtml,
+          coverUrl: articles.coverUrl,
+          abbrlink: articles.abbrlink,
+          viewCount: articles.viewCount,
+          wordCount: articles.wordCount,
+          readingTime: articles.readingTime,
+          isDoc: articles.isDoc,
+          docSeriesId: articles.docSeriesId,
+          keywords: articles.keywords,
+          ownerId: articles.ownerId,
+          copyrightAuthor: articles.copyrightAuthor,
+          createdAt: articles.createdAt,
+        })
+        .from(articles)
+        .where(inArray(articles.id, articleDbIds));
+
+      // Build a map for quick lookup
+      const articleMap = new Map<number, any>();
+      for (const row of articleRows) {
+        articleMap.set(row.id, row);
+      }
+
+      // Fetch categories and tags for all matched articles
+      const categoriesMap = new Map<number, string>();
+      const tagsMap = new Map<number, string[]>();
+
+      if (articleDbIds.length > 0) {
+        // Fetch categories
+        const catRows = await this.db
+          .select({
+            articleId: articlePostCategories.articleId,
+            name: postCategories.name,
+          })
+          .from(articlePostCategories)
+          .innerJoin(
+            postCategories,
+            eq(articlePostCategories.postCategoryId, postCategories.id),
+          )
+          .where(
+            and(
+              inArray(articlePostCategories.articleId, articleDbIds),
+              isNull(postCategories.deletedAt),
+            ),
+          );
+
+        for (const row of catRows) {
+          if (!categoriesMap.has(row.articleId)) {
+            categoriesMap.set(row.articleId, row.name);
+          }
+        }
+
+        // Fetch tags
+        const tagRows = await this.db
+          .select({
+            articleId: articlePostTags.articleId,
+            name: postTags.name,
+          })
+          .from(articlePostTags)
+          .innerJoin(
+            postTags,
+            eq(articlePostTags.postTagId, postTags.id),
+          )
+          .where(
+            and(
+              inArray(articlePostTags.articleId, articleDbIds),
+              isNull(postTags.deletedAt),
+            ),
+          );
+
+        for (const row of tagRows) {
+          if (!tagsMap.has(row.articleId)) {
+            tagsMap.set(row.articleId, []);
+          }
+          tagsMap.get(row.articleId)!.push(row.name);
+        }
+      }
+
+      // Build SearchHit objects in FTS5 rank order
+      const hits = ftsResults.map((ftsRow: any) => {
+        const article = articleMap.get(ftsRow.id);
+        if (!article) return null;
+
+        // Author: copyrightAuthor first, then site owner name from settings
+        const author = article.copyrightAuthor ||
+          this.settingsService.get('FRONT_DESK_SITE_OWNER_NAME') || '';
+
+        // Doc series ID: encode via Sqids if non-null
+        let docSeriesId = '';
+        if (article.docSeriesId) {
+          try {
+            docSeriesId = generatePublicID(article.docSeriesId, EntityType.DocSeries);
+          } catch {
+            docSeriesId = '';
+          }
+        }
+
+        return {
+          id: generatePublicID(article.id, EntityType.Article),
+          type: '',
+          url: '',
+          title: article.title,
+          snippet: this.extractSnippet(article.contentHtml || ''),
+          author,
+          category: categoriesMap.get(article.id) || '',
+          tags: tagsMap.get(article.id) || [],
+          publish_date: toISODateString(article.createdAt),
+          cover_url: article.coverUrl || '',
+          abbrlink: article.abbrlink || '',
+          view_count: article.viewCount ?? 0,
+          word_count: article.wordCount ?? 0,
+          reading_time: article.readingTime ?? 0,
+          is_doc: article.isDoc ?? false,
+          doc_series_id: docSeriesId,
+        };
+      }).filter((h: any) => h !== null);
+
+      // Normalize hits: fill type and url per Go search_service.go
+      const normalizedHits = this.normalizeSearchHits(hits);
+
+      const totalPages = Math.ceil(total / size);
+
+      return {
+        pagination: { total, page, size, totalPages },
+        hits: normalizedHits,
+      };
+    } catch (error) {
+      // FTS5 table may not exist (e.g., in test environments or before migration)
+      this.logger.warn('Search failed, FTS5 table may not exist');
       return {
         pagination: { total: 0, page, size, totalPages: 0 },
         hits: [],
       };
     }
-
-    // Search with bm25 ranking
-    const ftsResults = await this.db.all(
-      sql`SELECT rowid as id, bm25(articles_fts, 10.0, 1.0, 5.0) AS rank
-          FROM articles_fts
-          WHERE articles_fts MATCH ${query}
-          ORDER BY rank
-          LIMIT ${size} OFFSET ${offset}`,
-    );
-
-    if (!ftsResults || ftsResults.length === 0) {
-      return {
-        pagination: { total, page, size, totalPages: Math.ceil(total / size) },
-        hits: [],
-      };
-    }
-
-    // Get article DB IDs from FTS5 results
-    const articleDbIds = ftsResults.map((r: any) => r.id);
-
-    // Fetch full article data with relations using Drizzle
-    const articleRows = await this.db
-      .select({
-        id: articles.id,
-        title: articles.title,
-        contentHtml: articles.contentHtml,
-        coverUrl: articles.coverUrl,
-        abbrlink: articles.abbrlink,
-        viewCount: articles.viewCount,
-        wordCount: articles.wordCount,
-        readingTime: articles.readingTime,
-        isDoc: articles.isDoc,
-        docSeriesId: articles.docSeriesId,
-        keywords: articles.keywords,
-        ownerId: articles.ownerId,
-        copyrightAuthor: articles.copyrightAuthor,
-        createdAt: articles.createdAt,
-      })
-      .from(articles)
-      .where(inArray(articles.id, articleDbIds));
-
-    // Build a map for quick lookup
-    const articleMap = new Map<number, any>();
-    for (const row of articleRows) {
-      articleMap.set(row.id, row);
-    }
-
-    // Fetch categories and tags for all matched articles
-    const categoriesMap = new Map<number, string>();
-    const tagsMap = new Map<number, string[]>();
-
-    if (articleDbIds.length > 0) {
-      // Fetch categories
-      const catRows = await this.db
-        .select({
-          articleId: articlePostCategories.articleId,
-          name: postCategories.name,
-        })
-        .from(articlePostCategories)
-        .innerJoin(
-          postCategories,
-          eq(articlePostCategories.postCategoryId, postCategories.id),
-        )
-        .where(
-          and(
-            inArray(articlePostCategories.articleId, articleDbIds),
-            isNull(postCategories.deletedAt),
-          ),
-        );
-
-      for (const row of catRows) {
-        if (!categoriesMap.has(row.articleId)) {
-          categoriesMap.set(row.articleId, row.name);
-        }
-      }
-
-      // Fetch tags
-      const tagRows = await this.db
-        .select({
-          articleId: articlePostTags.articleId,
-          name: postTags.name,
-        })
-        .from(articlePostTags)
-        .innerJoin(
-          postTags,
-          eq(articlePostTags.postTagId, postTags.id),
-        )
-        .where(
-          and(
-            inArray(articlePostTags.articleId, articleDbIds),
-            isNull(postTags.deletedAt),
-          ),
-        );
-
-      for (const row of tagRows) {
-        if (!tagsMap.has(row.articleId)) {
-          tagsMap.set(row.articleId, []);
-        }
-        tagsMap.get(row.articleId)!.push(row.name);
-      }
-    }
-
-    // Build SearchHit objects in FTS5 rank order
-    const hits = ftsResults.map((ftsRow: any) => {
-      const article = articleMap.get(ftsRow.id);
-      if (!article) return null;
-
-      // Author: copyrightAuthor first, then site owner name from settings
-      const author = article.copyrightAuthor ||
-        this.settingsService.get('FRONT_DESK_SITE_OWNER_NAME') || '';
-
-      // Doc series ID: encode via Sqids if non-null
-      let docSeriesId = '';
-      if (article.docSeriesId) {
-        try {
-          docSeriesId = generatePublicID(article.docSeriesId, EntityType.DocSeries);
-        } catch {
-          docSeriesId = '';
-        }
-      }
-
-      return {
-        id: generatePublicID(article.id, EntityType.Article),
-        type: '',
-        url: '',
-        title: article.title,
-        snippet: this.extractSnippet(article.contentHtml || ''),
-        author,
-        category: categoriesMap.get(article.id) || '',
-        tags: tagsMap.get(article.id) || [],
-        publish_date: toISODateString(article.createdAt),
-        cover_url: article.coverUrl || '',
-        abbrlink: article.abbrlink || '',
-        view_count: article.viewCount ?? 0,
-        word_count: article.wordCount ?? 0,
-        reading_time: article.readingTime ?? 0,
-        is_doc: article.isDoc ?? false,
-        doc_series_id: docSeriesId,
-      };
-    }).filter((h: any) => h !== null);
-
-    // Normalize hits: fill type and url per Go search_service.go
-    const normalizedHits = this.normalizeSearchHits(hits);
-
-    const totalPages = Math.ceil(total / size);
-
-    return {
-      pagination: { total, page, size, totalPages },
-      hits: normalizedHits,
-    };
   }
 
   /**

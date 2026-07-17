@@ -76,7 +76,12 @@ export class DocSeriesService {
    * 2. Return DocSeriesResponse
    */
   async getById(publicID: string): Promise<DocSeriesResponseDto> {
-    const series = await this.docSeriesRepo.getById(publicID);
+    let series: any;
+    try {
+      series = await this.docSeriesRepo.getById(publicID);
+    } catch {
+      throw new NotFoundException(ErrorCodes.DOCSERIES_NOT_FOUND);
+    }
     if (!series) {
       throw new NotFoundException(ErrorCodes.DOCSERIES_NOT_FOUND);
     }
@@ -90,7 +95,12 @@ export class DocSeriesService {
    * 2. Return DocSeriesWithArticles
    */
   async getByIdWithArticles(publicID: string): Promise<DocSeriesWithArticlesDto> {
-    const result = await this.docSeriesRepo.getByIdWithArticles(publicID);
+    let result: any;
+    try {
+      result = await this.docSeriesRepo.getByIdWithArticles(publicID);
+    } catch {
+      throw new NotFoundException(ErrorCodes.DOCSERIES_NOT_FOUND);
+    }
     if (!result) {
       throw new NotFoundException(ErrorCodes.DOCSERIES_NOT_FOUND);
     }
