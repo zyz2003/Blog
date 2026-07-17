@@ -2,18 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 10
-current_phase_name: Scheduled Tasks
-current_plan: 10-03 Complete
-status: complete
-stopped_at: Phase 11 context gathered
-last_updated: "2026-07-16T13:26:45.600Z"
-last_activity: 2026-07-16
+current_phase: 11
+current_phase_name: migration-integration
+current_plan: 2
+status: executing
+stopped_at: Completed 11-01-PLAN.md
+last_updated: "2026-07-17T12:56:58Z"
+last_activity: 2026-07-17
+last_activity_desc: Completed plan 11-01 (Migration CLI Tool)
 progress:
   total_phases: 11
   completed_phases: 9
-  total_plans: 50
-  completed_plans: 50
+  total_plans: 56
+  completed_plans: 51
   percent: 82
 ---
 
@@ -24,10 +25,10 @@ progress:
 | Field | Value |
 |-------|-------|
 | Milestone | M3 - Production Ready |
-| Phase | 10 — Scheduled Tasks |
-| Current Plan | 10-03 Complete |
-| Status | Complete |
-| Last Activity | 2026-07-16 |
+| Phase | 11 (migration-integration) — EXECUTING |
+| Current Plan | 2 |
+| Status | Executing Phase 11 — Plan 01 complete |
+| Last Activity | 2026-07-17 — Completed 11-01 Migration CLI Tool |
 
 ## Phase Status
 
@@ -43,7 +44,7 @@ progress:
 | 08 | Album & Doc Series | Complete | 5 | 2026-07-12 |
 | 09 | SEO & Music & Notifications | Complete | 7 | 2026-07-14 |
 | 10 | Scheduled Tasks | Complete | 3 | 2026-07-16 |
-| 11 | Migration & Integration | Not Started | 0 | 2026-06-28 |
+| 11 | Migration & Integration | Executing | 5 | 2026-07-17 |
 
 ## Active Decisions
 
@@ -130,19 +131,19 @@ progress:
 | Metric | Value |
 |--------|-------|
 | Phases Completed | 10 / 11 |
-| Plans Created | 53 |
-| Plans Executed | 53 |
+| Plans Created | 58 |
+| Plans Executed | 54 |
 | Requirements Covered | 31 / 39 |
 | API Endpoints Implemented | 59 / ~65+ |
 
 ---
-*Last updated: 2026-07-11*
+*Last updated: 2026-07-17*
 
 ## Session
 
-**Last session:** 2026-07-16T13:26:45.591Z
-**Stopped at:** Phase 11 context gathered
-**Resume file:** .planning/phases/11-migration-integration/11-CONTEXT.md
+**Last session:** 2026-07-17T12:56:58Z
+**Stopped at:** Completed 11-01-PLAN.md
+**Resume file:** .planning/phases/11-migration-integration/11-01-SUMMARY.md
 
 ## Performance Metrics
 
@@ -161,3 +162,6 @@ progress:
 - [Phase 10]: D-238: CommentNotificationJob only sends email for reply comments (parentId exists), matching Go logic
 - [Phase 10]: D-239: BackupService uses local time for filename timestamps (matches Go time.Now().Format)
 - [Phase 10]: D-240: ScheduleModule is @Global() so ScheduleService can be injected anywhere without explicit module import
+- [Phase 11]: D-241: No table name mappings needed — Go and NestJS use identical SQLite table names (article_post_categories, article_post_tags, link_tag_pivot)
+- [Phase 11]: D-242: Notifications table is NestJS-only, skipped during Go→NestJS migration
+- [Phase 11]: D-243: better-sqlite3 resolved via direct require path from server/node_modules for scripts/ directory

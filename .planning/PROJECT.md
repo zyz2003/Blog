@@ -25,7 +25,7 @@
 ### Active
 
 - [ ] 友链管理 API 兼容：友链 CRUD、分类、标签、申请、审核、健康检查 — Phase 07 implemented, pending frontend validation
-- [ ] 数据迁移工具：从原 PostgreSQL 导入数据到 SQLite
+- [ ] 数据迁移工具：从原 PostgreSQL 导入数据到 SQLite — Phase 11 in progress (MIGRATION-01 CLI tool done)
 
 ### Out of Scope
 

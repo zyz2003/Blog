@@ -34,7 +34,7 @@ Phases 10-11 complete. Scheduled tasks running, migration tool available, end-to
 | 08 | Album & Doc Series | 5/5 | Complete    | 2026-07-12 |
 | 09 | SEO & Music & Notifications | 7/7 | Complete    | 2026-07-14 |
 | 10 | Scheduled Tasks | 3/3 | Complete | 2026-07-16 |
-| 11 | Migration & Integration | PostgreSQL-to-SQLite migration tool; full end-to-end API compatibility testing against Go backend responses | Final | TBD |
+| 11 | Migration & Integration | SQLite→SQLite migration tool; full end-to-end API compatibility testing against Go backend responses | Final | 1/5 Executing |
 
 ---
 
@@ -394,22 +394,38 @@ Plans:
 
 ### Phase 11: Migration & Integration
 
-**Goal:** PostgreSQL-to-SQLite migration tool; full end-to-end API compatibility testing against Go backend responses
+**Goal:** SQLite→SQLite migration tool; full end-to-end API compatibility testing against Go backend responses
 
 **Requirements:** MIGRATION-01, INTEGRATION-01
 
 **Success Criteria:**
 
-- Migration CLI tool reads from PostgreSQL connection and writes to SQLite data directory
-- All 30 tables migrate with data integrity preserved
+- Migration CLI tool reads from Go backend's SQLite .db file and writes to NestJS's .db file
+- All 33 tables migrate with data integrity preserved
 - ID seed values preserved so Sqids encoding produces identical public IDs
 - JWT secret preserved so existing tokens work after migration
 - Settings, file paths, and binary data all transfer correctly
-- End-to-end API compatibility test suite passes for all P0 endpoints
-- Frontend connects to new backend and all P0 features work without modification
+- End-to-end API compatibility test suite passes for all endpoints
+- Frontend connects to new backend and all features work without modification
 - `npm run dev` starts both frontend and backend successfully
 
-**Plans:** TBD
+**Plans:** 1/5 complete
+
+Plans:
+
+**Wave 1** (parallel, no cross-dependencies)
+
+- [x] 11-01-PLAN.md — Migration CLI tool: scripts/migrate.ts with FK-ordered table migration, timestamp conversion, auto-backup, and post-migration validation
+- [ ] 11-02-PLAN.md — API compat test infrastructure: shared helpers with typed TestContext, multipart upload helper, and 6 core module test files (auth, settings, version, user, article, page)
+
+**Wave 2** (depends on Wave 1)
+
+- [ ] 11-03-PLAN.md — Content & file module tests: post-category, post-tag, comment, search, doc-series, article-history, file, storage-policy, thumbnail, direct-link
+- [ ] 11-04-PLAN.md — Stats, links, album, SEO, notification module tests: statistics, link, album, album-category, rss, sitemap, music, notification, subscriber
+
+**Wave 3** (depends on all prior)
+
+- [ ] 11-05-PLAN.md — Remaining tests (backup, captcha, weather, proxy) + full test suite run + migration end-to-end verification + frontend smoke test + STATE/ROADMAP update
 
 ---
 
@@ -455,9 +471,9 @@ Plans:
 | NOTIF-01 | 09 | Notification management |
 | SUBSCRIBER-01 | 09 | Subscriber subscribe/unsubscribe |
 | CRON-01 | 10 | Scheduled tasks (8 job types) |
-| MIGRATION-01 | 11 | PostgreSQL to SQLite migration tool |
+| MIGRATION-01 | 11 | SQLite to SQLite migration tool |
 | INTEGRATION-01 | 11 | End-to-end API compatibility testing |
 
 ---
 
-*Last updated: 2026-06-28*
+*Last updated: 2026-07-17*
