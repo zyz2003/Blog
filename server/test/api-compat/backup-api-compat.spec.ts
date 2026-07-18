@@ -41,7 +41,7 @@ describe('Backup API Compat', () => {
         .set('authorization', `Bearer ${ctx.adminToken}`)
         .send({ description: 'test backup' });
 
-      assertSuccessResponse(res, 201);
+      assertSuccessResponse(res, 200);
       const data = res.body.data;
       // BackupInfo has filename, size, created_at, description, is_auto
       expect(data).toHaveProperty('filename');
@@ -157,7 +157,7 @@ describe('Backup API Compat', () => {
         .send({ keep_count: 10 });
 
       // Per D-244: NestJS POST returns code 201 in response body (Go returns 200)
-      assertSuccessResponse(res, 201);
+      assertSuccessResponse(res, 200);
     });
 
     it('returns 400 for invalid keep_count (0)', async () => {

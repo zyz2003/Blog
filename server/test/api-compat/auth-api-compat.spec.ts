@@ -33,7 +33,7 @@ describe('Auth API Compat', () => {
         .send({ email: 'admin@test.com', password: ADMIN_PASSWORD });
 
       // Go backend returns 201 for login
-      assertSuccessResponse(res, 201);
+      assertSuccessResponse(res, 200);
       const data = res.body.data;
 
       // Token fields
@@ -81,7 +81,7 @@ describe('Auth API Compat', () => {
         .post('/api/auth/refresh-token')
         .send({ refreshToken });
 
-      assertSuccessResponse(res, 201);
+      assertSuccessResponse(res, 200);
       expect(res.body.data).toHaveProperty('accessToken');
       expect(typeof res.body.data.accessToken).toBe('string');
     });

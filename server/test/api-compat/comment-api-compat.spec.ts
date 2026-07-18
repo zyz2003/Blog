@@ -116,7 +116,7 @@ describe('Comment API Compat', () => {
         });
 
       // NestJS POST returns code 201 (Go returns 200)
-      assertSuccessResponse(res, 201);
+      assertSuccessResponse(res, 200);
       const data = res.body.data;
 
       // Comment has id and content_html (content is admin-only field)

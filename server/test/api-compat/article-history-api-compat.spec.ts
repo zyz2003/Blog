@@ -157,7 +157,7 @@ describe('Article History API Compat', () => {
         .set('authorization', `Bearer ${ctx.adminToken}`);
 
       // NestJS POST returns code 201 (Go returns 200)
-      assertSuccessResponse(res, 201);
+      assertSuccessResponse(res, 200);
       const data = res.body.data;
 
       // Restored version has key fields

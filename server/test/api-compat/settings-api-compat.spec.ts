@@ -33,7 +33,7 @@ describe('Settings API Compat', () => {
         .send({ keys: ['APP_NAME', 'GRAVATAR_URL'] });
 
       // NestJS POST returns 201; Go backend returns 200 for all success
-      assertSuccessResponse(res, 201);
+      assertSuccessResponse(res, 200);
       const data = res.body.data;
       expect(data).toHaveProperty('APP_NAME');
       expect(data).toHaveProperty('GRAVATAR_URL');
@@ -45,7 +45,7 @@ describe('Settings API Compat', () => {
         .set('authorization', `Bearer ${ctx.adminToken}`)
         .send({ keys: ['JWT_SECRET', 'id_seed'] });
 
-      assertSuccessResponse(res, 201);
+      assertSuccessResponse(res, 200);
       expect(res.body.data).toHaveProperty('JWT_SECRET');
       expect(res.body.data).toHaveProperty('id_seed');
     });
@@ -69,7 +69,7 @@ describe('Settings API Compat', () => {
         .send({ settings: { APP_NAME: 'UpdatedTestApp' } });
 
       // NestJS POST returns 201; Go backend returns 200 for all success
-      assertSuccessResponse(res, 201);
+      assertSuccessResponse(res, 200);
 
       // Restore original value
       await supertest(ctx.app.getHttpServer())

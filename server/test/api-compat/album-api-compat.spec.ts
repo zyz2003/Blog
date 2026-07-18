@@ -64,7 +64,7 @@ describe('Album API Compat', () => {
 
       // NestJS POST returns 201; Go returns 200
       // Album add returns { data: null, message: "添加成功" }
-      assertSuccessResponse(res, 201);
+      assertSuccessResponse(res, 200);
     });
 
     it('returns 401 without JWT', async () => {
@@ -88,7 +88,7 @@ describe('Album API Compat', () => {
         });
 
       // NestJS POST returns 201; Go returns 200
-      assertSuccessResponse(res, 201);
+      assertSuccessResponse(res, 200);
       const data = res.body.data;
       // Batch import result has successCount, failCount, skipCount
       expect(data).toHaveProperty('successCount');

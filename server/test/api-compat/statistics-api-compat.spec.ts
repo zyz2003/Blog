@@ -60,7 +60,7 @@ describe('Statistics API Compat', () => {
 
       // NestJS POST returns 201; Go returns 200
       // Visit recording returns immediately (fire-and-forget per D-160)
-      assertSuccessResponse(res, 201);
+      assertSuccessResponse(res, 200);
     });
 
     it('works without auth (public endpoint)', async () => {

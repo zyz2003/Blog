@@ -17,6 +17,10 @@ import { DRIZZLE } from '../../src/database/database.module';
 import { users } from '../../src/database/schemas/user.schema';
 import { userGroups } from '../../src/database/schemas/user-group.schema';
 import { settings } from '../../src/database/schemas/setting.schema';
+import { linkCategories } from '../../src/database/schemas/link-category.schema';
+import { linkTags } from '../../src/database/schemas/link-tag.schema';
+import { storagePolicies } from '../../src/database/schemas/storage-policy.schema';
+import { albumCategories } from '../../src/database/schemas/album-category.schema';
 
 // ─── TestContext Interface ──────────────────────────────────────────────
 
@@ -122,6 +126,40 @@ export async function seedBaseData(db: any): Promise<void> {
       .onConflictDoUpdate({ target: settings.configKey, set: { value: s.value } })
       .run();
   }
+
+  // Insert link category (id=1) for link creation tests
+  await db.insert(linkCategories).values({
+    id: 1,
+    name: 'Test Category',
+    description: 'Test link category',
+    displayOrder: 0,
+  }).onConflictDoNothing().run();
+
+  // Insert link tag for link tag tests
+  await db.insert(linkTags).values({
+    id: 1,
+    name: 'Test Tag',
+    color: '#000000',
+  }).onConflictDoNothing().run();
+
+  // Insert storage policy for file upload tests
+  await db.insert(storagePolicies).values({
+    id: 1,
+    name: 'Local Storage',
+    type: 'local',
+    flag: 'article_image',
+    maxSize: 0,
+    basePath: 'data/uploads',
+    baseUrl: '/uploads',
+  }).onConflictDoNothing().run();
+
+  // Insert album category for album tests
+  await db.insert(albumCategories).values({
+    id: 1,
+    name: 'Test Album Category',
+    description: 'Test album category',
+    displayOrder: 0,
+  }).onConflictDoNothing().run();
 }
 
 // ─── generateAdminToken ─────────────────────────────────────────────────
@@ -145,6 +183,7 @@ export function generateAdminToken(seed: string, jwtSecret: string): string {
 // ─── assertSuccessResponse ──────────────────────────────────────────────
 
 export function assertSuccessResponse(res: supertest.Response, expectedCode = 200): void {
+  expect(res.status).toBe(expectedCode);
   expect(res.body).toHaveProperty('code', expectedCode);
   expect(res.body).toHaveProperty('message');
   expect(res.body).toHaveProperty('data');
@@ -155,7 +194,7 @@ export function assertSuccessResponse(res: supertest.Response, expectedCode = 20
 export function assertPaginatedResponse(
   res: supertest.Response,
   listKey = 'list',
-  pageKey = 'pageNum',
+  pageKey = 'page',
 ): void {
   assertSuccessResponse(res);
   const data = res.body.data;

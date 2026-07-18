@@ -36,7 +36,7 @@ describe('Subscriber API Compat', () => {
 
       // May succeed (201) or fail (400/429) if code is invalid or rate-limited
       if (res.body?.code === 201 || res.body?.code === 200) {
-        assertSuccessResponse(res, 201);
+        assertSuccessResponse(res, 200);
       } else {
         // Verification code error or rate limit is acceptable
         expect(res.status).toBeGreaterThanOrEqual(400);
@@ -65,7 +65,7 @@ describe('Subscriber API Compat', () => {
 
       // May succeed (201) or fail (400) if captcha is required
       if (res.body?.code === 201 || res.body?.code === 200) {
-        assertSuccessResponse(res, 201);
+        assertSuccessResponse(res, 200);
       } else {
         // Captcha verification error is acceptable
         expect(res.status).toBeGreaterThanOrEqual(400);
@@ -92,7 +92,7 @@ describe('Subscriber API Compat', () => {
 
       // May succeed (201) or fail (404) if subscriber not found
       if (res.body?.code === 201 || res.body?.code === 200) {
-        assertSuccessResponse(res, 201);
+        assertSuccessResponse(res, 200);
       } else {
         // Subscriber not found is acceptable
         expect(res.status).toBeGreaterThanOrEqual(400);

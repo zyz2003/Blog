@@ -62,7 +62,7 @@ describe('Article API Compat', () => {
           status: 'DRAFT',
         });
 
-      assertSuccessResponse(res, 201);
+      assertSuccessResponse(res, 200);
       const data = res.body.data;
 
       // Article ID is Sqids-encoded string
@@ -162,7 +162,7 @@ describe('Article API Compat', () => {
         .send({ image_url: 'https://example.com/test.jpg' });
 
       // NestJS POST returns 201
-      assertSuccessResponse(res, 201);
+      assertSuccessResponse(res, 200);
       expect(res.body.data).toHaveProperty('primary_color');
     });
   });

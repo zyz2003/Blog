@@ -46,7 +46,7 @@ describe('Post Category API Compat', () => {
         .send({ name: `Compat Test Category ${ctx.ts}` });
 
       // NestJS POST returns code 201 (Go returns 200)
-      assertSuccessResponse(res, 201);
+      assertSuccessResponse(res, 200);
       const data = res.body.data;
 
       // Category has Sqids-encoded string id

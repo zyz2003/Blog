@@ -39,7 +39,7 @@ describe('Page API Compat', () => {
           is_published: true,
         });
 
-      assertSuccessResponse(res, 201);
+      assertSuccessResponse(res, 200);
       const data = res.body.data;
 
       // Page has: id (numeric), path, content, is_published, created_at, updated_at
@@ -144,7 +144,7 @@ describe('Page API Compat', () => {
         .set('authorization', `Bearer ${ctx.adminToken}`);
 
       // NestJS POST returns 201
-      assertSuccessResponse(res, 201);
+      assertSuccessResponse(res, 200);
     });
   });
 

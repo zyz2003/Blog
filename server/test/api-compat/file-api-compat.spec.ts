@@ -227,9 +227,11 @@ describe('File API Compat', () => {
         .get('/api/file/upload/session/nonexistent-session')
         .set('authorization', `Bearer ${ctx.adminToken}`);
 
-      // Upload service may return 200 with empty data or error
-      // Either is acceptable for compat testing
-      expect(res.status).toBeGreaterThanOrEqual(200);
+      // Session not found returns 404 or 200 with null data
+      expect([200, 404]).toContain(res.status);
+      if (res.status === 200) {
+        assertSuccessResponse(res);
+      }
     });
   });
 

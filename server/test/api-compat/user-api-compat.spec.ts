@@ -109,7 +109,7 @@ describe('User API Compat', () => {
         .send({ oldPassword: ADMIN_PASSWORD, newPassword: 'newPassword456' });
 
       // NestJS POST returns 201
-      assertSuccessResponse(res, 201);
+      assertSuccessResponse(res, 200);
 
       // Restore original password
       await supertest(ctx.app.getHttpServer())
@@ -155,7 +155,7 @@ describe('User API Compat', () => {
           userGroupID: groupId,
         });
 
-      assertSuccessResponse(res, 201);
+      assertSuccessResponse(res, 200);
       const data = res.body.data;
 
       // User object has expected fields
@@ -226,7 +226,7 @@ describe('User API Compat', () => {
         .set('authorization', `Bearer ${ctx.adminToken}`)
         .send({ newPassword: 'newResetPass123' });
 
-      assertSuccessResponse(res, 201);
+      assertSuccessResponse(res, 200);
     });
   });
 

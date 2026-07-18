@@ -54,7 +54,7 @@ describe('Post Tag API Compat', () => {
         .send({ name: `Compat Test Tag ${ctx.ts}` });
 
       // NestJS POST returns code 201 (Go returns 200)
-      assertSuccessResponse(res, 201);
+      assertSuccessResponse(res, 200);
       const data = res.body.data;
 
       // Tag has Sqids-encoded string id

@@ -43,10 +43,10 @@ describe('Link API Compat', () => {
           email: 'test@example.com',
         });
 
-      // NestJS POST returns 201; Go returns 200
+      // Go returns 200 for link apply; NestJS now also returns 200 via @HttpCode
       // May succeed or fail if rate-limited
-      if (res.status === 200 || res.status === 201) {
-        assertSuccessResponse(res, 201);
+      if (res.status === 200) {
+        assertSuccessResponse(res, 200);
       } else {
         // Rate limit or validation error is acceptable
         expect(res.status).toBeGreaterThanOrEqual(400);
@@ -294,8 +294,8 @@ describe('Link API Compat', () => {
         .post('/api/links/health-check')
         .set('authorization', `Bearer ${ctx.adminToken}`);
 
-      // NestJS POST returns 201; Go returns 200
-      assertSuccessResponse(res, 201);
+      // Go returns 200 for health-check; NestJS now also returns 200 via @HttpCode
+      assertSuccessResponse(res, 200);
       // Health check returns status message
       expect(res.body.data).toHaveProperty('status');
     });
