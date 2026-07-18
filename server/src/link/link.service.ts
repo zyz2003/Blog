@@ -415,7 +415,12 @@ export class LinkService {
     dto: UpdateLinkRequestDto,
   ): Promise<LinkResponseDto> {
     // Decode public ID
-    const decoded = decodePublicID(publicId);
+    let decoded: { dbID: number; entityType: number };
+    try {
+      decoded = decodePublicID(publicId);
+    } catch {
+      throw new NotFoundException(ErrorCodes.LINK_NOT_FOUND);
+    }
     if (decoded.entityType !== EntityType.Link) {
       throw new BadRequestException(ErrorCodes.INVALID_PUBLIC_ID);
     }
@@ -472,7 +477,12 @@ export class LinkService {
    * Soft-delete a link by public ID.
    */
   async adminDeleteLink(publicId: string): Promise<void> {
-    const decoded = decodePublicID(publicId);
+    let decoded: { dbID: number; entityType: number };
+    try {
+      decoded = decodePublicID(publicId);
+    } catch {
+      throw new NotFoundException(ErrorCodes.LINK_NOT_FOUND);
+    }
     if (decoded.entityType !== EntityType.Link) {
       throw new BadRequestException(ErrorCodes.INVALID_PUBLIC_ID);
     }
@@ -550,7 +560,12 @@ export class LinkService {
     dto: ReviewLinkRequestDto,
   ): Promise<void> {
     // Decode public ID
-    const decoded = decodePublicID(publicId);
+    let decoded: { dbID: number; entityType: number };
+    try {
+      decoded = decodePublicID(publicId);
+    } catch {
+      throw new NotFoundException(ErrorCodes.LINK_NOT_FOUND);
+    }
     if (decoded.entityType !== EntityType.Link) {
       throw new BadRequestException(ErrorCodes.INVALID_PUBLIC_ID);
     }
