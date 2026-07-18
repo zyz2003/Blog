@@ -317,8 +317,10 @@ export class SearchService implements OnModuleInit {
         hits: normalizedHits,
       };
     } catch (error) {
-      // FTS5 table may not exist (e.g., in test environments or before migration)
-      this.logger.warn('Search failed, FTS5 table may not exist');
+      // FTS5 table may not exist (e.g., in test environments or before migration),
+      // or the query may contain invalid FTS5 syntax.
+      const msg = error instanceof Error ? error.message : String(error);
+      this.logger.warn(`Search failed: ${msg}`);
       return {
         pagination: { total: 0, page, size, totalPages: 0 },
         hits: [],
