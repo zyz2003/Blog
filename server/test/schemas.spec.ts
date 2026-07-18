@@ -19,7 +19,7 @@ describe('Schema Definitions Verification', () => {
       .all() as { name: string }[];
     db.close();
 
-    expect(tables.length).toBe(32);
+    expect(tables.length).toBe(33);
 
     const tableNames = tables.map((t) => t.name);
     // Verify all expected tables exist
@@ -47,6 +47,7 @@ describe('Schema Definitions Verification', () => {
       'album_categories',
       'doc_series',
       'notification_types',
+      'notifications',
       'user_notification_configs',
       'user_installed_themes',
       'subscribers',

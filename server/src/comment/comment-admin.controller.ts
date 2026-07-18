@@ -1,13 +1,21 @@
 import {
   Controller,
   Get,
+  Post,
   Put,
   Delete,
   Body,
   Param,
   Query,
+  Res,
+  Req,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { AdminGuard } from '../common/guards/admin.guard';
 import { CommentService } from './comment.service';
 import { AdminListCommentDto } from './dto/admin-list-comment.dto';
@@ -16,6 +24,8 @@ import { UpdateContentCommentDto } from './dto/update-content-comment.dto';
 import { UpdateCommentInfoDto } from './dto/update-comment-info.dto';
 import { UpdateStatusCommentDto } from './dto/update-status-comment.dto';
 import { SetPinCommentDto } from './dto/set-pin-comment.dto';
+import { ExportCommentsDto } from './dto/export-comments.dto';
+import type { Request, Response } from 'express';
 
 /**
  * CommentAdminController handles all admin-only comment endpoints.
@@ -106,5 +116,71 @@ export class CommentAdminController {
   @Put(':id/pin')
   async setPin(@Param('id') id: string, @Body() dto: SetPinCommentDto) {
     return this.commentService.setPin(id, dto.pinned);
+  }
+
+  /**
+   * POST /api/comments/export
+   * Export comments as JSON file.
+   * Matches Go ExportComments (router.go line 287).
+   * Frontend expects responseType: 'blob'.
+   * Returns JSON buffer directly (Go returns ZIP but frontend's axios handles blob).
+   */
+  @Post('export')
+  @HttpCode(HttpStatus.OK)
+  async exportComments(
+    @Body() dto: ExportCommentsDto,
+    @Res() res: Response,
+  ) {
+    const jsonBuffer = await this.commentService.exportComments(dto.ids ?? []);
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename=comments_export.json',
+    );
+    res.setHeader('Content-Length', jsonBuffer.length.toString());
+    res.send(jsonBuffer);
+  }
+
+  /**
+   * POST /api/comments/import
+   * Import comments from a JSON file.
+   * Matches Go ImportComments (router.go line 288).
+   * Accepts multipart/form-data with 'file' field and optional parameters.
+   */
+  @Post('import')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FileInterceptor('file'))
+  async importComments(
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: Request,
+  ) {
+    if (!file) {
+      return {
+        total_count: 0,
+        success_count: 0,
+        skipped_count: 0,
+        failed_count: 1,
+        error_messages: ['No file uploaded'],
+        imported: 0,
+        skipped: 0,
+        errors: ['No file uploaded'],
+      };
+    }
+
+    const options = {
+      skipExisting:
+        req.body?.skip_existing === 'false' ? false : true,
+      defaultStatus: parseInt(req.body?.default_status || '1', 10),
+      keepCreateTime:
+        req.body?.keep_create_time === 'false' ? false : true,
+    };
+
+    const result = await this.commentService.importComments(
+      file.buffer,
+      options,
+    );
+
+    return result;
   }
 }

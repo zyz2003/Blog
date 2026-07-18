@@ -1425,6 +1425,198 @@ export class CommentService {
   }
 
   /**
+   * Export comments as a JSON string.
+   * Matches Go ExportComments: returns comments filtered by IDs (empty = all).
+   * Frontend expects a Blob (responseType: 'blob'), so controller returns JSON buffer.
+   */
+  async exportComments(ids: string[]): Promise<Buffer> {
+    const { comments } = await import('../database/schemas');
+    const { eq, inArray, isNull, desc } = await import('drizzle-orm');
+
+    let rows: any[];
+
+    if (ids && ids.length > 0) {
+      // Decode public IDs to database IDs
+      const dbIds = ids
+        .map((id) => {
+          try {
+            const decoded = decodePublicID(id);
+            if (decoded.entityType === EntityType.Comment) {
+              return decoded.dbID;
+            }
+            return null;
+          } catch {
+            return null;
+          }
+        })
+        .filter((id): id is number => id !== null);
+
+      if (dbIds.length === 0) {
+        rows = [];
+      } else {
+        rows = await this.db
+          .select()
+          .from(comments)
+          .where(inArray(comments.id, dbIds))
+          .execute();
+      }
+    } else {
+      // Export all non-deleted comments
+      rows = await this.db
+        .select()
+        .from(comments)
+        .where(isNull(comments.deletedAt))
+        .orderBy(desc(comments.createdAt))
+        .execute();
+    }
+
+    // Convert to export format (matching Go ExportComments output)
+    const exportData = rows.map((row) => ({
+      id: row.id,
+      created_at: row.createdAt,
+      updated_at: row.updatedAt,
+      target_path: row.targetPath,
+      target_title: row.targetTitle,
+      user_id: row.userId,
+      parent_id: row.parentId,
+      reply_to_id: row.replyToId,
+      nickname: row.nickname,
+      email: row.email,
+      email_md5: row.emailMd5,
+      website: row.website,
+      content: row.content,
+      content_html: row.contentHtml,
+      status: row.status,
+      is_admin_comment: row.isAdminComment ? 1 : 0,
+      is_anonymous: row.isAnonymous ? 1 : 0,
+      user_agent: row.userAgent,
+      ip_address: row.ipAddress,
+      ip_location: row.ipLocation,
+      like_count: row.likeCount,
+      pinned_at: row.pinnedAt,
+    }));
+
+    return Buffer.from(JSON.stringify(exportData, null, 2), 'utf-8');
+  }
+
+  /**
+   * Import comments from a JSON file.
+   * Matches Go ImportComments: supports JSON format with options.
+   */
+  async importComments(
+    fileData: Buffer,
+    options: {
+      skipExisting?: boolean;
+      defaultStatus?: number;
+      keepCreateTime?: boolean;
+    },
+  ): Promise<{
+    total_count: number;
+    success_count: number;
+    skipped_count: number;
+    failed_count: number;
+    error_messages: string[];
+    imported: number;
+    skipped: number;
+    errors: string[];
+  }> {
+    const { comments } = await import('../database/schemas');
+    const { eq, isNull } = await import('drizzle-orm');
+    const { initSqidsEncoderWithSeed } = await import(
+      '../common/utils/sqids.util'
+    );
+
+    const result = {
+      total_count: 0,
+      success_count: 0,
+      skipped_count: 0,
+      failed_count: 0,
+      error_messages: [] as string[],
+      imported: 0,
+      skipped: 0,
+      errors: [] as string[],
+    };
+
+    let parsed: any[];
+    try {
+      parsed = JSON.parse(fileData.toString('utf-8'));
+      if (!Array.isArray(parsed)) {
+        throw new Error('Expected an array of comments');
+      }
+    } catch (e: any) {
+      result.failed_count = 1;
+      result.error_messages.push(`Invalid JSON: ${e.message}`);
+      result.errors = result.error_messages;
+      return result;
+    }
+
+    result.total_count = parsed.length;
+
+    for (const item of parsed) {
+      try {
+        // Skip existing if requested — check by target_path + nickname + content
+        if (options.skipExisting) {
+          const existing = await this.db
+            .select({ id: comments.id })
+            .from(comments)
+            .where(
+              eq(comments.targetPath, item.target_path || ''),
+            )
+            .limit(1)
+            .execute();
+
+          if (existing.length > 0) {
+            result.skipped_count++;
+            continue;
+          }
+        }
+
+        const now = Math.floor(Date.now() / 1000);
+        const createdAt = options.keepCreateTime
+          ? item.created_at || now
+          : now;
+        const updatedAt = now;
+
+        await this.db.insert(comments).values({
+          targetPath: item.target_path || '',
+          targetTitle: item.target_title || null,
+          userId: item.user_id || null,
+          parentId: item.parent_id || null,
+          replyToId: item.reply_to_id || null,
+          nickname: item.nickname || 'Anonymous',
+          email: item.email || null,
+          emailMd5: item.email_md5 || '',
+          website: item.website || null,
+          content: item.content || '',
+          contentHtml: item.content_html || item.content || '',
+          status: item.status || options.defaultStatus || 1,
+          isAdminComment: item.is_admin_comment === 1,
+          isAnonymous: item.is_anonymous === 1,
+          userAgent: item.user_agent || null,
+          ipAddress: item.ip_address || '0.0.0.0',
+          ipLocation: item.ip_location || null,
+          likeCount: item.like_count || 0,
+          pinnedAt: item.pinned_at || null,
+          createdAt,
+          updatedAt,
+        });
+
+        result.success_count++;
+      } catch (e: any) {
+        result.failed_count++;
+        const msg = `Comment import failed: ${e.message}`;
+        result.error_messages.push(msg);
+      }
+    }
+
+    result.imported = result.success_count;
+    result.skipped = result.skipped_count;
+    result.errors = result.error_messages;
+
+    return result;
+  }
+
+  /**
    * Send Pushoo notification via HTTP POST.
    */
   private async sendPushooNotification(
