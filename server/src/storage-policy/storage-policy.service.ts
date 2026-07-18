@@ -215,10 +215,18 @@ export class StoragePolicyService implements OnModuleInit {
   async initializeDefaultPolicies() {
     for (const def of DEFAULT_POLICIES) {
       try {
-        const existing = await this.repository.findByFlag(def.flag);
+        // Check for existing policy (including soft-deleted) to avoid UNIQUE constraint violation
+        const existing = await this.repository.findByFlagIncludeDeleted(def.flag);
         if (!existing) {
           await this.repository.create(def);
           this.logger.log(`Created default policy: ${def.name}`);
+        } else if (existing.deletedAt) {
+          // Soft-deleted policy exists — restore it instead of creating a new one
+          await this.repository.update(existing.id, {
+            ...def,
+            deletedAt: null,
+          });
+          this.logger.log(`Restored soft-deleted default policy: ${def.name}`);
         }
       } catch (error) {
         this.logger.error(

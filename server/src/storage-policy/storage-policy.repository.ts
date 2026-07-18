@@ -37,6 +37,18 @@ export class StoragePolicyRepository {
     return policy ?? null;
   }
 
+  /**
+   * Find a policy by flag, including soft-deleted records.
+   * Used by initializeDefaultPolicies to detect flag conflicts with deleted rows.
+   */
+  async findByFlagIncludeDeleted(flag: string) {
+    const [policy] = await this.db
+      .select()
+      .from(storagePolicies)
+      .where(eq(storagePolicies.flag, flag));
+    return policy ?? null;
+  }
+
   async create(data: any) {
     const [policy] = await this.db
       .insert(storagePolicies)

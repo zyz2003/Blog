@@ -313,14 +313,16 @@ export class StatisticsRepository {
   async aggregateDaily(date: Date): Promise<void> {
     const [startTs, endTs] = getChinaDayBounds(date);
 
-    await this.db.transaction(async (tx: any) => {
+    // better-sqlite3 is synchronous — Drizzle's db.transaction() requires
+    // a synchronous callback (no async/await). Use .all()/.run() inside tx.
+    this.db.transaction((tx: any) => {
       // 1. Delete existing visitor_stats for this date
-      await tx
-        .delete(visitorStats)
-        .where(eq(visitorStats.date, date));
+      tx.delete(visitorStats)
+        .where(eq(visitorStats.date, date))
+        .run();
 
       // 2. Re-aggregate from visitor_logs
-      const result = await tx
+      const result = tx
         .select({
           uniqueVisitors: sql<number>`COUNT(DISTINCT ${visitorLogs.visitorId})`,
           totalViews: sql<number>`COUNT(*)`,
@@ -333,7 +335,8 @@ export class StatisticsRepository {
             gte(visitorLogs.createdAt, sql`${startTs}`),
             lte(visitorLogs.createdAt, sql`${endTs}`),
           ),
-        );
+        )
+        .all();
 
       const row = result[0];
       if (!row || row.totalViews === 0) {
@@ -342,15 +345,15 @@ export class StatisticsRepository {
       }
 
       // 3. Insert aggregated row
-      await tx
-        .insert(visitorStats)
+      tx.insert(visitorStats)
         .values({
           date,
           uniqueVisitors: row.uniqueVisitors,
           totalViews: row.totalViews,
           pageViews: row.pageViews,
           bounceCount: row.bounceCount ?? 0,
-        });
+        })
+        .run();
     });
   }
 
