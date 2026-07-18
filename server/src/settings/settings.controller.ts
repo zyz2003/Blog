@@ -14,7 +14,6 @@ import { AdminGuard } from '../common/guards/admin.guard';
 import { Public } from '../common/decorators/public.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { GetByKeysRequestDto } from './dto/get-by-keys-request.dto';
-import { UpdateSettingsRequestDto } from './dto/update-settings-request.dto';
 import { decodePublicID, EntityType } from '../common/utils/sqids.util';
 
 @Controller('settings')
@@ -35,8 +34,28 @@ export class SettingsController {
   @HttpCode(HttpStatus.OK)
   @Post('update')
   @UseGuards(JwtAuthGuard, AdminGuard)
-  async update(@Body() dto: UpdateSettingsRequestDto): Promise<null> {
-    await this.settingsService.update(dto.settings);
+  async update(@Body() body: Record<string, any>): Promise<null> {
+    // Go backend accepts flat key-value pairs: { "SITE_NAME": "xxx" }
+    // Frontend sends the same flat format.
+    // Validate: body must be a non-empty object with string values.
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      throw new HttpException('请求参数格式错误', HttpStatus.BAD_REQUEST);
+    }
+    const keys = Object.keys(body);
+    if (keys.length === 0) {
+      throw new HttpException('没有需要更新的配置项', HttpStatus.BAD_REQUEST);
+    }
+    // Filter to string values only (matches Go additionalProperties: string)
+    const settings: Record<string, string> = {};
+    for (const [key, value] of Object.entries(body)) {
+      if (typeof value === 'string') {
+        settings[key] = value;
+      } else if (value !== undefined && value !== null) {
+        // Convert non-string values to string (e.g. numbers, booleans)
+        settings[key] = String(value);
+      }
+    }
+    await this.settingsService.update(settings);
     return null;
   }
 

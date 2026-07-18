@@ -35,7 +35,7 @@
     "isomorphic-dompurify": "^3.18.0",
     "joi": "17.13.3",
     "jsonwebtoken": "^9.0.3",
-    "marked": "^18.0.5",
+    "marked": "^18.0.6",
     "nodemailer": "^9.0.3",
     "passport": "0.7.0",
     "passport-jwt": "^4.0.1",
@@ -46,7 +46,8 @@
     "sqids": "0.3.0",
     "svg-captcha": "^1.4.0",
     "ua-parser-js": "^2.0.10",
-    "uuid": "^14.0.1"
+    "uuid": "^14.0.1",
+    "yaml": "^2.9.0"
   },
   "devDependencies": {
     "@nestjs/cli": "11.0.23",
