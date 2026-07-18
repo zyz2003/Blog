@@ -4,17 +4,17 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 11
 current_phase_name: migration-integration
-current_plan: 3
+current_plan: 4
 status: executing
-stopped_at: Completed 11-02-PLAN.md
-last_updated: "2026-07-17T14:25:42.870Z"
-last_activity: 2026-07-17
-last_activity_desc: Completed 11-02 API Compat Test Infrastructure
+stopped_at: Completed 11-04-PLAN.md
+last_updated: "2026-07-18T00:37:20Z"
+last_activity: 2026-07-18
+last_activity_desc: Completed 11-04 Stats/Links/Album/SEO/Notification API Compat Tests
 progress:
   total_phases: 11
   completed_phases: 9
   total_plans: 56
-  completed_plans: 53
+  completed_plans: 54
   percent: 82
 ---
 
@@ -26,8 +26,8 @@ progress:
 |-------|-------|
 | Milestone | M3 - Production Ready |
 | Phase | 11 (migration-integration) — EXECUTING |
-| Current Plan | 3 |
-| Status | Executing Phase 11 — Plan 02 complete |
+| Current Plan | 4 |
+| Status | Executing Phase 11 — Plan 04 complete |
 | Last Activity | 2026-07-17 — Completed 11-02 API Compat Test Infrastructure |
 
 ## Phase Status
@@ -44,7 +44,7 @@ progress:
 | 08 | Album & Doc Series | Complete | 5 | 2026-07-12 |
 | 09 | SEO & Music & Notifications | Complete | 7 | 2026-07-14 |
 | 10 | Scheduled Tasks | Complete | 3 | 2026-07-16 |
-| 11 | Migration & Integration | Executing | 5 | 2026-07-17 |
+| 11 | Migration & Integration | Executing | 4/6 | 2026-07-18 |
 
 ## Active Decisions
 
@@ -132,7 +132,7 @@ progress:
 |--------|-------|
 | Phases Completed | 10 / 11 |
 | Plans Created | 58 |
-| Plans Executed | 55 |
+| Plans Executed | 56 |
 | Requirements Covered | 31 / 39 |
 | API Endpoints Implemented | 59 / ~65+ |
 
@@ -141,9 +141,9 @@ progress:
 
 ## Session
 
-**Last session:** 2026-07-17T13:35:27Z
-**Stopped at:** Completed 11-02-PLAN.md
-**Resume file:** .planning/phases/11-migration-integration/11-02-SUMMARY.md
+**Last session:** 2026-07-18T00:37:20Z
+**Stopped at:** Completed 11-04-PLAN.md
+**Resume file:** .planning/phases/11-migration-integration/11-04-SUMMARY.md
 
 ## Performance Metrics
 
@@ -167,3 +167,6 @@ progress:
 - [Phase 11]: D-243: better-sqlite3 resolved via direct require path from server/node_modules for scripts/ directory
 - [Phase 11]: D-244: NestJS POST returns code 201 in response body (Go returns 200) — documented as known compat difference
 - [Phase 11]: D-245: Page service create() defaults markdownContent/customJs/customCss to empty string (not null) to match NOT NULL schema
+- [Phase 11]: D-246: Global prefix exclude for RSS/sitemap/robots.txt routes added to test helpers (matching main.ts)
+- [Phase 11]: D-247: Notification settings DTO uses allowCommentReplyNotification (simplified, not type-based flags)
+- [Phase 11]: D-248: Album stat increment for nonexistent ID succeeds silently (no 404)

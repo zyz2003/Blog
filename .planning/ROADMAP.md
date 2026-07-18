@@ -34,7 +34,7 @@ Phases 10-11 complete. Scheduled tasks running, migration tool available, end-to
 | 08 | Album & Doc Series | 5/5 | Complete    | 2026-07-12 |
 | 09 | SEO & Music & Notifications | 7/7 | Complete    | 2026-07-14 |
 | 10 | Scheduled Tasks | 3/3 | Complete | 2026-07-16 |
-| 11 | Migration & Integration | 3/6 | In Progress|  |
+| 11 | Migration & Integration | 4/6 | In Progress|  |
 
 ---
 
@@ -409,7 +409,7 @@ Plans:
 - Frontend connects to new backend and all features work without modification
 - `npm run dev` starts both frontend and backend successfully
 
-**Plans:** 3/6 plans executed
+**Plans:** 4/6 plans executed
 
 Plans:
 
@@ -421,7 +421,7 @@ Plans:
 **Wave 2** (depends on Wave 1)
 
 - [x] 11-03-PLAN.md — Content & file module tests: post-category, post-tag, comment, search, doc-series, article-history, file, storage-policy, thumbnail, direct-link
-- [ ] 11-04-PLAN.md — Stats, links, album, SEO, notification module tests: statistics, link, album, album-category, rss, sitemap, music, notification, subscriber
+- [x] 11-04-PLAN.md — Stats, links, album, SEO, notification module tests: statistics, link, album, album-category, rss, sitemap, music, notification, subscriber
 
 **Wave 3** (depends on all prior)
 
