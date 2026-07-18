@@ -45,7 +45,15 @@ export async function createTestApp(): Promise<TestContext> {
   }).compile();
 
   const app = moduleFixture.createNestApplication();
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api', {
+    exclude: [
+      'rss.xml',
+      'feed.xml',
+      'atom.xml',
+      'sitemap.xml',
+      'robots.txt',
+    ],
+  });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   const db = app.get(DRIZZLE);
