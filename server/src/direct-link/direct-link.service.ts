@@ -31,7 +31,13 @@ export class DirectLinkService {
     const results = [];
 
     for (const fileId of fileIds) {
-      const { dbID, entityType } = decodePublicID(fileId);
+      let dbID: number;
+      let entityType: number;
+      try {
+        ({ dbID, entityType } = decodePublicID(fileId));
+      } catch {
+        continue; // Skip invalid IDs silently (matching Go behavior for batch create)
+      }
       if (entityType !== EntityType.File) continue;
 
       // Check if direct link already exists (unique constraint on fileId)
@@ -91,7 +97,13 @@ export class DirectLinkService {
    * Decodes publicID with EntityType.DirectLink per RESEARCH Pitfall 5.
    */
   async handleDirectDownload(publicID: string, fileName: string) {
-    const { dbID, entityType } = decodePublicID(publicID);
+    let dbID: number;
+    let entityType: number;
+    try {
+      ({ dbID, entityType } = decodePublicID(publicID));
+    } catch {
+      throw new NotFoundException(ErrorCodes.NOT_FOUND);
+    }
 
     // CRITICAL: Must decode with EntityType.DirectLink, NOT EntityType.File
     // per RESEARCH Pitfall 5 and D-107
