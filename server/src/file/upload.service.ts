@@ -441,7 +441,12 @@ export class UploadService implements OnModuleInit, OnModuleDestroy {
     const { path: uriPath, fileName } = parseAnzhiyuURI(dto.uri);
 
     // Decode policy
-    const decoded = decodePublicID(dto.policy_id);
+    let decoded: { dbID: number; entityType: number };
+    try {
+      decoded = decodePublicID(dto.policy_id);
+    } catch {
+      throw new BadRequestException(ErrorCodes.INVALID_POLICY_TYPE);
+    }
     if (decoded.entityType !== EntityType.StoragePolicy) {
       throw new BadRequestException(ErrorCodes.INVALID_POLICY_TYPE);
     }
