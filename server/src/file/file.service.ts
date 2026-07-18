@@ -110,7 +110,13 @@ export class FileService {
    * Get file info by public ID.
    */
   async getFileInfo(publicID: string) {
-    const { dbID, entityType } = decodePublicID(publicID);
+    let dbID: number;
+    let entityType: number;
+    try {
+      ({ dbID, entityType } = decodePublicID(publicID));
+    } catch {
+      throw new NotFoundException(ErrorCodes.FILE_NOT_FOUND);
+    }
     if (entityType !== EntityType.File) {
       throw new NotFoundException(ErrorCodes.FILE_NOT_FOUND);
     }
@@ -147,7 +153,13 @@ export class FileService {
    * Get file metadata for download streaming.
    */
   async downloadFile(publicID: string) {
-    const { dbID, entityType } = decodePublicID(publicID);
+    let dbID: number;
+    let entityType: number;
+    try {
+      ({ dbID, entityType } = decodePublicID(publicID));
+    } catch {
+      throw new NotFoundException(ErrorCodes.FILE_NOT_FOUND);
+    }
     if (entityType !== EntityType.File) {
       throw new NotFoundException(ErrorCodes.FILE_NOT_FOUND);
     }
@@ -177,7 +189,13 @@ export class FileService {
    * Get download info per RESEARCH Section 9.
    */
   async getDownloadInfo(publicID: string) {
-    const { dbID, entityType } = decodePublicID(publicID);
+    let dbID: number;
+    let entityType: number;
+    try {
+      ({ dbID, entityType } = decodePublicID(publicID));
+    } catch {
+      throw new NotFoundException(ErrorCodes.FILE_NOT_FOUND);
+    }
     if (entityType !== EntityType.File) {
       throw new NotFoundException(ErrorCodes.FILE_NOT_FOUND);
     }
@@ -212,7 +230,13 @@ export class FileService {
    * Get preview URLs for all images in the same directory.
    */
   async getPreviewURLs(publicID: string, ownerId: number) {
-    const { dbID, entityType } = decodePublicID(publicID);
+    let dbID: number;
+    let entityType: number;
+    try {
+      ({ dbID, entityType } = decodePublicID(publicID));
+    } catch {
+      throw new NotFoundException(ErrorCodes.FILE_NOT_FOUND);
+    }
     if (entityType !== EntityType.File) {
       throw new NotFoundException(ErrorCodes.FILE_NOT_FOUND);
     }
@@ -273,7 +297,13 @@ export class FileService {
     }
 
     // Get file
-    const { dbID, entityType } = decodePublicID(publicID);
+    let dbID: number;
+    let entityType: number;
+    try {
+      ({ dbID, entityType } = decodePublicID(publicID));
+    } catch {
+      throw new NotFoundException(ErrorCodes.FILE_NOT_FOUND);
+    }
     if (entityType !== EntityType.File) {
       throw new NotFoundException(ErrorCodes.FILE_NOT_FOUND);
     }
@@ -388,7 +418,13 @@ export class FileService {
     content: Buffer,
     ownerId: number,
   ) {
-    const { dbID, entityType } = decodePublicID(publicID);
+    let dbID: number;
+    let entityType: number;
+    try {
+      ({ dbID, entityType } = decodePublicID(publicID));
+    } catch {
+      throw new NotFoundException(ErrorCodes.FILE_NOT_FOUND);
+    }
     if (entityType !== EntityType.File) {
       throw new NotFoundException(ErrorCodes.FILE_NOT_FOUND);
     }
@@ -433,7 +469,13 @@ export class FileService {
    */
   async deleteItems(ids: string[], ownerId: number) {
     for (const publicID of ids) {
-      const { dbID, entityType } = decodePublicID(publicID);
+      let dbID: number;
+      let entityType: number;
+      try {
+        ({ dbID, entityType } = decodePublicID(publicID));
+      } catch {
+        continue; // Skip invalid IDs silently (matching Go behavior for batch delete)
+      }
       if (entityType !== EntityType.File) continue;
 
       const file = await this.repository.findById(dbID);
@@ -474,7 +516,13 @@ export class FileService {
    * Rename a file/directory — check name conflict.
    */
   async renameItem(id: string, newName: string, ownerId: number) {
-    const { dbID, entityType } = decodePublicID(id);
+    let dbID: number;
+    let entityType: number;
+    try {
+      ({ dbID, entityType } = decodePublicID(id));
+    } catch {
+      throw new NotFoundException(ErrorCodes.FILE_NOT_FOUND);
+    }
     if (entityType !== EntityType.File) {
       throw new NotFoundException(ErrorCodes.FILE_NOT_FOUND);
     }
@@ -505,7 +553,13 @@ export class FileService {
    * Get folder tree with signed download URLs per RESEARCH Section 3.
    */
   async getFolderTree(publicID: string, ownerId: number) {
-    const { dbID, entityType } = decodePublicID(publicID);
+    let dbID: number;
+    let entityType: number;
+    try {
+      ({ dbID, entityType } = decodePublicID(publicID));
+    } catch {
+      throw new NotFoundException(ErrorCodes.FOLDER_NOT_FOUND);
+    }
     if (entityType !== EntityType.File) {
       throw new NotFoundException(ErrorCodes.FOLDER_NOT_FOUND);
     }
@@ -545,7 +599,13 @@ export class FileService {
    * Get folder size — recursive sum per RESEARCH Section 9.
    */
   async getFolderSize(publicID: string) {
-    const { dbID, entityType } = decodePublicID(publicID);
+    let dbID: number;
+    let entityType: number;
+    try {
+      ({ dbID, entityType } = decodePublicID(publicID));
+    } catch {
+      throw new NotFoundException(ErrorCodes.FOLDER_NOT_FOUND);
+    }
     if (entityType !== EntityType.File) {
       throw new NotFoundException(ErrorCodes.FOLDER_NOT_FOUND);
     }
@@ -571,7 +631,13 @@ export class FileService {
    * Update folder view config.
    */
   async updateFolderView(publicID: string, view: any) {
-    const { dbID, entityType } = decodePublicID(publicID);
+    let dbID: number;
+    let entityType: number;
+    try {
+      ({ dbID, entityType } = decodePublicID(publicID));
+    } catch {
+      throw new NotFoundException(ErrorCodes.FOLDER_NOT_FOUND);
+    }
     if (entityType !== EntityType.File) {
       throw new NotFoundException(ErrorCodes.FOLDER_NOT_FOUND);
     }
@@ -585,7 +651,13 @@ export class FileService {
    */
   async moveItems(sourceIDs: string[], destinationID: string, ownerId: number) {
     // Decode destination
-    const { dbID: destDbId, entityType: destType } = decodePublicID(destinationID);
+    let destDbId: number;
+    let destType: number;
+    try {
+      ({ dbID: destDbId, entityType: destType } = decodePublicID(destinationID));
+    } catch {
+      throw new NotFoundException(ErrorCodes.FOLDER_NOT_FOUND);
+    }
     if (destType !== EntityType.File) {
       throw new NotFoundException(ErrorCodes.FOLDER_NOT_FOUND);
     }
@@ -596,7 +668,13 @@ export class FileService {
     }
 
     for (const sourceID of sourceIDs) {
-      const { dbID: srcDbId, entityType: srcType } = decodePublicID(sourceID);
+      let srcDbId: number;
+      let srcType: number;
+      try {
+        ({ dbID: srcDbId, entityType: srcType } = decodePublicID(sourceID));
+      } catch {
+        continue; // Skip invalid IDs silently
+      }
       if (srcType !== EntityType.File) continue;
 
       const srcFile = await this.repository.findById(srcDbId);
@@ -638,7 +716,13 @@ export class FileService {
    * Copy items to a new parent directory.
    */
   async copyItems(sourceIDs: string[], destinationID: string, ownerId: number) {
-    const { dbID: destDbId, entityType: destType } = decodePublicID(destinationID);
+    let destDbId: number;
+    let destType: number;
+    try {
+      ({ dbID: destDbId, entityType: destType } = decodePublicID(destinationID));
+    } catch {
+      throw new NotFoundException(ErrorCodes.FOLDER_NOT_FOUND);
+    }
     if (destType !== EntityType.File) {
       throw new NotFoundException(ErrorCodes.FOLDER_NOT_FOUND);
     }
@@ -649,7 +733,13 @@ export class FileService {
     }
 
     for (const sourceID of sourceIDs) {
-      const { dbID: srcDbId, entityType: srcType } = decodePublicID(sourceID);
+      let srcDbId: number;
+      let srcType: number;
+      try {
+        ({ dbID: srcDbId, entityType: srcType } = decodePublicID(sourceID));
+      } catch {
+        continue; // Skip invalid IDs silently
+      }
       if (srcType !== EntityType.File) continue;
 
       const srcFile = await this.repository.findById(srcDbId);
