@@ -52,6 +52,7 @@ export async function createTestApp(): Promise<TestContext> {
       'atom.xml',
       'sitemap.xml',
       'robots.txt',
+      'needcache/download/:public_id',
     ],
   });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));

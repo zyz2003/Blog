@@ -19,6 +19,7 @@ async function bootstrap() {
       'atom.xml',
       'sitemap.xml',
       'robots.txt',
+      'needcache/download/:public_id',
     ],
   });
 
