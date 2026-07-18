@@ -98,7 +98,12 @@ export class CommentService {
     let parentDbId: number | null = null;
     let parentComment: any = null;
     if (req.parent_id && req.parent_id !== '') {
-      const decoded = decodePublicID(req.parent_id);
+      let decoded: { dbID: number; entityType: number };
+      try {
+        decoded = decodePublicID(req.parent_id);
+      } catch {
+        throw new BadRequestException(ErrorCodes.INVALID_PUBLIC_ID);
+      }
       if (decoded.entityType !== EntityType.Comment) {
         throw new BadRequestException(ErrorCodes.INVALID_PUBLIC_ID);
       }
@@ -116,7 +121,12 @@ export class CommentService {
     let replyToDbId: number | null = null;
     let replyToComment: any = null;
     if (req.reply_to_id && req.reply_to_id !== '') {
-      const decoded = decodePublicID(req.reply_to_id);
+      let decoded: { dbID: number; entityType: number };
+      try {
+        decoded = decodePublicID(req.reply_to_id);
+      } catch {
+        throw new BadRequestException(ErrorCodes.INVALID_PUBLIC_ID);
+      }
       if (decoded.entityType !== EntityType.Comment) {
         throw new BadRequestException(ErrorCodes.INVALID_PUBLIC_ID);
       }
@@ -173,7 +183,12 @@ export class CommentService {
     let userId: number | null = null;
     if (claims) {
       // Authenticated user — check if admin
-      const userDbId = decodePublicID(claims.user_id).dbID;
+      let userDbId: number;
+      try {
+        userDbId = decodePublicID(claims.user_id).dbID;
+      } catch {
+        throw new BadRequestException(ErrorCodes.INVALID_PUBLIC_ID);
+      }
       const user = await this.findUserById(userDbId);
       if (user) {
         userId = user.id;
@@ -245,7 +260,14 @@ export class CommentService {
     // If the comment is a reply (replyToDbId is not null) and the reply target has a userId (not a guest),
     // check if the user has comment_reply notification enabled and create an in-app notification.
     // CR-01 fix: Skip self-notification — don't notify user about their own reply.
-    const replierUserId = claims?.user_id ? decodePublicID(claims.user_id).dbID : null;
+    let replierUserId: number | null = null;
+    if (claims?.user_id) {
+      try {
+        replierUserId = decodePublicID(claims.user_id).dbID;
+      } catch {
+        // Invalid user_id in claims — skip self-notification check
+      }
+    }
     if (replyToDbId && replyToComment?.userId && replyToComment.userId !== replierUserId) {
       // Fire-and-forget: inner try-catch handles errors (WR-03 fix: no double error handling)
       this.fireCommentReplyNotification(replyToComment.userId, req.nickname);
@@ -742,7 +764,12 @@ export class CommentService {
     pageSize: number,
   ): Promise<any> {
     // 1. Decode parent ID
-    const decoded = decodePublicID(parentPublicID);
+    let decoded: { dbID: number; entityType: number };
+    try {
+      decoded = decodePublicID(parentPublicID);
+    } catch {
+      throw new NotFoundException(ErrorCodes.COMMENT_NOT_FOUND);
+    }
     if (decoded.entityType !== EntityType.Comment) {
       throw new BadRequestException(ErrorCodes.COMMENT_NOT_FOUND);
     }
@@ -882,7 +909,12 @@ export class CommentService {
    * Like a comment — increment likeCount per D-133.
    */
   async likeComment(publicID: string): Promise<{ like_count: number }> {
-    const decoded = decodePublicID(publicID);
+    let decoded: { dbID: number; entityType: number };
+    try {
+      decoded = decodePublicID(publicID);
+    } catch {
+      throw new NotFoundException(ErrorCodes.COMMENT_NOT_FOUND);
+    }
     if (decoded.entityType !== EntityType.Comment) {
       throw new BadRequestException(ErrorCodes.COMMENT_NOT_FOUND);
     }
@@ -895,7 +927,12 @@ export class CommentService {
    * Unlike a comment — decrement likeCount (min 0) per D-133.
    */
   async unlikeComment(publicID: string): Promise<{ like_count: number }> {
-    const decoded = decodePublicID(publicID);
+    let decoded: { dbID: number; entityType: number };
+    try {
+      decoded = decodePublicID(publicID);
+    } catch {
+      throw new NotFoundException(ErrorCodes.COMMENT_NOT_FOUND);
+    }
     if (decoded.entityType !== EntityType.Comment) {
       throw new BadRequestException(ErrorCodes.COMMENT_NOT_FOUND);
     }
@@ -908,7 +945,12 @@ export class CommentService {
    * Set or clear pin on a comment per D-134.
    */
   async setPin(publicID: string, isPinned: boolean): Promise<any> {
-    const decoded = decodePublicID(publicID);
+    let decoded: { dbID: number; entityType: number };
+    try {
+      decoded = decodePublicID(publicID);
+    } catch {
+      throw new NotFoundException(ErrorCodes.COMMENT_NOT_FOUND);
+    }
     if (decoded.entityType !== EntityType.Comment) {
       throw new BadRequestException(ErrorCodes.COMMENT_NOT_FOUND);
     }
@@ -920,7 +962,12 @@ export class CommentService {
    * Update comment status (1=Published, 2=Pending, 3=Rejected).
    */
   async updateStatus(publicID: string, status: number): Promise<any> {
-    const decoded = decodePublicID(publicID);
+    let decoded: { dbID: number; entityType: number };
+    try {
+      decoded = decodePublicID(publicID);
+    } catch {
+      throw new NotFoundException(ErrorCodes.COMMENT_NOT_FOUND);
+    }
     if (decoded.entityType !== EntityType.Comment) {
       throw new BadRequestException(ErrorCodes.COMMENT_NOT_FOUND);
     }
@@ -932,7 +979,12 @@ export class CommentService {
    * Update comment content and re-render HTML per D-137.
    */
   async updateContent(publicID: string, newContent: string): Promise<any> {
-    const decoded = decodePublicID(publicID);
+    let decoded: { dbID: number; entityType: number };
+    try {
+      decoded = decodePublicID(publicID);
+    } catch {
+      throw new NotFoundException(ErrorCodes.COMMENT_NOT_FOUND);
+    }
     if (decoded.entityType !== EntityType.Comment) {
       throw new BadRequestException(ErrorCodes.COMMENT_NOT_FOUND);
     }
@@ -955,7 +1007,12 @@ export class CommentService {
     publicID: string,
     data: { nickname?: string; email?: string; website?: string; content?: string },
   ): Promise<any> {
-    const decoded = decodePublicID(publicID);
+    let decoded: { dbID: number; entityType: number };
+    try {
+      decoded = decodePublicID(publicID);
+    } catch {
+      throw new NotFoundException(ErrorCodes.COMMENT_NOT_FOUND);
+    }
     if (decoded.entityType !== EntityType.Comment) {
       throw new BadRequestException(ErrorCodes.COMMENT_NOT_FOUND);
     }
