@@ -183,7 +183,12 @@ export class UserService {
     const { username, password, email, nickname, userGroupID } = dto;
 
     // Decode public ID for userGroupID
-    const decoded = decodePublicID(userGroupID);
+    let decoded: { dbID: number; entityType: number };
+    try {
+      decoded = decodePublicID(userGroupID);
+    } catch {
+      throw new NotFoundException(ErrorCodes.INVALID_PUBLIC_ID);
+    }
     if (decoded.entityType !== EntityType.UserGroup) {
       throw new NotFoundException(ErrorCodes.INVALID_PUBLIC_ID);
     }
@@ -234,7 +239,12 @@ export class UserService {
   }
 
   async adminUpdateUser(publicId: string, dto: any): Promise<void> {
-    const decoded = decodePublicID(publicId);
+    let decoded: { dbID: number; entityType: number };
+    try {
+      decoded = decodePublicID(publicId);
+    } catch {
+      throw new NotFoundException(ErrorCodes.USER_NOT_FOUND);
+    }
     if (decoded.entityType !== EntityType.User) {
       throw new NotFoundException(ErrorCodes.INVALID_PUBLIC_ID);
     }
@@ -247,7 +257,12 @@ export class UserService {
     if (dto.status !== undefined) updateData.status = dto.status;
 
     if (dto.userGroupID !== undefined) {
-      const groupDecoded = decodePublicID(dto.userGroupID);
+      let groupDecoded: { dbID: number; entityType: number };
+      try {
+        groupDecoded = decodePublicID(dto.userGroupID);
+      } catch {
+        throw new NotFoundException(ErrorCodes.INVALID_PUBLIC_ID);
+      }
       if (groupDecoded.entityType !== EntityType.UserGroup) {
         throw new NotFoundException(ErrorCodes.INVALID_PUBLIC_ID);
       }
@@ -261,7 +276,12 @@ export class UserService {
   }
 
   async adminDeleteUser(publicId: string): Promise<void> {
-    const decoded = decodePublicID(publicId);
+    let decoded: { dbID: number; entityType: number };
+    try {
+      decoded = decodePublicID(publicId);
+    } catch {
+      throw new NotFoundException(ErrorCodes.USER_NOT_FOUND);
+    }
     if (decoded.entityType !== EntityType.User) {
       throw new NotFoundException(ErrorCodes.INVALID_PUBLIC_ID);
     }
@@ -274,7 +294,12 @@ export class UserService {
   }
 
   async adminResetPassword(publicId: string, newPassword: string): Promise<void> {
-    const decoded = decodePublicID(publicId);
+    let decoded: { dbID: number; entityType: number };
+    try {
+      decoded = decodePublicID(publicId);
+    } catch {
+      throw new NotFoundException(ErrorCodes.USER_NOT_FOUND);
+    }
     if (decoded.entityType !== EntityType.User) {
       throw new NotFoundException(ErrorCodes.INVALID_PUBLIC_ID);
     }
@@ -287,7 +312,12 @@ export class UserService {
   }
 
   async adminUpdateStatus(publicId: string, status: number): Promise<void> {
-    const decoded = decodePublicID(publicId);
+    let decoded: { dbID: number; entityType: number };
+    try {
+      decoded = decodePublicID(publicId);
+    } catch {
+      throw new NotFoundException(ErrorCodes.USER_NOT_FOUND);
+    }
     if (decoded.entityType !== EntityType.User) {
       throw new NotFoundException(ErrorCodes.INVALID_PUBLIC_ID);
     }
