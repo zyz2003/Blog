@@ -9,6 +9,8 @@ import {
   Query,
   Req,
   Res,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { FileService } from './file.service';
 import { UploadService } from './upload.service';
@@ -60,6 +62,7 @@ export class FileController {
     return this.uploadService.getSessionStatus(sessionId, ownerId);
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post('upload/:sessionId/:index')
   async uploadChunk(
     @Param('sessionId') sessionId: string,
@@ -73,6 +76,7 @@ export class FileController {
     return this.uploadService.uploadChunk(sessionId, index, body, ownerId);
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post('upload/finalize')
   async finalizeClientUpload(
     @Body() dto: FinalizeUploadDto,
@@ -178,6 +182,7 @@ export class FileController {
 
   // ─── File operation endpoints ─────────────────────────────
 
+  @HttpCode(HttpStatus.OK)
   @Post('create')
   async createEmptyFile(
     @Body() dto: CreateFileDto,

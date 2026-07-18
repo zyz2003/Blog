@@ -7,6 +7,8 @@ import {
   Body,
   Param,
   UseGuards,
+  HttpCode,
+  HttpStatus,
   BadRequestException,
 } from '@nestjs/common';
 import { PostCategoryService } from './post-category.service';
@@ -35,6 +37,7 @@ export class PostCategoryController {
    * POST /api/post-categories — Create category (admin only).
    * Matches Go router: JWTAuth + AdminAuth.
    */
+  @HttpCode(HttpStatus.OK)
   @Post()
   @UseGuards(AdminGuard)
   async create(@Body() dto: CreatePostCategoryDto) {

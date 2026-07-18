@@ -4,6 +4,7 @@ import {
   Get,
   Body,
   Headers,
+  HttpCode,
   HttpException,
   HttpStatus,
   Optional,
@@ -28,6 +29,7 @@ export class AuthController {
 
   @Public()
   @Throttle({ default: { limit: 5, ttl: 60000 } }) // Go: CustomRateLimit(10, 5)
+  @HttpCode(HttpStatus.OK)
   @Post('login')
   async login(@Body() dto: LoginRequestDto) {
     // Verify captcha before checking credentials (matches Go: captcha verified first)
@@ -40,6 +42,7 @@ export class AuthController {
   }
 
   @Public()
+  @HttpCode(HttpStatus.OK)
   @Post('refresh-token')
   async refreshToken(
     @Headers('authorization') authorization: string,
@@ -65,12 +68,14 @@ export class AuthController {
 
   @Public()
   @Throttle({ default: { limit: 3, ttl: 60000 } }) // Go: CustomRateLimit(5, 3)
+  @HttpCode(HttpStatus.OK)
   @Post('register')
   async register() {
     throw new HttpException('注册功能暂未开放', HttpStatus.NOT_IMPLEMENTED);
   }
 
   @Public()
+  @HttpCode(HttpStatus.OK)
   @Post('activate')
   async activate() {
     throw new HttpException('激活功能暂未开放', HttpStatus.NOT_IMPLEMENTED);
@@ -78,6 +83,7 @@ export class AuthController {
 
   @Public()
   @Throttle({ default: { limit: 3, ttl: 60000 } }) // Go: CustomRateLimit(5, 3)
+  @HttpCode(HttpStatus.OK)
   @Post('forgot-password')
   async forgotPassword() {
     throw new HttpException('忘记密码功能暂未开放', HttpStatus.NOT_IMPLEMENTED);
@@ -85,6 +91,7 @@ export class AuthController {
 
   @Public()
   @Throttle({ default: { limit: 3, ttl: 60000 } }) // Go: CustomRateLimit(5, 3)
+  @HttpCode(HttpStatus.OK)
   @Post('reset-password')
   async resetPassword() {
     throw new HttpException('重置密码功能暂未开放', HttpStatus.NOT_IMPLEMENTED);

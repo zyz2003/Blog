@@ -4,6 +4,7 @@ import {
   Post,
   Body,
   UseGuards,
+  HttpCode,
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
@@ -40,6 +41,7 @@ export class BackupController {
    * Matches Go CreateBackup (handler.go lines 61-84).
    * Response: { data: BackupInfo, message: "备份创建成功" }
    */
+  @HttpCode(HttpStatus.OK)
   @Post('create')
   async createBackup(
     @Body() dto: CreateBackupRequestDto,
@@ -81,6 +83,7 @@ export class BackupController {
    * Matches Go RestoreBackup (handler.go lines 118-132).
    * Response: { data: null, message: "系统设置已恢复成功，请刷新页面以查看最新配置" }
    */
+  @HttpCode(HttpStatus.OK)
   @Post('restore')
   async restoreBackup(
     @Body() dto: RestoreBackupRequestDto,
@@ -114,6 +117,7 @@ export class BackupController {
    * Matches Go DeleteBackup (handler.go lines 146-160).
    * Response: { data: null, message: "备份已删除" }
    */
+  @HttpCode(HttpStatus.OK)
   @Post('delete')
   async deleteBackup(
     @Body() dto: DeleteBackupRequestDto,
@@ -147,6 +151,7 @@ export class BackupController {
    * Matches Go CleanOldBackups (handler.go lines 174-192).
    * Response: { data: null, message: "旧备份清理成功" }
    */
+  @HttpCode(HttpStatus.OK)
   @Post('clean')
   async cleanOldBackups(
     @Body() dto: CleanBackupsRequestDto,

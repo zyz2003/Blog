@@ -8,6 +8,8 @@ import {
   Param,
   Query,
   UseGuards,
+  HttpCode,
+  HttpStatus,
   BadRequestException,
 } from '@nestjs/common';
 import { PostTagService } from './post-tag.service';
@@ -39,6 +41,7 @@ export class PostTagController {
    * POST /api/post-tags — Create tag (admin only).
    * Matches Go router: JWTAuth + AdminAuth.
    */
+  @HttpCode(HttpStatus.OK)
   @Post()
   @UseGuards(AdminGuard)
   async create(@Body() dto: CreatePostTagDto) {

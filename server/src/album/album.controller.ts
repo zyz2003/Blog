@@ -12,6 +12,8 @@ import {
   UseInterceptors,
   UploadedFile,
   ParseIntPipe,
+  HttpCode,
+  HttpStatus,
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -69,6 +71,7 @@ export class AlbumController {
    * Matches Go AddAlbum (handler.go).
    * Returns null with message "添加成功".
    */
+  @HttpCode(HttpStatus.OK)
   @Post('albums/add')
   async addAlbum(@Body() dto: CreateAlbumDto) {
     await this.albumService.createAlbum({
@@ -99,6 +102,7 @@ export class AlbumController {
    * Batch import images from URLs.
    * Matches Go BatchImportAlbums (handler.go).
    */
+  @HttpCode(HttpStatus.OK)
   @Post('albums/batch-import')
   async batchImport(@Body() dto: BatchImportRequestDto) {
     return this.albumService.batchImportAlbums({
@@ -168,6 +172,7 @@ export class AlbumController {
    * Matches Go ExportAlbums (handler.go).
    * Uses @Res() to bypass ResponseInterceptor for file downloads.
    */
+  @HttpCode(HttpStatus.OK)
   @Post('albums/export')
   async exportAlbums(
     @Body() dto: ExportAlbumsRequestDto,
@@ -198,6 +203,7 @@ export class AlbumController {
    * Matches Go ImportAlbums (handler.go).
    * Uses FileInterceptor for multipart upload with form fields.
    */
+  @HttpCode(HttpStatus.OK)
   @Post('albums/import')
   @UseInterceptors(FileInterceptor('file'))
   async importAlbums(

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Res, HttpCode, HttpStatus } from '@nestjs/common';
 import { ThumbnailService } from './thumbnail.service';
 import { Public } from '../common/decorators/public.decorator';
 import * as fs from 'fs';
@@ -11,11 +11,13 @@ import * as fs from 'fs';
 export class ThumbnailController {
   constructor(private readonly service: ThumbnailService) {}
 
+  @HttpCode(HttpStatus.ACCEPTED)
   @Post('regenerate')
   async regenerateThumbnail(@Body() body: { id: string }) {
     return this.service.regenerateThumbnail(body.id);
   }
 
+  @HttpCode(HttpStatus.ACCEPTED)
   @Post('regenerate/directory')
   async regenerateDirectoryThumbnails(
     @Body() body: { directoryId: string },

@@ -7,6 +7,8 @@ import {
   Body,
   Param,
   Query,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { PageService } from './page.service';
 import { CreatePageDto } from './dto/create-page.dto';
@@ -29,6 +31,7 @@ export class PageController {
    * Create a new page. Matches Go Create handler.
    * Per D-77: title, path, content are required.
    */
+  @HttpCode(HttpStatus.OK)
   @Post()
   async create(@Body() dto: CreatePageDto) {
     return this.pageService.create(dto);
@@ -63,6 +66,7 @@ export class PageController {
    * MUST be defined before @Get(':id') to avoid 'initialize' being captured as :id param.
    * Per D-82: creates 3 default pages (privacy, cookies, copyright).
    */
+  @HttpCode(HttpStatus.OK)
   @Post('initialize')
   async initializeDefaultPages() {
     await this.pageService.initializeDefaultPages();

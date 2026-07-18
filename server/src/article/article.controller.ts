@@ -7,6 +7,7 @@ import {
   Body,
   Param,
   Query,
+  HttpCode,
   HttpException,
   HttpStatus,
   UseInterceptors,
@@ -38,6 +39,7 @@ export class ArticleController {
     @Inject(DRIZZLE) private readonly db: any,
   ) {}
 
+  @HttpCode(HttpStatus.OK)
   @Post()
   async create(
     @Body() dto: CreateArticleDto,
@@ -84,6 +86,7 @@ export class ArticleController {
    * Article image upload — replaces Phase 03 501 stub per D-113.
    * Uses FileInterceptor('file') with StoragePolicyService and ThumbnailService.
    */
+  @HttpCode(HttpStatus.OK)
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
   async uploadImage(
@@ -161,16 +164,19 @@ export class ArticleController {
     };
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post('primary-color')
   async getPrimaryColor(@Body() body: { image_url?: string }) {
     return { primary_color: '#b4bfe2' };
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post('export')
   async exportArticles() {
     throw new HttpException('功能暂未实现', HttpStatus.NOT_IMPLEMENTED);
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post('import')
   async importArticles() {
     throw new HttpException('功能暂未实现', HttpStatus.NOT_IMPLEMENTED);

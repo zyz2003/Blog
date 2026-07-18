@@ -8,6 +8,8 @@ import {
   Param,
   Query,
   UseGuards,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { Public } from '../common/decorators/public.decorator';
 import { AdminGuard } from '../common/guards/admin.guard';
@@ -107,6 +109,7 @@ export class DocSeriesController {
    * Create a new doc series (admin).
    * Matches Go Create (admin route in router.go).
    */
+  @HttpCode(HttpStatus.OK)
   @Post('doc-series')
   @UseGuards(AdminGuard)
   async create(@Body() dto: CreateDocSeriesRequestDto) {

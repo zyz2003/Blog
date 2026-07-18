@@ -5,6 +5,8 @@ import {
   Param,
   Query,
   Body,
+  HttpCode,
+  HttpStatus,
   BadRequestException,
 } from '@nestjs/common';
 import { ArticleHistoryService } from './article-history.service';
@@ -94,6 +96,7 @@ export class ArticleHistoryController {
    * Restore a history version — returns version data for manual restore.
    * Matches Go RestoreVersion.
    */
+  @HttpCode(HttpStatus.OK)
   @Post(':version/restore')
   async restoreVersion(
     @Param('articleId') articleId: string,

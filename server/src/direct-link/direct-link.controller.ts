@@ -6,6 +6,8 @@ import {
   Param,
   Query,
   Res,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { DirectLinkService } from './direct-link.service';
 import { FileService } from '../file/file.service';
@@ -23,6 +25,7 @@ import * as fs from 'fs';
 export class DirectLinkController {
   constructor(private readonly service: DirectLinkService) {}
 
+  @HttpCode(HttpStatus.OK)
   @Post()
   async createDirectLinks(
     @Body() body: { file_ids: string[] },

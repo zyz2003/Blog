@@ -4,6 +4,8 @@ import {
   Get,
   Body,
   Param,
+  HttpCode,
+  HttpStatus,
   BadRequestException,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
@@ -36,6 +38,7 @@ export class SubscriberController {
    * Per D-208: Rate limited @Throttle(3/60s).
    * Accepts { email, code }, verifies code, creates/reactivates subscriber.
    */
+  @HttpCode(HttpStatus.OK)
   @Post('subscribe')
   @Throttle({ default: { limit: 3, ttl: 60000 } })
   async subscribe(@Body() dto: SubscribeDto) {
@@ -49,6 +52,7 @@ export class SubscriberController {
    * Per D-207: CaptchaService verification before sending code.
    * Accepts { email, captcha params }, verifies captcha, sends verification code.
    */
+  @HttpCode(HttpStatus.OK)
   @Post('subscribe/code')
   @Throttle({ default: { limit: 3, ttl: 60000 } })
   async sendVerificationCode(@Body() dto: SendVerificationCodeDto) {
@@ -66,6 +70,7 @@ export class SubscriberController {
    * POST /api/public/unsubscribe
    * Accepts { email }, deactivates subscriber.
    */
+  @HttpCode(HttpStatus.OK)
   @Post('unsubscribe')
   async unsubscribe(@Body() dto: UnsubscribeDto) {
     await this.subscriberService.unsubscribe(dto.email);

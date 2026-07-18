@@ -4,6 +4,7 @@ import {
   Post,
   Body,
   UseGuards,
+  HttpCode,
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
@@ -20,6 +21,7 @@ import { decodePublicID, EntityType } from '../common/utils/sqids.util';
 export class SettingsController {
   constructor(private readonly settingsService: SettingsService) {}
 
+  @HttpCode(HttpStatus.OK)
   @Post('get-by-keys')
   @UseGuards(JwtAuthGuard)
   getByKeys(
@@ -30,6 +32,7 @@ export class SettingsController {
     return this.settingsService.getByKeys(dto.keys, isAdmin);
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post('update')
   @UseGuards(JwtAuthGuard, AdminGuard)
   async update(@Body() dto: UpdateSettingsRequestDto): Promise<null> {
@@ -37,6 +40,7 @@ export class SettingsController {
     return null;
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post('test-email')
   @UseGuards(JwtAuthGuard, AdminGuard)
   testEmail(): never {

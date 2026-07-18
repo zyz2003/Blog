@@ -9,6 +9,8 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { Public } from '../common/decorators/public.decorator';
 import { JwtAuthOptionalGuard } from '../common/guards/jwt-auth-optional.guard';
@@ -128,6 +130,7 @@ export class CommentController {
    * Extracts IP, User-Agent, Referer from request for spam detection
    * and geolocation.
    */
+  @HttpCode(HttpStatus.OK)
   @Post()
   @UseGuards(JwtAuthOptionalGuard)
   async create(@Body() dto: CreateCommentDto, @Req() req: any) {
@@ -154,6 +157,7 @@ export class CommentController {
    * MUST be declared before @Post(':id/like') to avoid 'upload'
    * captured as :id.
    */
+  @HttpCode(HttpStatus.OK)
   @Post('upload')
   @UseGuards(JwtAuthOptionalGuard)
   @UseInterceptors(FileInterceptor('file'))
@@ -170,6 +174,7 @@ export class CommentController {
    * Like a comment — increment likeCount.
    * Matches Go LikeComment (router.go line 271).
    */
+  @HttpCode(HttpStatus.OK)
   @Post(':id/like')
   async like(@Param('id') id: string) {
     return this.commentService.likeComment(id);
@@ -180,6 +185,7 @@ export class CommentController {
    * Unlike a comment — decrement likeCount (min 0).
    * Matches Go UnlikeComment (router.go line 272).
    */
+  @HttpCode(HttpStatus.OK)
   @Post(':id/unlike')
   async unlike(@Param('id') id: string) {
     return this.commentService.unlikeComment(id);

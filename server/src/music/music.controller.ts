@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { MusicService } from './music.service';
 import { GetSongResourcesDto } from './dto/get-song-resources.dto';
 import { Public } from '../common/decorators/public.decorator';
@@ -33,6 +33,7 @@ export class MusicController {
    * The global ResponseInterceptor wraps this as:
    * { code: 200, data: { audioUrl, lyricsText }, message: 'OK' }
    */
+  @HttpCode(HttpStatus.OK)
   @Post('song-resources')
   async getSongResources(@Body() dto: GetSongResourcesDto) {
     return this.musicService.fetchSongResources(dto.neteaseId);

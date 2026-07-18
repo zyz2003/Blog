@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Param, Res } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, Res, HttpCode, HttpStatus } from '@nestjs/common';
 import { FileService } from './file.service';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { MoveItemsDto } from './dto/move-items.dto';
@@ -37,6 +37,7 @@ export class FolderController {
     return this.fileService.getFolderSize(publicID);
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post('move')
   async moveItems(
     @Body() dto: MoveItemsDto,
@@ -46,6 +47,7 @@ export class FolderController {
     return this.fileService.moveItems(dto.sourceIDs, dto.destinationID, ownerId);
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post('copy')
   async copyItems(
     @Body() dto: CopyItemsDto,

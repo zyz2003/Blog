@@ -7,6 +7,7 @@ import {
   Body,
   Param,
   Query,
+  HttpCode,
   HttpException,
   HttpStatus,
   UseGuards,
@@ -32,6 +33,7 @@ export class UserController {
     return this.userService.getUserInfo(decoded.dbID);
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post('user/update-password')
   async updatePassword(
     @CurrentUser() user: any,
@@ -52,6 +54,7 @@ export class UserController {
     return null;
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post('user/avatar')
   async uploadAvatar() {
     throw new HttpException('头像上传功能暂未开放', HttpStatus.NOT_IMPLEMENTED);
@@ -80,6 +83,7 @@ export class UserController {
     return this.userService.adminListUsers(p, ps, keyword, groupIDNum, statusNum);
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post('admin/users')
   @UseGuards(AdminGuard)
   async adminCreateUser(@Body() dto: AdminCreateUserDto) {
@@ -100,6 +104,7 @@ export class UserController {
     return null;
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post('admin/users/:id/reset-password')
   @UseGuards(AdminGuard)
   async adminResetPassword(@Param('id') id: string, @Body() dto: AdminResetPasswordDto) {

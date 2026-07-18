@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Query, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Req, HttpCode, HttpStatus } from '@nestjs/common';
 import { Public } from '../common/decorators/public.decorator';
 import { StatisticsService } from './statistics.service';
 import { VisitorLogRequestDto } from './dto/visitor-log-request.dto';
@@ -53,6 +53,7 @@ export class StatisticsController {
    * Matches Go RecordVisit (router.go).
    */
   @Public()
+  @HttpCode(HttpStatus.OK)
   @Post('public/statistics/visit')
   async recordVisit(
     @Body() dto: VisitorLogRequestDto,

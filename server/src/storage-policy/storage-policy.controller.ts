@@ -8,6 +8,7 @@ import {
   Param,
   Query,
   UseGuards,
+  HttpCode,
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
@@ -21,6 +22,7 @@ import { AdminGuard } from '../common/guards/admin.guard';
 export class StoragePolicyController {
   constructor(private readonly service: StoragePolicyService) {}
 
+  @HttpCode(HttpStatus.OK)
   @Post()
   async create(@Body() dto: CreatePolicyDto) {
     return this.service.create(dto);
@@ -57,6 +59,7 @@ export class StoragePolicyController {
     throw new HttpException('功能暂未实现', HttpStatus.NOT_IMPLEMENTED);
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post('authorize/onedrive')
   async authorizeOnedrive() {
     throw new HttpException('功能暂未实现', HttpStatus.NOT_IMPLEMENTED);

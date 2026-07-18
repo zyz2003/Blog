@@ -9,6 +9,8 @@ import {
   Body,
   Req,
   UseGuards,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { Public } from '../common/decorators/public.decorator';
 import { JwtAuthOptionalGuard } from '../common/guards/jwt-auth-optional.guard';
@@ -67,6 +69,7 @@ export class LinkController {
    * Matches Go ApplyLink (router.go).
    */
   @Public()
+  @HttpCode(HttpStatus.OK)
   @Post('public/links')
   @UseGuards(JwtAuthOptionalGuard)
   async applyLink(@Body() dto: ApplyLinkRequestDto, @Req() req: any) {
@@ -252,6 +255,7 @@ export class LinkController {
    * Matches Go CheckLinksHealth (router.go).
    * Returns immediately; check status via GET /links/health-check/status.
    */
+  @HttpCode(HttpStatus.OK)
   @Post('links/health-check')
   async triggerHealthCheck() {
     await this.linkService.healthCheck();
