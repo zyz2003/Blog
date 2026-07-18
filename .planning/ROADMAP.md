@@ -34,7 +34,7 @@ Phases 10-11 complete. Scheduled tasks running, migration tool available, end-to
 | 08 | Album & Doc Series | 5/5 | Complete    | 2026-07-12 |
 | 09 | SEO & Music & Notifications | 7/7 | Complete    | 2026-07-14 |
 | 10 | Scheduled Tasks | 3/3 | Complete | 2026-07-16 |
-| 11 | Migration & Integration | 4/6 | In Progress|  |
+| 11 | Migration & Integration | 5/6 | Complete    | 2026-07-18 |
 
 ---
 
@@ -47,7 +47,7 @@ Phases 10-11 complete. Scheduled tasks running, migration tool available, end-to
 **Success Criteria:**
 
 - `npm run dev` starts NestJS on port 8091
-- All 30 Drizzle schema files exist and `drizzle-kit push` creates the SQLite database in `data/`
+- All 33 Drizzle schema files exist and `drizzle-kit push` creates the SQLite database in `data/`
 - SQLite WAL mode enabled, busy_timeout set to 5000ms
 - Global response interceptor wraps all responses as `{ code, data, message }`
 - Sqids encode/decode round-trips correctly with Go-compatible seed
@@ -409,7 +409,7 @@ Plans:
 - Frontend connects to new backend and all features work without modification
 - `npm run dev` starts both frontend and backend successfully
 
-**Plans:** 4/6 plans executed
+**Plans:** 5/6 plans complete
 
 Plans:
 
@@ -425,7 +425,7 @@ Plans:
 
 **Wave 3** (depends on all prior)
 
-- [ ] 11-05-PLAN.md — Remaining tests (backup, captcha, weather, proxy) + full test suite run + migration end-to-end verification + frontend smoke test + STATE/ROADMAP update
+- [x] 11-05-PLAN.md — Remaining tests (backup, captcha, weather, proxy) + full test suite run + migration end-to-end verification + frontend smoke test + STATE/ROADMAP update
 
 ---
 
@@ -476,4 +476,4 @@ Plans:
 
 ---
 
-*Last updated: 2026-07-17*
+*Last updated: 2026-07-18*

@@ -4,18 +4,18 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 11
 current_phase_name: migration-integration
-current_plan: 4
-status: executing
-stopped_at: Completed 11-04-PLAN.md
-last_updated: "2026-07-18T00:37:20Z"
+current_plan: 5
+status: complete
+stopped_at: Completed 11-05-PLAN.md — Phase 11 COMPLETE
+last_updated: "2026-07-18T09:25:00Z"
 last_activity: 2026-07-18
-last_activity_desc: Completed 11-04 Stats/Links/Album/SEO/Notification API Compat Tests
+last_activity_desc: Completed 11-05 Backup/Captcha/Weather/Proxy Tests + Integration Verification — Phase 11 COMPLETE
 progress:
   total_phases: 11
-  completed_phases: 9
-  total_plans: 56
-  completed_plans: 54
-  percent: 82
+  completed_phases: 11
+  total_plans: 58
+  completed_plans: 56
+  percent: 100
 ---
 
 # STATE: anheyu-app NestJS + SQLite Backend
@@ -44,7 +44,7 @@ progress:
 | 08 | Album & Doc Series | Complete | 5 | 2026-07-12 |
 | 09 | SEO & Music & Notifications | Complete | 7 | 2026-07-14 |
 | 10 | Scheduled Tasks | Complete | 3 | 2026-07-16 |
-| 11 | Migration & Integration | Executing | 4/6 | 2026-07-18 |
+| 11 | Migration & Integration | Complete | 5 | 2026-07-18 |
 
 ## Active Decisions
 
@@ -130,27 +130,26 @@ progress:
 
 | Metric | Value |
 |--------|-------|
-| Phases Completed | 10 / 11 |
+| Phases Completed | 11 / 11 |
 | Plans Created | 58 |
 | Plans Executed | 56 |
-| Requirements Covered | 31 / 39 |
+| Requirements Covered | 33 / 39 |
 | API Endpoints Implemented | 59 / ~65+ |
 
 ---
-*Last updated: 2026-07-17*
+*Last updated: 2026-07-18*
 
 ## Session
 
-**Last session:** 2026-07-18T00:37:20Z
-**Stopped at:** Completed 11-04-PLAN.md
-**Resume file:** .planning/phases/11-migration-integration/11-04-SUMMARY.md
+**Last session:** 2026-07-18T09:25:00Z
+**Stopped at:** Completed 11-05-PLAN.md — Phase 11 COMPLETE
+**Resume file:** .planning/phases/11-migration-integration/11-05-SUMMARY.md
 
 ## Performance Metrics
 
 | Phase | Plan | Duration | Notes |
 |-------|------|----------|-------|
-| Phase 07 P04 | 64 | 3 tasks | 5 files |
-| Phase 07 P05 | 13m | 1 tasks | 3 files |
+| Phase 11 P05 | 22m | 5 tasks | 6 files |
 
 ## Decisions
 
@@ -170,3 +169,6 @@ progress:
 - [Phase 11]: D-246: Global prefix exclude for RSS/sitemap/robots.txt routes added to test helpers (matching main.ts)
 - [Phase 11]: D-247: Notification settings DTO uses allowCommentReplyNotification (simplified, not type-based flags)
 - [Phase 11]: D-248: Album stat increment for nonexistent ID succeeds silently (no 404)
+- [Phase 11]: D-249: needcache/download/:public_id added to global prefix exclude (Go registers this route outside /api group)
+- [Phase 11]: D-250: config/export and config/import endpoints not yet implemented in NestJS (exist in Go backend)
+- [Phase 11]: D-251: proxy/download endpoint not yet implemented in NestJS (exists in Go backend)
