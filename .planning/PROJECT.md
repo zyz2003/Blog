@@ -24,8 +24,9 @@
 
 ### Active
 
-- [ ] 友链管理 API 兼容：友链 CRUD、分类、标签、申请、审核、健康检查 — Phase 07 implemented, pending frontend validation
-- [ ] 数据迁移工具：从原 PostgreSQL 导入数据到 SQLite — Phase 11 in progress (MIGRATION-01 CLI tool done)
+- [x] 友链管理 API 兼容：友链 CRUD、分类、标签、申请、审核、健康检查 — Phase 07
+- [x] 数据迁移工具：从原 Go SQLite 导入数据到 NestJS SQLite — Phase 11 (MIGRATION-01)
+- [x] 端到端 API 兼容性测试：292 个测试覆盖所有已实现端点 — Phase 11 (INTEGRATION-01)
 
 ### Out of Scope
 
