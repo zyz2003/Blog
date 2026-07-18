@@ -68,7 +68,12 @@ export class ArticleHistoryService {
     page: number,
     pageSize: number,
   ) {
-    const { dbID } = decodePublicID(articlePublicId);
+    let dbID: number;
+    try {
+      ({ dbID } = decodePublicID(articlePublicId));
+    } catch {
+      throw new NotFoundException(ErrorCodes.ARTICLE_NOT_FOUND);
+    }
 
     const { list, total } = await this.historyRepo.listByArticle(
       dbID,
@@ -89,7 +94,12 @@ export class ArticleHistoryService {
    * Matches Go GetVersion.
    */
   async getHistoryVersion(articlePublicId: string, version: number) {
-    const { dbID } = decodePublicID(articlePublicId);
+    let dbID: number;
+    try {
+      ({ dbID } = decodePublicID(articlePublicId));
+    } catch {
+      throw new NotFoundException(ErrorCodes.ARTICLE_NOT_FOUND);
+    }
 
     const history = await this.historyRepo.getByVersion(dbID, version);
     if (!history) {
@@ -113,7 +123,12 @@ export class ArticleHistoryService {
       throw new BadRequestException('两个版本号不能相同');
     }
 
-    const { dbID } = decodePublicID(articlePublicId);
+    let dbID: number;
+    try {
+      ({ dbID } = decodePublicID(articlePublicId));
+    } catch {
+      throw new NotFoundException(ErrorCodes.ARTICLE_NOT_FOUND);
+    }
 
     const [version1, version2] = await Promise.all([
       this.historyRepo.getByVersion(dbID, v1),
@@ -143,7 +158,12 @@ export class ArticleHistoryService {
    * This endpoint does NOT modify the article; caller must use PUT /api/articles/:id.
    */
   async restoreVersion(articlePublicId: string, version: number) {
-    const { dbID } = decodePublicID(articlePublicId);
+    let dbID: number;
+    try {
+      ({ dbID } = decodePublicID(articlePublicId));
+    } catch {
+      throw new NotFoundException(ErrorCodes.ARTICLE_NOT_FOUND);
+    }
 
     const history = await this.historyRepo.getByVersion(dbID, version);
     if (!history) {
@@ -158,7 +178,12 @@ export class ArticleHistoryService {
    * Matches Go GetHistoryCount.
    */
   async getHistoryCount(articlePublicId: string): Promise<{ count: number }> {
-    const { dbID } = decodePublicID(articlePublicId);
+    let dbID: number;
+    try {
+      ({ dbID } = decodePublicID(articlePublicId));
+    } catch {
+      throw new NotFoundException(ErrorCodes.ARTICLE_NOT_FOUND);
+    }
     const count = await this.historyRepo.getCount(dbID);
     return { count };
   }
