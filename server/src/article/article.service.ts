@@ -291,7 +291,12 @@ export class ArticleService {
    */
   async update(publicId: string, dto: UpdateArticleDto, ownerDbId: number) {
     // Decode article public ID
-    const { dbID } = decodePublicID(publicId);
+    let dbID: number;
+    try {
+      ({ dbID } = decodePublicID(publicId));
+    } catch {
+      throw new NotFoundException(ErrorCodes.ARTICLE_NOT_FOUND);
+    }
 
     // Fetch existing article with relations
     const existing = await this.articleRepo.findByIdWithRelations(dbID);
@@ -457,7 +462,12 @@ export class ArticleService {
    * Soft-delete article and sync category/tag counts (-1).
    */
   async delete(publicId: string) {
-    const { dbID } = decodePublicID(publicId);
+    let dbID: number;
+    try {
+      ({ dbID } = decodePublicID(publicId));
+    } catch {
+      throw new NotFoundException(ErrorCodes.ARTICLE_NOT_FOUND);
+    }
 
     const existing = await this.articleRepo.findByIdWithRelations(dbID);
     if (!existing) {
@@ -498,7 +508,12 @@ export class ArticleService {
    * Get single article by public ID (admin).
    */
   async get(publicId: string) {
-    const { dbID } = decodePublicID(publicId);
+    let dbID: number;
+    try {
+      ({ dbID } = decodePublicID(publicId));
+    } catch {
+      throw new NotFoundException(ErrorCodes.ARTICLE_NOT_FOUND);
+    }
     const article = await this.articleRepo.findByIdWithRelations(dbID);
     if (!article) {
       throw new NotFoundException(ErrorCodes.ARTICLE_NOT_FOUND);
