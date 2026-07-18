@@ -24,13 +24,16 @@ import * as path from 'path';
 const betterSqlite3Path = path.resolve(__dirname, '..', 'server', 'node_modules', 'better-sqlite3');
 const Database = require(betterSqlite3Path) as typeof import('better-sqlite3');
 import * as fs from 'fs';
-import * as path from 'path';
 import {
   MIGRATION_ORDER,
   TIMESTAMP_COLUMNS,
   CRITICAL_SETTINGS_KEYS,
   SELF_REFERENCING_TABLES,
   NESTJS_ONLY_TABLES,
+  TABLE_NAME_MAP,
+  COLUMN_NAME_MAP,
+  COLUMN_EXCLUSIONS,
+  COLUMN_DEFAULTS,
 } from './migrate-config';
 import {
   convertRow,
@@ -143,12 +146,15 @@ function verifyMigration(source: Database.Database, target: Database.Database): 
       continue;
     }
 
+    // Resolve target table name
+    const targetTable = TABLE_NAME_MAP[table] || table;
+
     // Skip if table doesn't exist in both source and target
     if (!sourceTables.has(table)) {
       continue;  // Source doesn't have it — nothing to verify
     }
-    if (!targetTables.has(table)) {
-      const msg = `${table}: exists in source but missing in target`;
+    if (!targetTables.has(targetTable)) {
+      const msg = `${table}: exists in source but missing in target (as ${targetTable})`;
       console.log(`  ❌ ${msg}`);
       failures.push(msg);
       continue;
@@ -156,7 +162,7 @@ function verifyMigration(source: Database.Database, target: Database.Database): 
 
     try {
       const sourceCount = source.prepare(`SELECT COUNT(*) as count FROM "${table}"`).get() as { count: number };
-      const targetCount = target.prepare(`SELECT COUNT(*) as count FROM "${table}"`).get() as { count: number };
+      const targetCount = target.prepare(`SELECT COUNT(*) as count FROM "${targetTable}"`).get() as { count: number };
 
       if (sourceCount.count === targetCount.count) {
         console.log(`  ✅ ${table}: ${targetCount.count} rows (source: ${sourceCount.count})`);
@@ -290,7 +296,7 @@ function main(): void {
         continue;
       }
 
-      // Read all rows from source
+      // Read all rows from source (using Go table name)
       const rows = sourceDb.prepare(`SELECT * FROM "${tableName}"`).all() as Record<string, any>[];
 
       if (rows.length === 0) {
@@ -301,19 +307,67 @@ function main(): void {
       // Get timestamp columns for this table
       const tsColumns = TIMESTAMP_COLUMNS[tableName] || [];
 
-      // Transform rows
-      const transformedRows = rows.map(row => convertRow(row, tsColumns));
+      // Transform rows: timestamp conversion
+      let transformedRows = rows.map(row => convertRow(row, tsColumns));
+
+      // Apply column exclusions (Go columns not in NestJS)
+      const exclusions = COLUMN_EXCLUSIONS[tableName] || [];
+      if (exclusions.length > 0) {
+        for (const row of transformedRows) {
+          for (const col of exclusions) {
+            delete row[col];
+          }
+        }
+        if (args.verbose) {
+          console.log(`  Excluded Go columns: ${exclusions.join(', ')}`);
+        }
+      }
+
+      // Apply column name mapping (Go column name → NestJS column name)
+      const colMap = COLUMN_NAME_MAP[tableName] || {};
+      if (Object.keys(colMap).length > 0) {
+        for (const row of transformedRows) {
+          for (const [srcCol, tgtCol] of Object.entries(colMap)) {
+            if (srcCol in row) {
+              row[tgtCol] = row[srcCol];
+              delete row[srcCol];
+            }
+          }
+        }
+        if (args.verbose) {
+          console.log(`  Column mapping: ${Object.entries(colMap).map(([s,t]) => `${s}→${t}`).join(', ')}`);
+        }
+      }
+
+      // Apply column defaults (NestJS columns not in Go source)
+      const defaults = COLUMN_DEFAULTS[tableName] || {};
+      if (Object.keys(defaults).length > 0) {
+        for (const row of transformedRows) {
+          for (const [col, fn] of Object.entries(defaults)) {
+            row[col] = (fn as () => any)();
+          }
+        }
+        if (args.verbose) {
+          console.log(`  Added default columns: ${Object.keys(defaults).join(', ')}`);
+        }
+      }
+
+      // Resolve target table name (may differ from Go source name)
+      const targetTableName = TABLE_NAME_MAP[tableName] || tableName;
+      if (targetTableName !== tableName && args.verbose) {
+        console.log(`  Table name mapping: ${tableName} → ${targetTableName}`);
+      }
 
       // Get column names from first row
       const columns = Object.keys(transformedRows[0]);
       const columnList = columns.map(c => `"${c}"`).join(', ');
       const placeholders = columns.map(() => '?').join(', ');
 
-      // Clear target table
-      targetDb.prepare(`DELETE FROM "${tableName}"`).run();
+      // Clear target table (using NestJS table name)
+      targetDb.prepare(`DELETE FROM "${targetTableName}"`).run();
 
       // Batch insert in transactions (every 100 rows)
-      const insertSql = `INSERT OR REPLACE INTO "${tableName}" (${columnList}) VALUES (${placeholders})`;
+      const insertSql = `INSERT OR REPLACE INTO "${targetTableName}" (${columnList}) VALUES (${placeholders})`;
       const insertStmt = targetDb.prepare(insertSql);
 
       const batchSize = 100;
@@ -353,6 +407,16 @@ function main(): void {
       const result = verifyMigration(sourceDb, targetDb);
       if (!result.passed) {
         console.error(`\n[migrate] Verification FAILED with ${result.failures.length} issue(s)`);
+        // Close databases and restore backup on verification failure
+        sourceDb.close();
+        targetDb.close();
+        sourceDb = null;
+        targetDb = null;
+        if (backupPath && fs.existsSync(backupPath)) {
+          console.log('[migrate] Restoring from backup due to verification failure...');
+          restoreBackup(backupPath, args.target);
+          console.log('[migrate] Backup restored.');
+        }
         process.exit(2);
       }
     }

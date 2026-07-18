@@ -6,7 +6,6 @@
  */
 
 import * as fs from 'fs';
-import * as path from 'path';
 
 /**
  * Convert Go Ent's ISO8601/RFC3339 timestamp to Unix epoch integer (seconds).
@@ -31,8 +30,12 @@ export function convertGoTimeToEpoch(goTime: string | number | null | undefined)
     return null;
   }
 
-  // Already a number (Go may store as integer in some SQLite setups) → pass through
+  // Already a number — check for millisecond timestamps (Go Ent always uses RFC3339 text,
+  // but if a number is present, detect millisecond values > year 2286 in seconds)
   if (typeof goTime === 'number') {
+    if (goTime > 1e10) {
+      return Math.floor(goTime / 1000);
+    }
     return goTime;
   }
 

@@ -124,6 +124,41 @@ export const SELF_REFERENCING_TABLES: string[] = [
   'files',     // parent_id → files.id
 ];
 
+// ─── Table name mapping: Go → NestJS ────────────────────────────────────────
+// When the Go backend and NestJS use different table names.
+
+export const TABLE_NAME_MAP: Record<string, string> = {
+  metadata: 'metadatas',  // Go: "metadata" → NestJS: "metadatas"
+};
+
+// ─── Column name mapping per table: Go → NestJS ─────────────────────────────
+// When Go and NestJS use different column names for the same data.
+
+export const COLUMN_NAME_MAP: Record<string, Record<string, string>> = {
+  links: {
+    link_category_links: 'category_id',  // Go: "link_category_links" → NestJS: "category_id"
+  },
+};
+
+// ─── Columns to exclude from source (Go columns not in NestJS) ──────────────
+// These Go columns have no equivalent in NestJS and must be dropped during migration.
+
+export const COLUMN_EXCLUSIONS: Record<string, string[]> = {
+  comments: ['article_comments'],  // Go FK column; NestJS uses target_path instead
+};
+
+// ─── Columns to add with defaults (NestJS columns not in Go source) ──────────
+// When NestJS has columns that don't exist in the Go source, provide default values.
+
+export const COLUMN_DEFAULTS: Record<string, Record<string, () => any>> = {
+  link_tag_pivot: {
+    // Go has composite PK (link_id, link_tag_id); NestJS has auto-increment id + created_at
+    created_at: () => Math.floor(Date.now() / 1000),
+  },
+  // links table: Go has no timestamps, NestJS has created_at/updated_at/deleted_at
+  // SQLite column defaults (unixepoch() / NULL) handle these automatically
+};
+
 // ─── NestJS-only tables (not in Go backend) ─────────────────────────────────
 // These tables exist in NestJS but not in the Go backend.
 // Migration should skip them in the source DB read (they won't exist).
