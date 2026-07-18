@@ -94,7 +94,13 @@ export class StoragePolicyService implements OnModuleInit {
   }
 
   async getById(publicID: string) {
-    const { dbID, entityType } = decodePublicID(publicID);
+    let dbID: number;
+    let entityType: number;
+    try {
+      ({ dbID, entityType } = decodePublicID(publicID));
+    } catch {
+      throw new NotFoundException(ErrorCodes.POLICY_NOT_FOUND);
+    }
     if (entityType !== EntityType.StoragePolicy) {
       throw new NotFoundException(ErrorCodes.POLICY_NOT_FOUND);
     }
@@ -116,7 +122,13 @@ export class StoragePolicyService implements OnModuleInit {
   }
 
   async update(publicID: string, data: any) {
-    const { dbID, entityType } = decodePublicID(publicID);
+    let dbID: number;
+    let entityType: number;
+    try {
+      ({ dbID, entityType } = decodePublicID(publicID));
+    } catch {
+      throw new NotFoundException(ErrorCodes.POLICY_NOT_FOUND);
+    }
     if (entityType !== EntityType.StoragePolicy) {
       throw new NotFoundException(ErrorCodes.POLICY_NOT_FOUND);
     }
@@ -175,7 +187,13 @@ export class StoragePolicyService implements OnModuleInit {
   }
 
   async delete(publicID: string) {
-    const { dbID, entityType } = decodePublicID(publicID);
+    let dbID: number;
+    let entityType: number;
+    try {
+      ({ dbID, entityType } = decodePublicID(publicID));
+    } catch {
+      throw new NotFoundException(ErrorCodes.POLICY_NOT_FOUND);
+    }
     if (entityType !== EntityType.StoragePolicy) {
       throw new NotFoundException(ErrorCodes.POLICY_NOT_FOUND);
     }
