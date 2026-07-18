@@ -103,7 +103,13 @@ export class ThumbnailService implements OnModuleInit {
    * returned if we intentionally want to defer generation (not the case in Phase 05).
    */
   async getThumbnailSign(publicID: string) {
-    const { dbID, entityType } = decodePublicID(publicID);
+    let dbID: number;
+    let entityType: number;
+    try {
+      ({ dbID, entityType } = decodePublicID(publicID));
+    } catch {
+      throw new NotFoundException(ErrorCodes.THUMBNAIL_NOT_FOUND);
+    }
     if (entityType !== EntityType.File) {
       throw new NotFoundException(ErrorCodes.THUMBNAIL_NOT_FOUND);
     }
@@ -196,7 +202,12 @@ export class ThumbnailService implements OnModuleInit {
     }
 
     // Decode publicID to verify EntityType
-    const { entityType } = decodePublicID(publicID);
+    let entityType: number;
+    try {
+      ({ entityType } = decodePublicID(publicID));
+    } catch {
+      throw new BadRequestException(ErrorCodes.THUMBNAIL_SIGN_INVALID);
+    }
     if (entityType !== EntityType.File) {
       throw new BadRequestException(ErrorCodes.THUMBNAIL_SIGN_INVALID);
     }
@@ -223,7 +234,13 @@ export class ThumbnailService implements OnModuleInit {
    * Regenerate a single thumbnail.
    */
   async regenerateThumbnail(publicID: string) {
-    const { dbID, entityType } = decodePublicID(publicID);
+    let dbID: number;
+    let entityType: number;
+    try {
+      ({ dbID, entityType } = decodePublicID(publicID));
+    } catch {
+      throw new NotFoundException(ErrorCodes.THUMBNAIL_NOT_FOUND);
+    }
     if (entityType !== EntityType.File) {
       throw new NotFoundException(ErrorCodes.THUMBNAIL_NOT_FOUND);
     }
@@ -269,7 +286,13 @@ export class ThumbnailService implements OnModuleInit {
    * Regenerate all thumbnails for files under a directory.
    */
   async regenerateDirectoryThumbnails(directoryPublicID: string) {
-    const { dbID, entityType } = decodePublicID(directoryPublicID);
+    let dbID: number;
+    let entityType: number;
+    try {
+      ({ dbID, entityType } = decodePublicID(directoryPublicID));
+    } catch {
+      throw new NotFoundException(ErrorCodes.FOLDER_NOT_FOUND);
+    }
     if (entityType !== EntityType.File) {
       throw new NotFoundException(ErrorCodes.FOLDER_NOT_FOUND);
     }
