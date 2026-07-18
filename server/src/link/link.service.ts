@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger, BadRequestException, forwardRef } from '@nestjs/common';
+import { Inject, Injectable, Logger, BadRequestException, NotFoundException, forwardRef } from '@nestjs/common';
 import { LinkRepository, CreateLinkParams } from './link.repository';
 import { LinkApplyRateLimiter } from './link-apply-rate-limiter';
 import { SettingsService } from '../settings/settings.service';

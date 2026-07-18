@@ -127,7 +127,12 @@ export class DocSeriesService {
     // If name is being updated, check uniqueness excluding self
     if (dto.name !== undefined) {
       // Decode publicID to get dbID for exclusion
-      const { dbID } = decodePublicID(publicID);
+      let dbID: number;
+      try {
+        ({ dbID } = decodePublicID(publicID));
+      } catch {
+        throw new NotFoundException(ErrorCodes.DOCSERIES_NOT_FOUND);
+      }
       const exists = await this.docSeriesRepo.existsByName(dto.name, dbID);
       if (exists) {
         throw new BadRequestException(
