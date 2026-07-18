@@ -34,7 +34,7 @@ Phases 10-11 complete. Scheduled tasks running, migration tool available, end-to
 | 08 | Album & Doc Series | 5/5 | Complete    | 2026-07-12 |
 | 09 | SEO & Music & Notifications | 7/7 | Complete    | 2026-07-14 |
 | 10 | Scheduled Tasks | 3/3 | Complete | 2026-07-16 |
-| 11 | Migration & Integration | 5/6 | Complete    | 2026-07-18 |
+| 11 | Migration & Integration | 5/5 | Complete    | 2026-07-18 |
 
 ---
 
@@ -409,7 +409,7 @@ Plans:
 - Frontend connects to new backend and all features work without modification
 - `npm run dev` starts both frontend and backend successfully
 
-**Plans:** 5/6 plans complete
+**Plans:** 5/5 plans complete
 
 Plans:
 

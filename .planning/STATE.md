@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 11
-current_plan: Not started
-status: completed
-stopped_at: Completed 11-05-PLAN.md — Phase 11 COMPLETE
-last_updated: "2026-07-18T01:48:43.924Z"
+current_phase: null
+current_plan: null
+status: project_complete
+stopped_at: All 11 phases complete — project ready for production
+last_updated: "2026-07-18T08:00:00.000Z"
 last_activity: 2026-07-18
 progress:
   total_phases: 11
-  completed_phases: 9
+  completed_phases: 11
   total_plans: 56
-  completed_plans: 55
-  percent: 82
-current_phase_name: migration-integration
+  completed_plans: 56
+  percent: 100
+current_phase_name: null
 ---
 
 # STATE: anheyu-app NestJS + SQLite Backend
@@ -23,10 +23,10 @@ current_phase_name: migration-integration
 
 | Field | Value |
 |-------|-------|
-| Milestone | M3 - Production Ready |
-| Phase | 11 |
-| Current Plan | Not started |
-| Status | Phase 11 Complete — All plans executed |
+| Milestone | M3 - Production Ready ✓ |
+| Phase | All 11 complete |
+| Current Plan | N/A |
+| Status | Project Complete — Ready for frontend integration testing |
 | Last Activity | 2026-07-18 |
 
 ## Phase Status
@@ -130,19 +130,21 @@ current_phase_name: migration-integration
 | Metric | Value |
 |--------|-------|
 | Phases Completed | 11 / 11 |
-| Plans Created | 58 |
+| Plans Created | 56 |
 | Plans Executed | 56 |
 | Requirements Covered | 33 / 39 |
 | API Endpoints Implemented | 59 / ~65+ |
+| API Compat Tests | 292 across 29 files |
+| Known Unimplemented | config/export, config/import, proxy/download |
 
 ---
 *Last updated: 2026-07-18*
 
 ## Session
 
-**Last session:** 2026-07-18T01:36:42.388Z
-**Stopped at:** Completed 11-05-PLAN.md — Phase 11 COMPLETE
-**Resume file:** .planning/phases/11-migration-integration/11-05-SUMMARY.md
+**Last session:** 2026-07-18T08:00:00.000Z
+**Stopped at:** Project complete — all phases done, code review fixes applied, Go backend archived
+**Resume file:** N/A — project development complete
 
 ## Performance Metrics
 
@@ -160,14 +162,20 @@ current_phase_name: migration-integration
 - [Phase 10]: D-238: CommentNotificationJob only sends email for reply comments (parentId exists), matching Go logic
 - [Phase 10]: D-239: BackupService uses local time for filename timestamps (matches Go time.Now().Format)
 - [Phase 10]: D-240: ScheduleModule is @Global() so ScheduleService can be injected anywhere without explicit module import
-- [Phase 11]: D-241: No table name mappings needed — Go and NestJS use identical SQLite table names (article_post_categories, article_post_tags, link_tag_pivot)
+- [Phase 11]: D-241: REVISED — Go and NestJS have 5 schema mismatches requiring migration mapping: metadata→metadatas table name, links.link_category_links→category_id column, comments.article_comments exclusion, link_tag_pivot extra columns (id, created_at), links missing timestamps
 - [Phase 11]: D-242: Notifications table is NestJS-only, skipped during Go→NestJS migration
 - [Phase 11]: D-243: better-sqlite3 resolved via direct require path from server/node_modules for scripts/ directory
-- [Phase 11]: D-244: NestJS POST returns code 201 in response body (Go returns 200) — documented as known compat difference
-- [Phase 11]: D-245: Page service create() defaults markdownContent/customJs/customCss to empty string (not null) to match NOT NULL schema
+- [Phase 11]: D-244: REVISED — POST endpoints now return code:200 via @HttpCode(HttpStatus.OK), matching Go backend. Only 5 endpoints return 201 (link create, link category/tag create, link import, album category create)
+- [Phase 11]: D-245: Page service create() defaults isPublished to true (matching Go backend and schema default), markdownContent/customJs/customCss to empty string (not null) to match NOT NULL schema
 - [Phase 11]: D-246: Global prefix exclude for RSS/sitemap/robots.txt routes added to test helpers (matching main.ts)
 - [Phase 11]: D-247: Notification settings DTO uses allowCommentReplyNotification (simplified, not type-based flags)
 - [Phase 11]: D-248: Album stat increment for nonexistent ID succeeds silently (no 404)
 - [Phase 11]: D-249: needcache/download/:public_id added to global prefix exclude (Go registers this route outside /api group)
 - [Phase 11]: D-250: config/export and config/import endpoints not yet implemented in NestJS (exist in Go backend)
 - [Phase 11]: D-251: proxy/download endpoint not yet implemented in NestJS (exists in Go backend)
+- [Phase 11]: D-252: decodePublicID try-catch added to all 11 service files — invalid Sqids IDs return 404/400 instead of 500
+- [Phase 11]: D-253: Migration tool adds TABLE_NAME_MAP, COLUMN_NAME_MAP, COLUMN_EXCLUSIONS, COLUMN_DEFAULTS for Go→NestJS schema differences
+- [Phase 11]: D-254: assertSuccessResponse now verifies both HTTP status code and body code field
+- [Phase 11]: D-255: seedBaseData now includes link category, link tag, storage policy, album category for more complete test data
+- [Phase 11]: D-256: Go backend source archived to _go-backend-archive/ (gitignored, 578 .go files for reference)
+- [Phase 11]: D-257: Codegraph indexes two projects: main project (NestJS TS) + _go-backend-archive (Go) for cross-reference
