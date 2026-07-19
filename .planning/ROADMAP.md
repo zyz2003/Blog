@@ -6,474 +6,196 @@ Rewrite the anheyu-app Go backend (Go + PostgreSQL + Redis) as NestJS + Drizzle 
 
 ## Milestones
 
-### M1: Core CMS Operational
+### M1: Core CMS Operational ✓
 
 Phases 01-04 complete. Admin can log in, manage articles/pages/categories/tags, configure site settings. Visitors can browse public content.
 
-### M2: Full Feature Parity
+### M2: Full Feature Parity ✓
 
 Phases 05-09 complete. All P0, P1, P2 features operational. File uploads, comments, search, statistics, albums, RSS, notifications all working.
 
-### M3: Production Ready
+### M3: Production Ready ✓
 
 Phases 10-11 complete. Scheduled tasks running, migration tool available, end-to-end testing passed. Ready for cutover from Go backend.
+
+### M4: Frontend Integration Verified
+
+Phases 12-15 complete. Every frontend API call verified against Go backend source code. All compatibility issues found and fixed. Frontend runs on new backend with zero modifications.
 
 ---
 
 ## Phase Overview
 
-| Phase | Name | Goal | Priority | Plans |
-|-------|------|------|----------|-------|
-| 01 | Infrastructure | 5/5 | Complete    | 2026-06-28 |
-| 02 | Auth & Settings | 5/5 | Complete    | 2026-06-29 |
-| 03 | Article & Category & Tag | 5/5 | Complete   | 2026-07-03 |
-| 04 | Page & Public API | 4/4 | Complete    | 2026-07-04 |
-| 05 | File Upload & Media | 5/5 | Complete    | 2026-07-05 |
-| 06 | Comment & Search | 5/5 | Complete    | 2026-07-10 |
-| 07 | Statistics & Links | 5/5 | Complete    | 2026-07-11 |
-| 08 | Album & Doc Series | 5/5 | Complete    | 2026-07-12 |
-| 09 | SEO & Music & Notifications | 7/7 | Complete    | 2026-07-14 |
-| 10 | Scheduled Tasks | 3/3 | Complete | 2026-07-16 |
-| 11 | Migration & Integration | 5/5 | Complete    | 2026-07-18 |
+### Development (Complete)
+
+| Phase | Name | Goal | Status | Last Updated |
+|-------|------|------|--------|--------------|
+| 01 | Infrastructure | NestJS scaffold, Drizzle, schemas, interceptor, guards, Sqids | Complete | 2026-06-28 |
+| 02 | Auth & Settings | JWT auth, user management, site settings, captcha | Complete | 2026-06-29 |
+| 03 | Article & Category & Tag | Article CRUD, categories, tags, public articles | Complete | 2026-07-03 |
+| 04 | Page & Public API | Page CRUD, public aggregation, version info | Complete | 2026-07-04 |
+| 05 | File Upload & Media | Upload, chunked upload, thumbnails, storage policies, direct links | Complete | 2026-07-05 |
+| 06 | Comment & Search | Comments with nesting, FTS5 search | Complete | 2026-07-10 |
+| 07 | Statistics & Links | Visitor tracking, analytics, friend links | Complete | 2026-07-11 |
+| 08 | Album & Doc Series | Albums with categories, document series | Complete | 2026-07-12 |
+| 09 | SEO & Music & Notifications | RSS, sitemap, music proxy, notifications, subscribers | Complete | 2026-07-14 |
+| 10 | Scheduled Tasks | Cron jobs, backup, view sync, cleanup | Complete | 2026-07-16 |
+| 11 | Migration & Integration | Migration tool, API compat tests (292 tests) | Complete | 2026-07-18 |
+
+### Verification (Pending)
+
+| Phase | Name | Goal | Priority | Dependencies |
+|-------|------|------|----------|--------------|
+| 12 | API Inventory & Auth & Settings Verification | Collect all frontend API calls; verify auth + settings endpoints | P0 | None |
+| 13 | Content Verification | Verify article/category/tag/page/file/comment/search endpoints | P0 | Phase 12 |
+| 14 | Features Verification | Verify statistics/links/album/doc-series/SEO/music/notifications/cron/backup | P1 | Phase 12 |
+| 15 | Final Integration & Cutover | Full regression, browser E2E walkthrough, production cutover | P0 | Phases 12-14 |
 
 ---
 
-### Phase 01: Infrastructure
+### Phase 12: API Inventory & Auth & Settings Verification
 
-**Goal:** NestJS scaffold with Drizzle+SQLite, response format interceptor, auth guards, Sqids encoder, and all database schemas defined
+**Goal:** Systematically collect all API calls made by the frontend; verify auth and settings endpoints work correctly with the frontend
 
-**Requirements:** INFRA-01, INFRA-02, INFRA-03, INFRA-04, INFRA-05, INFRA-06, API-COMPAT-01, API-COMPAT-02, API-COMPAT-04, API-COMPAT-05
+**Verification Method:** Three-layer verification (D-260)
+1. Scan frontend source code for all API calls → build complete endpoint inventory
+2. For each endpoint, read Go handler source code → document expected request/response format
+3. Browser walkthrough with NestJS backend → confirm functionality
 
-**Success Criteria:**
-
-- `npm run dev` starts NestJS on port 8091
-- All 33 Drizzle schema files exist and `drizzle-kit push` creates the SQLite database in `data/`
-- SQLite WAL mode enabled, busy_timeout set to 5000ms
-- Global response interceptor wraps all responses as `{ code, data, message }`
-- Sqids encode/decode round-trips correctly with Go-compatible seed
-- JWT guard and Admin guard are functional (even if no auth module yet)
-
-**Plans:** 5/5 plans complete
+**Plans:** 4 plans
 
 Plans:
-
-- [x] 01-01-PLAN.md — NestJS project scaffold, config, and 18 feature module placeholders
-- [x] 01-02-PLAN.md — Common infrastructure: interceptor, filter, error codes, guards, decorators, Sqids, cache
-- [x] 01-03-PLAN.md — Database infrastructure and first 12 Drizzle schema files
-- [x] 01-04-PLAN.md — Remaining 18 schema files and barrel export
-- [x] 01-05-PLAN.md — AppModule wiring, schema push, and integration tests
-
----
-
-### Phase 02: Auth & Settings
-
-**Goal:** Admin can log in via JWT, manage user profile, configure site settings; visitors can read public config
-
-**Requirements:** AUTH-01, AUTH-02, AUTH-03, USER-01, SETTING-01, SETTING-02, API-COMPAT-03, API-COMPAT-06
+- [ ] 12-01-PLAN.md — Build complete frontend API endpoint inventory (188 endpoints, Markdown table, cross-reference NestJS)
+- [ ] 12-02-PLAN.md — Auth verification (login field-by-field, token refresh dual-channel, captcha flow, 501 format)
+- [ ] 12-03-PLAN.md — Settings verification (unflatten, non-admin filtering, flat update format, site-config, 501 format)
+- [ ] 12-04-PLAN.md — Go comparison risk marking (per-endpoint risk levels, prioritized summary for Phases 13-15)
 
 **Success Criteria:**
 
-- POST /api/auth/login returns JWT with Go-compatible token structure (HS256, UserID/UserGroupID payload)
-- Existing Go-issued JWT tokens are accepted by NestJS guards
-- Admin can read and update site settings via /api/settings
-- Visitors can read public site config via /api/public/site-config
-- Password hashing uses bcrypt
-- Token refresh endpoint works
-
-**Plans:** 5/5 plans complete
-
-Plans:
-
-- [x] 02-01-PLAN.md — SettingsService with in-memory cache, unflatten, public/private key filtering, and SettingsController
-- [x] 02-02-PLAN.md — AuthService, TokenService, AuthController with Go-compatible JWT lifecycle
-- [x] 02-03-PLAN.md — UserService, UserController with current user ops and admin user management
-- [x] 02-04-PLAN.md — CaptchaService, CaptchaController, and @nestjs/throttler rate limiting
-- [x] 02-05-PLAN.md — AppModule wiring, startup initialization, and integration tests
+- Complete inventory of all frontend API calls (endpoint, method, params, response fields used)
+- Auth login returns correct token structure and user info matching Go handler
+- Token refresh works via both header and body channels
+- Unimplemented auth endpoints return correct 501 format
+- Captcha flow end-to-end verified (config → image → login)
+- GET /api/public/site-config returns all public keys (290+) with correct nesting
+- POST /api/settings/update accepts flat key-value pairs and persists correctly
+- POST /api/settings/get-by-keys returns correct values for admin and non-admin
+- Version endpoint returns correct format
+- Go comparison risk marking complete for all 188 endpoints
 
 ---
 
-### Phase 03: Article & Category & Tag
+### Phase 13: Content Verification
 
-**Goal:** Admin can CRUD articles with categories and tags; visitors can browse, filter, and paginate public articles
-
-**Requirements:** ARTICLE-01, ARTICLE-02, ARTICLE-03, CATEGORY-01, TAG-01
+**Goal:** Verify all content-related endpoints match Go backend behavior — articles, categories, tags, pages, file upload, comments, search
 
 **Success Criteria:**
 
-- Admin can create, update, delete articles via /api/articles with Markdown content, cover image, SEO metadata
-- Articles support draft/published/archived status
-- Category CRUD works at /api/post-categories with sort ordering
-- Tag CRUD works at /api/post-tags with article association
-- Visitors can list public articles with pagination, category filter, and tag filter at /api/public/articles
-- Visitors can view single public article at /api/public/articles/:id
-- Article IDs encode/decode via Sqids matching Go backend
-
-**Plans:** 5/5 plans complete
-
-Plans:
-**Wave 1**
-
-- [x] 03-01-PLAN.md — Junction table schemas + PostCategory/PostTag CRUD modules
-
-**Wave 2** *(blocked on Wave 1 completion)*
-
-- [x] 03-02-PLAN.md — Article admin CRUD with Go-compatible response shape and count sync
-
-**Wave 3** *(blocked on Wave 2 completion)*
-
-- [x] 03-03-PLAN.md — Public article endpoints (7 endpoints with pagination, filtering, prev/next)
-
-**Wave 4** *(blocked on Wave 3 completion)*
-
-- [x] 03-04-PLAN.md — Article history versioning with auto-creation and 5 history endpoints
-
-**Wave 5** *(blocked on Wave 4 completion)*
-
-- [x] 03-05-PLAN.md — AppModule wiring, test suite, and integration verification
+- Article CRUD works from frontend admin panel
+- Public article list renders correctly with pagination, filters, sorting
+- Article detail page loads with correct content, prev/next, related articles
+- Category and tag management works in admin panel
+- Page CRUD works from admin panel
+- Single file upload works from frontend
+- Chunked upload works for large files
+- Thumbnails generate and display correctly
+- File manager folder tree works
+- Direct links work
+- Visitors can post comments from frontend
+- Nested replies display correctly
+- Comment moderation (approve/reject) works in admin
+- Full-text search returns relevant results
+- All response fields match Go backend (field names, types, nesting)
 
 ---
 
-### Phase 04: Page & Public API
+### Phase 14: Features Verification
 
-**Goal:** Admin can CRUD pages; visitors can view pages and access public aggregation endpoints and version info
-
-**Requirements:** PAGE-01, PUBLIC-01, VERSION-01
+**Goal:** Verify all auxiliary feature endpoints — statistics, friend links, albums, doc series, SEO, music, notifications, scheduled tasks, backup
 
 **Success Criteria:**
 
-- Admin can create, update, delete pages via /api/pages with path-based routing
-- Pages support public/private visibility
-- Visitors can list public pages at /api/public/pages and view single page at /api/public/pages/:id
-- /api/public/* aggregation endpoints return combined site data (config, stats, recent articles)
-- GET /api/version returns backend version info matching Go response format
-- Public endpoints work without authentication; optional JWT identifies admin visitors
-
-**Plans:** 4/4 plans complete
-
-Plans:
-
-**Wave 1** (parallel)
-
-- [x] 04-01-PLAN.md — PageRepository and PageService with path validation, script splitting, and InitializeDefaultPages
-- [x] 04-02-PLAN.md — VersionController and VersionModule with @Res() bypass for /string endpoint
-
-**Wave 2** *(blocked on 04-01)*
-
-- [x] 04-03-PLAN.md — PageController (admin CRUD), PublicPageController (path wildcard), DTOs, and PageModule wiring
-
-**Wave 3** *(blocked on 04-01, 04-02, 04-03)*
-
-- [x] 04-04-PLAN.md — AppModule wiring, unit tests, and integration verification
+- Visitor tracking records visits correctly
+- Admin statistics dashboard displays data
+- Friend link CRUD works
+- Friend link apply/review workflow works
+- Public friend links display correctly
+- Album CRUD with categories works
+- Album batch import/export works
+- Public albums display correctly
+- Document series CRUD works
+- Series article ordering works
+- RSS feed valid and accessible
+- Sitemap XML valid and accessible
+- robots.txt correct
+- Music playlist loads
+- Notification management works
+- Subscriber subscribe/unsubscribe works
+- All cron jobs trigger and execute correctly
+- Backup creates and restores correctly
+- No startup log spam (D-264)
 
 ---
 
-### Phase 05: File Upload & Media
+### Phase 15: Final Integration & Cutover
 
-**Goal:** Admin can upload files (single + chunked), manage storage policies, generate thumbnails, and manage direct links
-
-**Requirements:** FILE-01, FILE-02, THUMB-01, STORAGE-01, LINK-DIRECT-01
+**Goal:** Full regression test and production cutover
 
 **Success Criteria:**
 
-- Single file upload works at PUT /api/file/upload with multer
-- Chunked upload session lifecycle works (create session, upload chunks, finalize)
-- Thumbnails auto-generated for uploaded images using sharp
-- Storage policy CRUD at /api/policies supports local storage (remote providers deferred)
-- Direct link CRUD at /api/direct-links with short-link access at /api/f/:id
-- Uploaded files accessible via static file serving
-- File manager folder tree structure operational
-
-**Plans:** 5/5 plans complete
-
-Plans:
-
-**Wave 1** (parallel)
-
-- [x] 05-01-PLAN.md — StoragePolicyModule: CRUD + default policy initialization + flag validation
-- [x] 05-02-PLAN.md — UploadService: session lifecycle, chunk handling, merge, URI parser
-
-**Wave 2** *(blocked on Wave 1)*
-
-- [x] 05-03-PLAN.md — FileService + FileController + FolderController: file operations, queries, downloads, folder tree
-
-**Wave 3** *(blocked on Wave 2)*
-
-- [x] 05-04-PLAN.md — ThumbnailModule + DirectLinkModule: generation, signing, serving, short-link download
-
-**Wave 4** *(blocked on Wave 3)*
-
-- [x] 05-05-PLAN.md — AppModule wiring, article upload stub completion, static file serving, integration tests
-
----
-
-### Phase 06: Comment & Search
-
-**Goal:** Visitors can post and browse comments with nested replies; all users can full-text search articles via FTS5
-
-**Requirements:** COMMENT-01, SEARCH-01
-
-**Success Criteria:**
-
-- Visitors can post comments at /api/public/comments; admin can CRUD at /api/comments
-- Nested/threaded comments with parent-child relationships work
-- Comment moderation workflow (pending/published) for admin
-- Admin can pin and like comments
-- Full-text search at /api/search returns articles matching query across title, content, keywords
-- FTS5 index auto-updates on article create/update/delete
-- Search results match Go backend relevance ordering
-
-**Plans:** 5/5 plans complete
-
-**Wave 1** (parallel)
-
-- [x] 06-01-PLAN.md — CommentRepository, 8 DTOs, Markdown renderer, rate limiter, error codes
-- [x] 06-02-PLAN.md — SearchModule: FTS5 index management, bm25 search, SearchController
-
-**Wave 2** *(blocked on 06-01)*
-
-- [x] 06-03-PLAN.md — CommentService: Create, ListByPath, ListLatest, ListChildren, toResponseDTO, admin operations
-
-**Wave 3** *(blocked on 06-03)*
-
-- [x] 06-04-PLAN.md — CommentController + CommentAdminController + CommentModule wiring
-
-**Wave 4** *(blocked on 06-01, 06-02, 06-03, 06-04)*
-
-- [x] 06-05-PLAN.md — WeatherModule, ArticleService FTS5 hooks, AppModule wiring
-
----
-
-### Phase 07: Statistics & Links
-
-**Goal:** Visitor tracking and analytics dashboard; friend link CRUD with health check
-
-**Requirements:** STATS-01, STATS-02, LINK-FRIEND-01
-
-**Success Criteria:**
-
-- Visitor logs recorded via POST /api/public/statistics/visit (frontend active reporting per D-160)
-- Admin can view trend statistics (daily/weekly/monthly) at /api/statistics
-- Device/browser/OS breakdown analytics available
-- Visitors can view public statistics at /api/public/statistics
-- Friend link CRUD at /api/links with categories at /api/link-categories
-- Public friend links visible at /api/public/links
-- Link health check task runs on schedule (background)
-
-**Plans:** 5/5 plans complete
-
-**Wave 1** (parallel)
-
-- [x] 07-01-PLAN.md — StatisticsRepository + 11 DTOs + UA parser + visitor dedup + all Phase 07 error codes
-- [x] 07-02-PLAN.md — LinkRepository + 17 DTOs + LinkApplyRateLimiter + EntityTypeLink
-
-**Wave 2** *(blocked on 07-01)*
-
-- [x] 07-03-PLAN.md — StatisticsService (7 methods) + StatisticsController (7 endpoints) + StatisticsModule wiring
-
-**Wave 3** *(blocked on 07-02)*
-
-- [x] 07-04-PLAN.md — LinkService (22+ methods) + LinkController (25 endpoints) + LinkModule wiring
-
-**Wave 4** *(blocked on 07-03, 07-04)*
-
-- [x] 07-05-PLAN.md — AppModule wiring, schema push verification, integration tests
-
----
-
-### Phase 08: Album & Doc Series
-
-**Goal:** Photo album CRUD with categories; document series CRUD for ordered article collections
-
-**Requirements:** ALBUM-01, DOCSERIES-01
-
-**Success Criteria:**
-
-- Album CRUD at /api/albums with cover images, descriptions, and photo lists
-- Album category CRUD at /api/album-categories
-- Visitors can browse public albums at /api/public/albums
-- Document series CRUD at /api/doc-series with ordered article membership
-- Visitors can browse public doc series at /api/public/doc-series
-- Album view count tracking works
-
-**Plans:** 5/5 plans complete
-
-**Wave 1** (parallel)
-
-- [x] 08-01-PLAN.md — AlbumRepository, AlbumCategoryRepository, DocSeriesRepository + all DTOs + error codes
-- [x] 08-02-PLAN.md — AlbumService (CreateOrRestore, BatchImport, Export/Import, applyDefaults) + AlbumCategoryService
-
-**Wave 2** *(blocked on 08-01)*
-
-- [x] 08-03-PLAN.md — DocSeriesService (CRUD, name uniqueness, article association, docCount sync)
-
-**Wave 3** *(blocked on 08-01, 08-02, 08-03)*
-
-- [x] 08-04-PLAN.md — AlbumController, AlbumCategoryController, PublicAlbumController, DocSeriesController + Module wiring
-
-**Wave 4** *(blocked on 08-04)*
-
-- [x] 08-05-PLAN.md — Integration tests, schema verification, API compatibility spot-check
-
----
-
-### Phase 09: SEO & Music & Notifications
-
-**Goal:** RSS/Sitemap XML feeds; music playlist API; notification management; subscriber management
-
-**Requirements:** RSS-01, SITEMAP-01, MUSIC-01, NOTIF-01, SUBSCRIBER-01
-
-**Success Criteria:**
-
-- RSS feed available at /rss.xml, /feed.xml, /atom.xml with valid RSS 2.0 XML
-- Sitemap XML available at /sitemap.xml; robots.txt at /robots.txt
-- Music playlist data accessible at /api/public/music
-- Notification type management and user notification settings work at /api/user/notification-*
-- Visitors can subscribe at /api/public/subscribe and unsubscribe via token
-- All XML endpoints return valid, well-formed XML with correct content types
-
-**Plans:** 7/7 plans complete
-
-**Wave 1** (parallel, no dependencies)
-
-- [x] 09-01-PLAN.md — RSS module: RssService, RssController, XML generation, 1-hour cache, Content-Type switching
-- [x] 09-02-PLAN.md — Sitemap module: SitemapService, SitemapController, XML/robots.txt generation, no cache
-- [x] 09-03-PLAN.md — EmailService: shared SMTP email service with nodemailer, verification/push email templates
-
-**Wave 2** (parallel, no cross-dependencies)
-
-- [x] 09-04-PLAN.md — Music module: MusicService, MusicController, metings API proxy, quality fallback, 5-min cache
-- [x] 09-05-PLAN.md — Notification module: NotificationService, NotificationController, notifications table, in-app notifications, default type init
-
-**Wave 3** (depends on 09-03)
-
-- [x] 09-06-PLAN.md — Subscriber module: SubscriberService, SubscriberController, verification codes, CaptchaService, EmailService
-
-**Wave 4** (depends on all prior)
-
-- [x] 09-07-PLAN.md — Cross-module integration: ArticleService RSS cache invalidation, CommentService notification hook, AppModule wiring, schema push
-
----
-
-### Phase 10: Scheduled Tasks
-
-**Goal:** Cron jobs for history cleanup, temp data cleanup, statistics aggregation, view sync, thumbnail generation, link health check, scheduled publishing, and backup
-
-**Requirements:** CRON-01
-
-**Success Criteria:**
-
-- Article history cleanup job runs on schedule, removing entries older than configured retention
-- Temporary data (upload sessions, expired tokens) cleaned on schedule
-- Statistics aggregation job computes daily/weekly/monthly rollups
-- View count sync job persists in-memory counts to database
-- Thumbnail generation job processes queued image transformations
-- Link health check job verifies friend link availability and updates status
-- Scheduled publishing job publishes articles with future publish_at dates
-- Backup job exports configuration as JSON on schedule
-- All jobs use @nestjs/schedule with configurable intervals
-
-**Plans:** 3/3 plans complete
-
-Plans:
-
-- [x] PLAN.md
-
-**Wave 1** (no dependencies)
-
-- [x] 10-01-PLAN.md — ScheduleModule, ScheduleService with wrappers, 7 cron jobs, view count Map, startup catch-up
-
-**Wave 2** *(blocked on Wave 1)*
-
-- [x] 10-02-PLAN.md — On-demand dispatch (4 jobs), service extensions, SettingsService exportAll/importAll
-
-**Wave 3** *(blocked on Wave 2)*
-
-- [x] 10-03-PLAN.md — BackupService, BackupController (5 admin endpoints), ScheduledBackupJob wiring, integration
-
----
-
-### Phase 11: Migration & Integration
-
-**Goal:** SQLite→SQLite migration tool; full end-to-end API compatibility testing against Go backend responses
-
-**Requirements:** MIGRATION-01, INTEGRATION-01
-
-**Success Criteria:**
-
-- Migration CLI tool reads from Go backend's SQLite .db file and writes to NestJS's .db file
-- All 33 tables migrate with data integrity preserved
-- ID seed values preserved so Sqids encoding produces identical public IDs
-- JWT secret preserved so existing tokens work after migration
-- Settings, file paths, and binary data all transfer correctly
-- End-to-end API compatibility test suite passes for all endpoints
-- Frontend connects to new backend and all features work without modification
-- `npm run dev` starts both frontend and backend successfully
-
-**Plans:** 5/5 plans complete
-
-Plans:
-
-**Wave 1** (parallel, no cross-dependencies)
-
-- [x] 11-01-PLAN.md — Migration CLI tool: scripts/migrate.ts with FK-ordered table migration, timestamp conversion, auto-backup, and post-migration validation
-- [x] 11-02-PLAN.md — API compat test infrastructure: shared helpers with typed TestContext, multipart upload helper, and 6 core module test files (auth, settings, version, user, article, page)
-
-**Wave 2** (depends on Wave 1)
-
-- [x] 11-03-PLAN.md — Content & file module tests: post-category, post-tag, comment, search, doc-series, article-history, file, storage-policy, thumbnail, direct-link
-- [x] 11-04-PLAN.md — Stats, links, album, SEO, notification module tests: statistics, link, album, album-category, rss, sitemap, music, notification, subscriber
-
-**Wave 3** (depends on all prior)
-
-- [x] 11-05-PLAN.md — Remaining tests (backup, captcha, weather, proxy) + full test suite run + migration end-to-end verification + frontend smoke test + STATE/ROADMAP update
+- All frontend pages work without errors
+- All admin panel functions work
+- No console errors in browser
+- Performance acceptable (page load < 3s)
+- Production-ready deployment documented
 
 ---
 
 ## Requirement Traceability
 
-| Requirement ID | Phase | Description |
-|---------------|-------|-------------|
-| INFRA-01 | 01 | NestJS project scaffold on port 8091 |
-| INFRA-02 | 01 | Drizzle ORM + SQLite connection |
-| INFRA-03 | 01 | SQLite WAL mode + busy_timeout |
-| INFRA-04 | 01 | Global response format interceptor |
-| INFRA-05 | 01 | Sqids ID encode/decode with Go-compatible seed |
-| INFRA-06 | 01 | Drizzle schema definitions for all 30 tables |
-| AUTH-01 | 02 | Admin login with JWT |
-| AUTH-02 | 02 | JWT token refresh |
-| AUTH-03 | 02 | JWT compatible with Go backend tokens |
-| USER-01 | 02 | User profile management |
-| SETTING-01 | 02 | Site settings read/update |
-| SETTING-02 | 02 | Public site config query |
-| ARTICLE-01 | 03 | Article CRUD with draft/published/archived |
-| ARTICLE-02 | 03 | Article list with pagination and filters |
-| ARTICLE-03 | 03 | Public article browsing |
-| CATEGORY-01 | 03 | Category CRUD with sorting |
-| TAG-01 | 03 | Tag CRUD with article association |
-| PAGE-01 | 04 | Page CRUD with public/private |
-| PUBLIC-01 | 04 | Public aggregation endpoints |
-| VERSION-01 | 04 | Version info API |
-| FILE-01 | 05 | Single file upload |
-| FILE-02 | 05 | Chunked upload with session management |
-| THUMB-01 | 05 | Thumbnail generation |
-| STORAGE-01 | 05 | Storage policy CRUD (local) |
-| LINK-DIRECT-01 | 05 | Direct link CRUD and short-link access |
-| COMMENT-01 | 06 | Comment CRUD with nested replies and moderation |
-| SEARCH-01 | 06 | Full-text search via FTS5 |
-| STATS-01 | 07 | Visitor tracking and logging |
-| STATS-02 | 07 | Statistics analytics (trends, devices, sources) |
-| LINK-FRIEND-01 | 07 | Friend link CRUD with health check |
-| ALBUM-01 | 08 | Album CRUD with categories |
-| DOCSERIES-01 | 08 | Document series CRUD |
-| RSS-01 | 09 | RSS/Atom feed generation |
-| SITEMAP-01 | 09 | Sitemap XML generation |
-| MUSIC-01 | 09 | Music playlist data API |
-| NOTIF-01 | 09 | Notification management |
-| SUBSCRIBER-01 | 09 | Subscriber subscribe/unsubscribe |
-| CRON-01 | 10 | Scheduled tasks (8 job types) |
-| MIGRATION-01 | 11 | SQLite to SQLite migration tool |
-| INTEGRATION-01 | 11 | End-to-end API compatibility testing |
+| Requirement ID | Phase | Verification Phase | Description |
+|---------------|-------|--------------------|-------------|
+| INFRA-01 | 01 | — | NestJS project scaffold on port 8091 |
+| INFRA-02 | 01 | — | Drizzle ORM + SQLite connection |
+| INFRA-03 | 01 | — | SQLite WAL mode + busy_timeout |
+| INFRA-04 | 01 | — | Global response format interceptor |
+| INFRA-05 | 01 | — | Sqids ID encode/decode with Go-compatible seed |
+| INFRA-06 | 01 | — | Drizzle schema definitions for all 30 tables |
+| AUTH-01 | 02 | 12 | Admin login with JWT |
+| AUTH-02 | 02 | 12 | JWT token refresh |
+| AUTH-03 | 02 | 12 | JWT compatible with Go backend tokens |
+| USER-01 | 02 | 12 | User profile management |
+| SETTING-01 | 02 | 12 | Site settings read/update |
+| SETTING-02 | 02 | 12 | Public site config query |
+| ARTICLE-01 | 03 | 13 | Article CRUD with draft/published/archived |
+| ARTICLE-02 | 03 | 13 | Article list with pagination and filters |
+| ARTICLE-03 | 03 | 13 | Public article browsing |
+| CATEGORY-01 | 03 | 13 | Category CRUD with sorting |
+| TAG-01 | 03 | 13 | Tag CRUD with article association |
+| PAGE-01 | 04 | 13 | Page CRUD with public/private |
+| PUBLIC-01 | 04 | 12 | Public aggregation endpoints |
+| VERSION-01 | 04 | 12 | Version info API |
+| FILE-01 | 05 | 13 | Single file upload |
+| FILE-02 | 05 | 13 | Chunked upload with session management |
+| THUMB-01 | 05 | 13 | Thumbnail generation |
+| STORAGE-01 | 05 | 13 | Storage policy CRUD (local) |
+| LINK-DIRECT-01 | 05 | 13 | Direct link CRUD and short-link access |
+| COMMENT-01 | 06 | 13 | Comment CRUD with nested replies and moderation |
+| SEARCH-01 | 06 | 13 | Full-text search via FTS5 |
+| STATS-01 | 07 | 14 | Visitor tracking and logging |
+| STATS-02 | 07 | 14 | Statistics analytics (trends, devices, sources) |
+| LINK-FRIEND-01 | 07 | 14 | Friend link CRUD with health check |
+| ALBUM-01 | 08 | 14 | Album CRUD with categories |
+| DOCSERIES-01 | 08 | 14 | Document series CRUD |
+| RSS-01 | 09 | 14 | RSS/Atom feed generation |
+| SITEMAP-01 | 09 | 14 | Sitemap XML generation |
+| MUSIC-01 | 09 | 14 | Music playlist data API |
+| NOTIF-01 | 09 | 14 | Notification management |
+| SUBSCRIBER-01 | 09 | 14 | Subscriber subscribe/unsubscribe |
+| CRON-01 | 10 | 14 | Scheduled tasks (8 job types) |
+| MIGRATION-01 | 11 | — | SQLite to SQLite migration tool |
+| INTEGRATION-01 | 11 | 15 | End-to-end API compatibility testing |
 
 ---
 
-*Last updated: 2026-07-18*
+*Last updated: 2026-07-19*
