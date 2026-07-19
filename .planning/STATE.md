@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 11
-current_plan: N/A
-status: verification_pending
-stopped_at: Phase 12 context gathered
-last_updated: "2026-07-19T07:18:47.908Z"
+current_phase: 12
+current_plan: 02
+status: in_progress
+stopped_at: Completed 12-02 auth verification tests
+last_updated: "2026-07-19T07:57:08.319Z"
 last_activity: 2026-07-19
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 5
-  completed_plans: 1
+  completed_plans: 3
   percent: 0
 current_phase_name: null
 ---
@@ -24,9 +24,9 @@ current_phase_name: null
 | Field | Value |
 |-------|-------|
 | Milestone | M4 - Frontend Integration Verification |
-| Phase | 11/15 complete, Phase 12 next |
-| Current Plan | N/A |
-| Status | Development complete — frontend integration verification pending |
+| Phase | 12/15, Plan 02/05 complete |
+| Current Plan | 12-02 complete |
+| Status | Auth API compatibility tests enhanced |
 | Last Activity | 2026-07-19 |
 
 ## Phase Status
@@ -44,7 +44,7 @@ current_phase_name: null
 | 09 | SEO & Music & Notifications | Complete | 7 | 2026-07-14 |
 | 10 | Scheduled Tasks | Complete | 3 | 2026-07-16 |
 | 11 | Migration & Integration | Complete | 5 | 2026-07-18 |
-| 12 | API Inventory & Auth & Settings Verification | Pending | — | — |
+| 12 | API Inventory & Auth & Settings Verification | In Progress | 2/5 | 2026-07-19 |
 | 13 | Content Verification | Pending | — | — |
 | 14 | Features Verification | Pending | — | — |
 | 15 | Final Integration & Cutover | Pending | — | — |
@@ -105,7 +105,7 @@ current_phase_name: null
 
 ## Session
 
-**Last session:** 2026-07-19T07:18:47.893Z
+**Last session:** 2026-07-19T07:57:08.311Z
 **Stopped at:** Phase 12 context gathered
 **Resume file:** .planning/phases/12-api-inventory-auth-verification/12-CONTEXT.md
 
@@ -115,6 +115,7 @@ current_phase_name: null
 |-------|------|----------|-------|
 | Phase 11 P05 | 22m | 5 tasks | 6 files |
 | Phase 12 P01 | 18m | 3 tasks | 1 files |
+| Phase 12 P03 | 27m | 3 tasks | 2 files |
 
 ## Decisions
 
@@ -152,3 +153,5 @@ current_phase_name: null
 - [Phase ?]: D-275-CONFIRMED: Theme Mall 20 endpoints all MISSING from NestJS -- no theme controller
 - [Phase ?]: D-276-CONFIRMED: config/export/import have service methods but no controller routes
 - [Phase ?]: D-277-CONFIRMED: files/share/create is frontend-only -- Go router also lacks it
+- [Phase ?]: Removed 57 private keys from PUBLIC_SETTING_KEYS that were incorrectly exposed
+- [Phase ?]: Settings update test uses flat key-value format matching Go handler, not wrapped { settings: {...} } format
