@@ -142,6 +142,8 @@ export const PUBLIC_SETTING_KEYS = new Set([
   'FRIEND_LINK_PLACEHOLDER_LOGO',
   'FRIEND_LINK_PLACEHOLDER_DESCRIPTION',
   'FRIEND_LINK_PLACEHOLDER_SITESHOT',
+  'FRIEND_LINK_APPLY_CUSTOM_CODE_HTML',
+  'FRIEND_LINK_APPLY_CUSTOM_CODE',
 
   // ─── Post settings ───
   'post.default.cover',
@@ -218,7 +220,6 @@ export const PUBLIC_SETTING_KEYS = new Set([
 
   // ─── About page ───
   'about.page.enable',
-  'about.page.content',
   'about.page.name',
   'about.page.description',
   'about.page.avatar_img',
@@ -239,6 +240,7 @@ export const PUBLIC_SETTING_KEYS = new Set([
   'about.page.skills_tips',
   'about.page.custom_code',
   'about.page.custom_code_html',
+  'about.page.comic',
   'about.page.enable.author_box',
   'about.page.enable.page_content',
   'about.page.enable.skills',
@@ -310,6 +312,12 @@ export const PUBLIC_SETTING_KEYS = new Set([
   // ─── WeChat share (public display only) ───
   'wechat.share.enable',
   'wechat.share.app_id',
+
+  // ─── User panel ───
+  'userpanel.show_user_center',
+  'userpanel.show_notifications',
+  'userpanel.show_publish_article',
+  'userpanel.show_admin_dashboard',
 
   // ─── Auth/registration ───
   'ENABLE_REGISTRATION',
