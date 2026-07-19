@@ -46,7 +46,7 @@ Phases 12-15 complete. Every frontend API call verified against Go backend sourc
 
 | Phase | Name | Goal | Priority | Dependencies |
 |-------|------|------|----------|--------------|
-| 12 | API Inventory & Auth & Settings Verification | 3/5 | In Progress|  |
+| 12 | API Inventory & Auth & Settings Verification | 4/5 | In Progress|  |
 | 13 | Content Verification | Verify article/category/tag/page/file/comment/search endpoints | P0 | Phase 12 |
 | 14 | Features Verification | Verify statistics/links/album/doc-series/SEO/music/notifications/cron/backup | P1 | Phase 12 |
 | 15 | Final Integration & Cutover | Full regression, browser E2E walkthrough, production cutover | P0 | Phases 12-14 |
@@ -63,7 +63,7 @@ Phases 12-15 complete. Every frontend API call verified against Go backend sourc
 2. For each endpoint, read Go handler source code → document expected request/response format
 3. Browser walkthrough with NestJS backend → confirm functionality
 
-**Plans:** 3/5 plans executed
+**Plans:** 4/5 plans executed
 
 Plans:
 
@@ -71,7 +71,7 @@ Plans:
 - [x] 12-01-PLAN.md — Build complete frontend API endpoint inventory (188 endpoints, Markdown table, cross-reference NestJS)
 - [x] 12-02-PLAN.md — Auth verification (login field-by-field, token refresh dual-channel, captcha flow, 501 format)
 - [x] 12-03-PLAN.md — Settings verification (unflatten, non-admin filtering, flat update format, site-config, 501 format)
-- [ ] 12-04-PLAN.md — Go comparison risk marking (per-endpoint risk levels, prioritized summary for Phases 13-15)
+- [x] 12-04-PLAN.md — Go comparison risk marking (per-endpoint risk levels, prioritized summary for Phases 13-15)
 
 **Success Criteria:**
 

@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_phase: 12
-current_plan: 02
+current_plan: 04
 status: in_progress
-stopped_at: Completed 12-02 auth verification tests
-last_updated: "2026-07-19T07:57:08.319Z"
+stopped_at: Completed 12-04 Go comparison risk marking
+last_updated: "2026-07-19T08:25:00.000Z"
 last_activity: 2026-07-19
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 5
-  completed_plans: 3
+  completed_plans: 4
   percent: 0
 current_phase_name: null
 ---
@@ -24,9 +24,9 @@ current_phase_name: null
 | Field | Value |
 |-------|-------|
 | Milestone | M4 - Frontend Integration Verification |
-| Phase | 12/15, Plan 02/05 complete |
-| Current Plan | 12-02 complete |
-| Status | Auth API compatibility tests enhanced |
+| Phase | 12/15, Plan 04/05 complete |
+| Current Plan | 12-04 complete |
+| Status | Go comparison risk marking complete |
 | Last Activity | 2026-07-19 |
 
 ## Phase Status
@@ -44,7 +44,7 @@ current_phase_name: null
 | 09 | SEO & Music & Notifications | Complete | 7 | 2026-07-14 |
 | 10 | Scheduled Tasks | Complete | 3 | 2026-07-16 |
 | 11 | Migration & Integration | Complete | 5 | 2026-07-18 |
-| 12 | API Inventory & Auth & Settings Verification | In Progress | 2/5 | 2026-07-19 |
+| 12 | API Inventory & Auth & Settings Verification | In Progress | 4/5 | 2026-07-19 |
 | 13 | Content Verification | Pending | — | — |
 | 14 | Features Verification | Pending | — | — |
 | 15 | Final Integration & Cutover | Pending | — | — |
@@ -95,8 +95,9 @@ current_phase_name: null
 | Plans Created | 56 |
 | Plans Executed | 56 |
 | Requirements Covered | 33 / 39 |
-| API Endpoints Implemented | 59 / ~65+ |
+| API Endpoints Implemented | 155 / 188 |
 | API Compat Tests | 292 across 29 files |
+| API Endpoints Risk Marked | 188 (HIGH 25, MEDIUM 72, LOW 18, NONE 69, N/A 4) |
 | Known Unimplemented | config/export, config/import, proxy/download |
 | Post-Phase-11 Bugs Fixed | 3 (ScheduleService log spam, settings seed, timestamp conversion) |
 
@@ -105,9 +106,9 @@ current_phase_name: null
 
 ## Session
 
-**Last session:** 2026-07-19T07:57:08.311Z
-**Stopped at:** Completed 12-02 auth verification tests
-**Resume file:** .planning/phases/12-api-inventory-auth-verification/12-02-SUMMARY.md
+**Last session:** 2026-07-19T08:25:00.000Z
+**Stopped at:** Completed 12-04 Go comparison risk marking
+**Resume file:** .planning/phases/12-api-inventory-auth-verification/12-04-SUMMARY.md
 
 ## Performance Metrics
 
@@ -117,6 +118,7 @@ current_phase_name: null
 | Phase 12 P01 | 18m | 3 tasks | 1 files |
 | Phase 12 P02 | 26m | 3 tasks | 2 files |
 | Phase 12 P03 | 27m | 3 tasks | 2 files |
+| Phase 12 P04 | 18m | 2 tasks | 1 files |
 
 ## Decisions
 
@@ -159,3 +161,6 @@ current_phase_name: null
 - [Phase 12]: D-278: Login response field-by-field verification matches Go LoginUserInfoResponse struct (userGroupID is number, other IDs are Sqids strings)
 - [Phase 12]: D-279: ThrottlerStorage cleared between captcha behavior tests to avoid 429 rate limiting
 - [Phase 12]: D-280: Test user seeding uses onConflictDoUpdate on username (not onConflictDoNothing on id) to handle existing admin user in file DB
+- [Phase 12]: D-281: CCP-1 created_at/updated_at nullability is MEDIUM risk (DB likely has NOT NULL constraints, but needs verification in Phase 13)
+- [Phase 12]: D-282: Album camelCase field naming may be HIGH risk if frontend depends on camelCase (Go uses camelCase, NestJS may normalize to snake_case)
+- [Phase 12]: D-283: Link/LinkCategory/LinkTag ID type may be HIGH risk if frontend expects int (Go uses int, NestJS may use Sqids string)
