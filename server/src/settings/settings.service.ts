@@ -13,7 +13,7 @@ import * as path from 'path';
 const CDN_AFFECTED_KEYS = [
   'SITE_KEYWORDS',
   'SITE_DESCRIPTION',
-  'FRONT_DESK_SITE_OWNER_NAME',
+  'frontDesk.siteOwner.name',
   'ICON_URL',
   'CUSTOM_HEADER_HTML',
   'CUSTOM_FOOTER_HTML',
