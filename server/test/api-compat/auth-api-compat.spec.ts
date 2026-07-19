@@ -22,6 +22,8 @@ import {
  *     **Risk: NONE** -- NestJS is correct per frontend contract.
  *     The frontend TokenManager.updateToken(accessToken, expires) treats expires
  *     as string throughout, and handleRefreshToken() checks `data?.expires` (truthy).
+ *     Verified: frontend/src/lib/api/client.ts TokenManager.updateToken signature
+ *     and handleRefreshToken() response validation both expect string.
  *
  * (2) 5 auth endpoints: Go implemented with real handlers, NestJS returns 501.
  *     register, activate, forgot-password, reset-password, check-email.
