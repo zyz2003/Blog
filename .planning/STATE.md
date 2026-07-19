@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: null
-current_plan: null
-status: project_complete
-stopped_at: All 11 phases complete — project ready for production
-last_updated: "2026-07-18T08:00:00.000Z"
-last_activity: 2026-07-18
+current_phase: 11
+current_plan: N/A
+status: verification_pending
+stopped_at: Phase 12 context gathered
+last_updated: "2026-07-19T05:22:25.861Z"
+last_activity: 2026-07-19
 progress:
-  total_phases: 11
-  completed_phases: 11
-  total_plans: 56
-  completed_plans: 56
-  percent: 100
+  total_phases: 4
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 current_phase_name: null
 ---
 
@@ -23,11 +23,11 @@ current_phase_name: null
 
 | Field | Value |
 |-------|-------|
-| Milestone | M3 - Production Ready ✓ |
-| Phase | All 11 complete |
+| Milestone | M4 - Frontend Integration Verification |
+| Phase | 11/15 complete, Phase 12 next |
 | Current Plan | N/A |
-| Status | Project Complete — Ready for frontend integration testing |
-| Last Activity | 2026-07-18 |
+| Status | Development complete — frontend integration verification pending |
+| Last Activity | 2026-07-19 |
 
 ## Phase Status
 
@@ -44,6 +44,10 @@ current_phase_name: null
 | 09 | SEO & Music & Notifications | Complete | 7 | 2026-07-14 |
 | 10 | Scheduled Tasks | Complete | 3 | 2026-07-16 |
 | 11 | Migration & Integration | Complete | 5 | 2026-07-18 |
+| 12 | API Inventory & Auth & Settings Verification | Pending | — | — |
+| 13 | Content Verification | Pending | — | — |
+| 14 | Features Verification | Pending | — | — |
+| 15 | Final Integration & Cutover | Pending | — | — |
 
 ## Active Decisions
 
@@ -57,57 +61,11 @@ current_phase_name: null
 | D-06 | JWT HS256 with Go-compatible payload | Token structure must accept existing Go-issued tokens | 02 |
 | D-07 | In-memory cache (Map + TTL) instead of Redis | Single-user blog does not need Redis overhead | 01 |
 | D-08 | Port 8091 | Matches Go backend, frontend next.config.ts needs no change | 01 |
-| D-09 | Feature module organization | article/ auth/ etc with module+controller+service+repository | 01 |
-| D-10 | NestJS backend in server/ directory | Go code preserved during dev, deleted after Phase 11 | 01 |
-| D-11 | One-table-one-file schemas in database/schemas/ | Aligned with Go ent/schema/ structure | 01 |
-| D-12 | 3 separate Guards (JwtAuth/JwtAuthOptional/Admin) | Matches Go JWTAuth/JWTAuthOptional/AdminAuth pattern | 01 |
-| D-13 | Global JwtAuthGuard + @Public() decorator | Public routes skip auth, matches Go global middleware | 01 |
-| D-14 | Error codes constant file with Chinese messages | Frontend depends on Chinese error message text | 01 |
-| D-15 | Sqids init from DB settings table id_seed | Same as Go backend, shuffled alphabet | 01 |
-| D-16 | @nestjs/config + NestJS built-in Logger | Official NestJS solutions, no extra dependencies | 01 |
-| D-17 | GoRNGSource replicates Go's math/rand lagged fibonacci PRNG | rngLen=607, rngTap=273 for exact Sqids shuffle compatibility | 01 |
-| D-18 | CommonModule provides but does NOT globally register guards/interceptors | APP_GUARD/APP_INTERCEPTOR wiring deferred to app.module.ts | 01 |
-| D-19 | Drizzle v0.45 uses integer/text (not sqliteInteger/sqliteText) | API changed in v0.45; lowercase function names are correct exports | 01 |
-| D-20 | uniqueIndex() replaces index().unique() in Drizzle v0.45 | IndexBuilder.unique() removed; uniqueIndex() is the correct API | 01 |
-| D-21 | PRAGMA foreign_keys=ON added alongside WAL and busy_timeout | Go backend expects referential integrity, SQLite defaults to off | 01 |
-| D-22 | ES module imports for FK references in schema files | Matches Plan 03 pattern (user.schema.ts); require() is CJS syntax | 01 |
-| D-23 | real() column type for Go field.Float in url_stat avgDuration | Drizzle v0.45 exports real() for SQLite REAL column type | 01 |
-| D-24 | linkTagPivot explicit join table for Link-LinkTag many-to-many | Implied by Go edge.StorageKey(edge.Table("link_tag_pivot")) | 01 |
-| D-25 | JwtStrategy + JwtModule created in Phase 01 for APP_GUARD wiring | Without registered strategy, AuthGuard('jwt') throws | 01 |
-| D-26 | drizzle.config.ts uses schema path string, not import object | drizzle-kit v0.31 Zod validation rejects imported schema objects | 01 |
-| D-27 | passport-jwt@4.0.1 required as runtime dependency for JwtStrategy | PassportStrategy(Strategy) from passport-jwt needed | 01 |
-| D-30 | JWT_SECRET from settings table dynamically read | Same as Go backend SettingService.Get("JWT_SECRET") | 02 |
-| D-31 | Access token 15min, refresh token 30d (hardcoded) | Matches Go backend time.Minute*15 and time.Hour*24*30 | 02 |
-| D-38 | Settings key-value + in-memory cache (Map) | Loaded at startup, refreshed on update | 02 |
-| D-39 | Public/private key distinction via hardcoded list | Matches Go IsPublicSetting() | 02 |
-| D-44 | Avatar upload now functional | StoragePolicyService + ThumbnailService available after Phase 05 | 05 |
-| D-94 | Upload sessions in memory Map with 60s cleanup, 24h TTL | Matches Go backend session lifecycle pattern | 05 |
-| D-95 | Chunk temp files in data/uploads/tmp/{sessionId}/ | Cleaned up on session completion and startup | 05 |
-| D-96 | Auto-merge triggers on last chunk (uploadedChunks.size === totalChunks) | Matches Go backend auto-merge behavior | 05 |
-| D-99 | Only type='local' allowed for storage policies; cloud types return 400 | Cloud storage deferred to future release | 05 |
-| D-100 | Policy max_size=0 means unlimited | Matches Go backend behavior | 05 |
-| D-101 | Flag uniqueness among non-deleted policies; 3 allowed flags | article_image, comment_image, user_avatar | 05 |
-| D-103 | Post-upload thumbnail generation via forwardRef | Circular dependency FileModule <-> ThumbnailModule | 05 |
-| D-104 | WebP thumbnails at max 400x400 using sharp | Matches Go backend thumbnail dimensions | 05 |
-| D-105 | HMAC-SHA256 signing with 15-min expiry for thumbnails | Prevents unauthorized thumbnail access | 05 |
-| D-106 | Thumbnail failure does not block file upload | Matches Go backend error handling | 05 |
-| D-107 | Direct links use EntityType.DirectLink=7 | NOT EntityType.File — critical for correct ID decoding | 05 |
-| D-108 | Short-link download with Content-Disposition header | Matches Go backend download behavior | 05 |
-| D-112 | File download via createReadStream for streaming | Efficient memory usage for large files | 05 |
-| D-113 | ArticleController.uploadImage with FileInterceptor | Replaced Phase 03 501 stub | 05 |
-| D-114 | ServeStaticModule for data/uploads at /uploads | Provides direct URL access for article images | 05 |
-| D-143 | GeoIPService injected from WeatherModule into CommentService | Replaces @Optional() HTTP fallback per D-143 | 06 |
-| D-151 | FTS5 index hooks in ArticleService CRUD (try-catch) | Index failure never blocks article operations | 06 |
-| D-160 | recordVisit fires async processing and returns immediately | Fire-and-forget via unawaited Promise, matches Go worker pool | 07 |
-| D-164 | Full RecordVisit pipeline: IP extraction, dedup, UA parse, GeoIP, async DB writes | Matches Go processVisitTask async processing | 07 |
-| D-168 | getBasicStatistics enriches today/yesterday from visitor_logs | Accuracy before daily aggregation runs, matches Go enrichTodayYesterdayFromVisitorLogs | 07 |
-| D-169 | StatisticsController: 2 public endpoints (@Public()) + 5 admin endpoints | Matches Go public/admin route split | 07 |
-| D-200 | Album FK onDelete set null matches Go backend | Go ent schema OnDelete: schema.SetNull | 08 |
-| D-201 | Controllers return { data, message } for Chinese success messages | Go backend returns Chinese messages | 08 |
-| D-202 | DocSeries update uses excludeDbId for name uniqueness | Previous get-and-compare had logic error | 08 |
-| D-203 | aspectRatio persisted to DB on create | Was computed but not stored | 08 |
-| D-204 | All Phase 08 tests use consistent Sqids seed | Prevents global singleton conflict | 08 |
-| D-169 | StatisticsController: 2 public endpoints (@Public()) + 5 admin endpoints | Matches Go public/admin route split | 07 |
+| D-260 | Three-layer verification: frontend API scan + Go code diff + browser walkthrough | Cannot start Go backend (no PostgreSQL/Redis), use Go source code as spec | 12 |
+| D-261 | Verification driven by frontend actual API calls, not backend endpoint list | Frontend is the real consumer — what it calls is what matters | 12 |
+| D-262 | Default settings seeded from Go definition.go on startup | Go backend writes 331 defaults on first run; NestJS must do the same | post-11 fix |
+| D-263 | sql<> template does NOT apply Drizzle mode:'timestamp' conversion | Use sql<number> + manual *1000 for raw SQL aggregate queries | post-11 fix |
+| D-264 | ScheduleService backfill capped at 30 days | Prevents log spam on startup after long downtime | post-11 fix |
 
 ## Blockers
 
@@ -124,27 +82,32 @@ current_phase_name: null
 - Upload sessions must be stored in-memory (Map) — not in DB — for performance per D-94
 - Sharp import must use `import sharp from 'sharp'` (default export), not namespace import
 - Direct link publicIDs must use EntityType.DirectLink=7, NOT EntityType.File=2 (critical pitfall)
+- Drizzle sql<> template bypasses mode:'timestamp' conversion — raw SQL aggregates must use sql<number> + manual conversion
+- Go backend seeds 331 default settings on first startup — NestJS must replicate this or frontend gets missing config keys
+- Settings update endpoint must accept flat key-value pairs (Go additionalProperties: string), not nested wrapper objects
+- Frontend may not send config keys that don't exist in DB — seed defaults first, then frontend can update them
 
 ## Metrics
 
 | Metric | Value |
 |--------|-------|
-| Phases Completed | 11 / 11 |
+| Phases Completed | 11 / 15 |
 | Plans Created | 56 |
 | Plans Executed | 56 |
 | Requirements Covered | 33 / 39 |
 | API Endpoints Implemented | 59 / ~65+ |
 | API Compat Tests | 292 across 29 files |
 | Known Unimplemented | config/export, config/import, proxy/download |
+| Post-Phase-11 Bugs Fixed | 3 (ScheduleService log spam, settings seed, timestamp conversion) |
 
 ---
-*Last updated: 2026-07-18*
+*Last updated: 2026-07-19*
 
 ## Session
 
-**Last session:** 2026-07-18T08:00:00.000Z
-**Stopped at:** Project complete — all phases done, code review fixes applied, Go backend archived
-**Resume file:** N/A — project development complete
+**Last session:** 2026-07-19T05:22:25.850Z
+**Stopped at:** Phase 12 context gathered
+**Resume file:** .planning/phases/12-api-inventory-auth-verification/12-CONTEXT.md
 
 ## Performance Metrics
 
@@ -172,10 +135,15 @@ current_phase_name: null
 - [Phase 11]: D-248: Album stat increment for nonexistent ID succeeds silently (no 404)
 - [Phase 11]: D-249: needcache/download/:public_id added to global prefix exclude (Go registers this route outside /api group)
 - [Phase 11]: D-250: config/export and config/import endpoints not yet implemented in NestJS (exist in Go backend)
-- [Phase 11]: D-251: proxy/download endpoint not yet implemented in NestJS (exists in Go backend)
+- [Phase 11]: D-251: proxy/download endpoint not yet implemented in NestJS (exist in Go backend)
 - [Phase 11]: D-252: decodePublicID try-catch added to all 11 service files — invalid Sqids IDs return 404/400 instead of 500
 - [Phase 11]: D-253: Migration tool adds TABLE_NAME_MAP, COLUMN_NAME_MAP, COLUMN_EXCLUSIONS, COLUMN_DEFAULTS for Go→NestJS schema differences
 - [Phase 11]: D-254: assertSuccessResponse now verifies both HTTP status code and body code field
 - [Phase 11]: D-255: seedBaseData now includes link category, link tag, storage policy, album category for more complete test data
 - [Phase 11]: D-256: Go backend source archived to _go-backend-archive/ (gitignored, 578 .go files for reference)
 - [Phase 11]: D-257: Codegraph indexes two projects: main project (NestJS TS) + _go-backend-archive (Go) for cross-reference
+- [Post-11]: D-260: Three-layer verification: frontend API scan + Go code diff + browser walkthrough (Go backend cannot start without PostgreSQL/Redis)
+- [Post-11]: D-261: Verification driven by frontend actual API calls, not backend endpoint list
+- [Post-11]: D-262: Default settings seeded from Go definition.go on startup (331 entries)
+- [Post-11]: D-263: sql<> template bypasses Drizzle mode:'timestamp' — use sql<number> + manual *1000
+- [Post-11]: D-264: ScheduleService backfill capped at 30 days to prevent log spam
