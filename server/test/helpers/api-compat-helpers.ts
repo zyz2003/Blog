@@ -101,6 +101,9 @@ export async function seedBaseData(db: any): Promise<void> {
   }).onConflictDoNothing().run();
 
   // Insert users (id=1, admin, hashed password)
+  // Use onConflictDoUpdate on username — the file DB may already have an admin
+  // user from a prior app run, and onConflictDoNothing on id alone won't handle
+  // the username/email unique constraints.
   const passwordHash = await bcryptjs.hash(ADMIN_PASSWORD, 10);
   await db.insert(users).values({
     id: 1,
@@ -110,7 +113,16 @@ export async function seedBaseData(db: any): Promise<void> {
     nickname: 'Admin',
     userGroupId: 1,
     status: 1,
-  }).onConflictDoNothing().run();
+  }).onConflictDoUpdate({
+    target: users.username,
+    set: {
+      passwordHash,
+      email: 'admin@test.com',
+      nickname: 'Admin',
+      userGroupId: 1,
+      status: 1,
+    },
+  }).run();
 
   // Insert settings
   const settingsData = [
