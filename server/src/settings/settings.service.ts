@@ -2,6 +2,7 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { settings } from '../database/schemas/setting.schema';
 import { DRIZZLE } from '../database/database.module';
 import { PUBLIC_SETTING_KEYS } from './public-setting-keys';
+import { DEFAULT_SETTINGS } from './default-settings';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -31,6 +32,7 @@ export class SettingsService implements OnModuleInit {
 
   async onModuleInit(): Promise<void> {
     await this.ensureLoaded();
+    await this.seedMissingDefaults();
   }
 
   /**
@@ -52,6 +54,31 @@ export class SettingsService implements OnModuleInit {
       this.cache.set(row.configKey, row.value);
     }
     this.configVersion = Date.now();
+  }
+
+  /**
+   * Seed missing default settings from Go definition.go.
+   * On first startup (or after DB reset), inserts all DEFAULT_SETTINGS
+   * that don't already exist in the database. Existing keys are never overwritten.
+   * Matches Go's behavior of writing all defaults on first run.
+   */
+  private async seedMissingDefaults(): Promise<void> {
+    const missing = DEFAULT_SETTINGS.filter(d => !this.cache.has(d.key));
+    if (missing.length === 0) return;
+
+    this.logger.log(`Seeding ${missing.length} missing default settings...`);
+
+    for (const d of missing) {
+      await this.db
+        .insert(settings)
+        .values({ configKey: d.key, value: d.value, comment: d.comment })
+        .onConflictDoNothing()
+        .run();
+      this.cache.set(d.key, d.value);
+    }
+
+    this.configVersion = Date.now();
+    this.logger.log(`Seeded ${missing.length} default settings. Total: ${this.cache.size}`);
   }
 
   get(key: string): string | undefined {

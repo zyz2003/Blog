@@ -207,6 +207,19 @@ export class ScheduleService implements OnModuleInit {
       return;
     }
 
+    // Safety limit: only backfill up to 30 days to prevent excessive log spam
+    // on first startup or after long downtime
+    const MAX_BACKFILL_DAYS = 30;
+    const maxStartDate = new Date(today);
+    maxStartDate.setDate(maxStartDate.getDate() - MAX_BACKFILL_DAYS);
+    if (startDate.getTime() < maxStartDate.getTime()) {
+      this.logger.warn(
+        `First log date is too old (${startDate.toISOString()}). ` +
+        `Clamping backfill to last ${MAX_BACKFILL_DAYS} days from today.`,
+      );
+      startDate = maxStartDate;
+    }
+
     // Yesterday in China timezone
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
@@ -218,8 +231,6 @@ export class ScheduleService implements OnModuleInit {
     // Iterate day-by-day from startDate to yesterday
     const current = new Date(startDate);
     while (current.getTime() < today.getTime()) {
-      this.logger.log(`Aggregating data for date ${current.toISOString()}`);
-
       try {
         await this.statisticsService.aggregateDaily(new Date(current));
       } catch (error) {

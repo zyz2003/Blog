@@ -361,19 +361,26 @@ export class StatisticsRepository {
    * Get the last (most recent) date in visitor_stats.
    * Returns null if no rows exist.
    * Matches Go GetLastAggregatedDate.
+   *
+   * Note: sql<> template does NOT apply Drizzle's mode:'timestamp' conversion,
+   * so we get the raw Unix-seconds integer and must convert manually.
    */
   async getLastStatDate(): Promise<Date | null> {
     const [result] = await this.db
-      .select({ maxDate: sql<Date>`MAX(${visitorStats.date})` })
+      .select({ maxDate: sql<number>`MAX(${visitorStats.date})` })
       .from(visitorStats);
 
-    return result?.maxDate ?? null;
+    if (!result?.maxDate) return null;
+    return new Date(result.maxDate * 1000);
   }
 
   /**
    * Get the first (earliest) created_at date in visitor_logs.
    * Returns null if no rows exist.
    * Matches Go GetFirstLogDate.
+   *
+   * Note: sql<> template does NOT apply Drizzle's mode:'timestamp' conversion,
+   * so we get the raw Unix-seconds integer and must convert manually.
    */
   async getFirstLogDate(): Promise<Date | null> {
     const [result] = await this.db
@@ -381,8 +388,6 @@ export class StatisticsRepository {
       .from(visitorLogs);
 
     if (!result?.minDate) return null;
-
-    // visitor_logs.createdAt is stored as Unix timestamp (integer)
     return new Date(result.minDate * 1000);
   }
 }
