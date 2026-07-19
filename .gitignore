@@ -23,3 +23,4 @@ DEVELOPMENT_WORKFLOW.md
 anheyu-app/
 .codegraph/
 _go-backend-archive/
+server/data/uploads/
