@@ -31,7 +31,12 @@ function generateNonAdminToken(seed: string): string {
  * Recursively check if an object contains a private key at any nesting level.
  * Returns the found key name or null if no private key found.
  */
-const PRIVATE_KEY_PATTERNS = ['JWT_SECRET', 'id_seed', 'SMTP_PASSWORD', 'DATABASE_URL', 'LOCAL_FILE_SIGNING_SECRET'];
+const PRIVATE_KEY_PATTERNS = [
+  'JWT_SECRET', 'id_seed', 'SMTP_PASSWORD', 'SMTP_USERNAME', 'SMTP_HOST',
+  'DATABASE_URL', 'LOCAL_FILE_SIGNING_SECRET', 'secret_id', 'secret_key',
+  'captcha_key', 'app_secret', 'smtp_pass', 'smtp_user', 'qq_api_key',
+  'pushoo', 'webhook', 'IP_API_TOKEN', 'cdn.secret',
+];
 
 function hasPrivateKey(obj: any, depth = 0): string | null {
   if (depth > 10 || !obj || typeof obj !== 'object') return null;
