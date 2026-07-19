@@ -46,7 +46,7 @@ Phases 12-15 complete. Every frontend API call verified against Go backend sourc
 
 | Phase | Name | Goal | Priority | Dependencies |
 |-------|------|------|----------|--------------|
-| 12 | API Inventory & Auth & Settings Verification | Collect all frontend API calls; verify auth + settings endpoints | P0 | None |
+| 12 | API Inventory & Auth & Settings Verification | 1/5 | In Progress|  |
 | 13 | Content Verification | Verify article/category/tag/page/file/comment/search endpoints | P0 | Phase 12 |
 | 14 | Features Verification | Verify statistics/links/album/doc-series/SEO/music/notifications/cron/backup | P1 | Phase 12 |
 | 15 | Final Integration & Cutover | Full regression, browser E2E walkthrough, production cutover | P0 | Phases 12-14 |
@@ -58,14 +58,17 @@ Phases 12-15 complete. Every frontend API call verified against Go backend sourc
 **Goal:** Systematically collect all API calls made by the frontend; verify auth and settings endpoints work correctly with the frontend
 
 **Verification Method:** Three-layer verification (D-260)
+
 1. Scan frontend source code for all API calls → build complete endpoint inventory
 2. For each endpoint, read Go handler source code → document expected request/response format
 3. Browser walkthrough with NestJS backend → confirm functionality
 
-**Plans:** 4 plans
+**Plans:** 1/5 plans executed
 
 Plans:
-- [ ] 12-01-PLAN.md — Build complete frontend API endpoint inventory (188 endpoints, Markdown table, cross-reference NestJS)
+
+- [ ] PLAN.md
+- [x] 12-01-PLAN.md — Build complete frontend API endpoint inventory (188 endpoints, Markdown table, cross-reference NestJS)
 - [ ] 12-02-PLAN.md — Auth verification (login field-by-field, token refresh dual-channel, captcha flow, 501 format)
 - [ ] 12-03-PLAN.md — Settings verification (unflatten, non-admin filtering, flat update format, site-config, 501 format)
 - [ ] 12-04-PLAN.md — Go comparison risk marking (per-endpoint risk levels, prioritized summary for Phases 13-15)

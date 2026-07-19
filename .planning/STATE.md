@@ -6,13 +6,13 @@ current_phase: 11
 current_plan: N/A
 status: verification_pending
 stopped_at: Phase 12 context gathered
-last_updated: "2026-07-19T05:22:25.861Z"
+last_updated: "2026-07-19T07:18:47.908Z"
 last_activity: 2026-07-19
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 5
+  completed_plans: 1
   percent: 0
 current_phase_name: null
 ---
@@ -105,7 +105,7 @@ current_phase_name: null
 
 ## Session
 
-**Last session:** 2026-07-19T05:22:25.850Z
+**Last session:** 2026-07-19T07:18:47.893Z
 **Stopped at:** Phase 12 context gathered
 **Resume file:** .planning/phases/12-api-inventory-auth-verification/12-CONTEXT.md
 
@@ -114,6 +114,7 @@ current_phase_name: null
 | Phase | Plan | Duration | Notes |
 |-------|------|----------|-------|
 | Phase 11 P05 | 22m | 5 tasks | 6 files |
+| Phase 12 P01 | 18m | 3 tasks | 1 files |
 
 ## Decisions
 
@@ -147,3 +148,7 @@ current_phase_name: null
 - [Post-11]: D-262: Default settings seeded from Go definition.go on startup (331 entries)
 - [Post-11]: D-263: sql<> template bypasses Drizzle mode:'timestamp' — use sql<number> + manual *1000
 - [Post-11]: D-264: ScheduleService backfill capped at 30 days to prevent log spam
+- [Phase ?]: D-274-REVISED: Auth 501 endpoints are compatibility gaps -- Go has real handlers
+- [Phase ?]: D-275-CONFIRMED: Theme Mall 20 endpoints all MISSING from NestJS -- no theme controller
+- [Phase ?]: D-276-CONFIRMED: config/export/import have service methods but no controller routes
+- [Phase ?]: D-277-CONFIRMED: files/share/create is frontend-only -- Go router also lacks it
