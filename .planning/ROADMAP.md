@@ -46,7 +46,7 @@ Phases 12-15 complete. Every frontend API call verified against Go backend sourc
 
 | Phase | Name | Goal | Priority | Dependencies |
 |-------|------|------|----------|--------------|
-| 12 | API Inventory & Auth & Settings Verification | 4/5 | In Progress|  |
+| 12 | API Inventory & Auth & Settings Verification | 4/5 | Complete|  |
 | 13 | Content Verification | Verify article/category/tag/page/file/comment/search endpoints | P0 | Phase 12 |
 | 14 | Features Verification | Verify statistics/links/album/doc-series/SEO/music/notifications/cron/backup | P1 | Phase 12 |
 | 15 | Final Integration & Cutover | Full regression, browser E2E walkthrough, production cutover | P0 | Phases 12-14 |
@@ -91,6 +91,16 @@ Plans:
 ### Phase 13: Content Verification
 
 **Goal:** Verify all content-related endpoints match Go backend behavior — articles, categories, tags, pages, file upload, comments, search
+
+**Plans:** 6 plans
+
+Plans:
+- [ ] 13-01-PLAN.md — CCP-1 schema audit + Article/Category/Tag field-by-field verification
+- [ ] 13-02-PLAN.md — Page module field-by-field verification
+- [ ] 13-03-PLAN.md — File module fixes (pagination, toFileItem) + File field-by-field verification
+- [ ] 13-04-PLAN.md — Comment module field-by-field verification
+- [ ] 13-05-PLAN.md — Search verification + drizzle-kit push
+- [ ] 13-06-PLAN.md — Full regression + Phase 13 test suite validation
 
 **Success Criteria:**
 
