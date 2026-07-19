@@ -5,6 +5,7 @@ import {
   closeTestApp,
   assertSuccessResponse,
   assertErrorResponse,
+  clearThrottleStorage,
   TestContext,
   ADMIN_PASSWORD,
 } from '../helpers/api-compat-helpers';
@@ -322,6 +323,112 @@ describe('Auth API Compat', () => {
       expect(typeof res.body.message).toBe('string');
       expect(res.body.message.length).toBeGreaterThan(0);
       expect(res.body.data).toBeNull();
+    });
+  });
+
+  // ─── Captcha Structure Verification ─────────────────────────────────
+
+  describe('Captcha Structure Verification', () => {
+    it('GET /api/public/captcha/config returns { provider: "none" } when provider is none', async () => {
+      // Ensure provider is "none" (default test data)
+      await ctx.settingsService.update({ 'captcha.provider': 'none' });
+
+      const res = await supertest(ctx.app.getHttpServer())
+        .get('/api/public/captcha/config');
+
+      assertSuccessResponse(res);
+      expect(res.body.data).toHaveProperty('provider', 'none');
+    });
+
+    it('captcha/config does not include image_captcha_length when provider is none', async () => {
+      const res = await supertest(ctx.app.getHttpServer())
+        .get('/api/public/captcha/config');
+
+      assertSuccessResponse(res);
+      expect(res.body.data.provider).toBe('none');
+      expect(res.body.data).not.toHaveProperty('image_captcha_length');
+    });
+
+    it('GET /api/public/captcha/image returns { captcha_id, image_base64 } when provider is image', async () => {
+      // Set provider to "image"
+      await ctx.settingsService.update({ 'captcha.provider': 'image' });
+
+      const res = await supertest(ctx.app.getHttpServer())
+        .get('/api/public/captcha/image');
+
+      assertSuccessResponse(res);
+      expect(res.body.data).toHaveProperty('captcha_id');
+      expect(typeof res.body.data.captcha_id).toBe('string');
+      expect(res.body.data.captcha_id.length).toBeGreaterThan(0);
+      expect(res.body.data).toHaveProperty('image_base64');
+      expect(typeof res.body.data.image_base64).toBe('string');
+      expect(res.body.data.image_base64.length).toBeGreaterThan(0);
+
+      // Reset provider back to "none"
+      await ctx.settingsService.update({ 'captcha.provider': 'none' });
+    });
+  });
+
+  // ─── Captcha Behavior Verification ──────────────────────────────────
+
+  describe('Captcha Behavior Verification', () => {
+    it('login succeeds without captcha fields when provider is none', async () => {
+      // Ensure provider is "none"
+      await ctx.settingsService.update({ 'captcha.provider': 'none' });
+      // Clear throttle storage to avoid 429 from prior login calls
+      clearThrottleStorage(ctx.app);
+
+      const res = await supertest(ctx.app.getHttpServer())
+        .post('/api/auth/login')
+        .send({ email: 'admin@test.com', password: ADMIN_PASSWORD });
+
+      assertSuccessResponse(res, 200);
+    });
+
+    it('login fails with wrong captcha answer when provider is image', async () => {
+      // Set provider to "image"
+      await ctx.settingsService.update({ 'captcha.provider': 'image' });
+      clearThrottleStorage(ctx.app);
+
+      // Generate a captcha image
+      const captchaRes = await supertest(ctx.app.getHttpServer())
+        .get('/api/public/captcha/image');
+
+      const captchaId = captchaRes.body.data.captcha_id;
+
+      // Login with wrong captcha answer
+      const res = await supertest(ctx.app.getHttpServer())
+        .post('/api/auth/login')
+        .send({
+          email: 'admin@test.com',
+          password: ADMIN_PASSWORD,
+          image_captcha_id: captchaId,
+          image_captcha_answer: 'wrong_answer',
+        });
+
+      assertErrorResponse(res, 400);
+      expect(res.body.data).toBeNull();
+
+      // Reset provider to "none"
+      await ctx.settingsService.update({ 'captcha.provider': 'none' });
+    });
+
+    it('login accepts captcha fields in request body without error when provider is none', async () => {
+      // Ensure provider is "none"
+      await ctx.settingsService.update({ 'captcha.provider': 'none' });
+      clearThrottleStorage(ctx.app);
+
+      // Login with captcha fields present (should be ignored when provider=none)
+      const res = await supertest(ctx.app.getHttpServer())
+        .post('/api/auth/login')
+        .send({
+          email: 'admin@test.com',
+          password: ADMIN_PASSWORD,
+          image_captcha_id: 'some-id',
+          image_captcha_answer: 'some-answer',
+        });
+
+      assertSuccessResponse(res, 200);
     });
   });
 });

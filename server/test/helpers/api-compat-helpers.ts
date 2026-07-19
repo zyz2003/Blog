@@ -7,6 +7,7 @@
  */
 import { Test } from '@nestjs/testing';
 import { ValidationPipe, INestApplication } from '@nestjs/common';
+import { ThrottlerStorage } from '@nestjs/throttler';
 import supertest from 'supertest';
 import * as bcryptjs from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
@@ -30,6 +31,7 @@ export interface TestContext {
   adminToken: string;
   request: (method: string) => supertest.Test; // bound to app
   ts: number; // unique timestamp for test data
+  settingsService: SettingsService;
 }
 
 // ─── Constants ──────────────────────────────────────────────────────────
@@ -83,7 +85,7 @@ export async function createTestApp(): Promise<TestContext> {
     return supertest(server)[method as keyof supertest.SuperTest<any>]() as any;
   };
 
-  return { app, db, adminToken, request, ts };
+  return { app, db, adminToken, request, ts, settingsService };
 }
 
 // ─── seedBaseData ───────────────────────────────────────────────────────
@@ -229,6 +231,24 @@ export function assertErrorResponse(
   expect(res.body).toHaveProperty('message');
   if (code !== undefined) {
     expect(res.body.code).toBe(code);
+  }
+}
+
+// ─── clearThrottleStorage ────────────────────────────────────────────────
+
+/**
+ * Clear the ThrottlerGuard rate-limit storage between tests.
+ * The auth login endpoint has @Throttle({ limit: 5, ttl: 60000 }) which
+ * causes 429 errors when multiple login calls are made in the same test run.
+ */
+export function clearThrottleStorage(app: INestApplication): void {
+  try {
+    const storage = app.get(ThrottlerStorage) as any;
+    if (storage?.storage instanceof Map) {
+      storage.storage.clear();
+    }
+  } catch {
+    // ThrottlerStorage may not be available in all test configurations
   }
 }
 
