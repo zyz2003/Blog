@@ -333,9 +333,33 @@ describe('Settings API Compat', () => {
 
       assertSuccessResponse(res);
       const keyCount = countAllKeys(res.body.data);
-      // With 331 seeded settings, public keys should produce 200+ keys
+      // With 334 seeded settings, public keys should produce 200+ keys
       // after unflattening (some keys are private and excluded)
       expect(keyCount).toBeGreaterThanOrEqual(200);
+    });
+
+    it('contains userpanel public keys', async () => {
+      const res = await supertest(ctx.app.getHttpServer())
+        .get('/api/public/site-config');
+
+      assertSuccessResponse(res);
+      const data = res.body.data;
+      expect(data).toHaveProperty('userpanel');
+      expect(data.userpanel).toHaveProperty('show_user_center');
+      expect(data.userpanel).toHaveProperty('show_notifications');
+      expect(data.userpanel).toHaveProperty('show_publish_article');
+      expect(data.userpanel).toHaveProperty('show_admin_dashboard');
+    });
+
+    it('contains about.page.comic and friend link custom code keys', async () => {
+      const res = await supertest(ctx.app.getHttpServer())
+        .get('/api/public/site-config');
+
+      assertSuccessResponse(res);
+      const data = res.body.data;
+      expect(data.about.page).toHaveProperty('comic');
+      expect(data).toHaveProperty('FRIEND_LINK_APPLY_CUSTOM_CODE_HTML');
+      expect(data).toHaveProperty('FRIEND_LINK_APPLY_CUSTOM_CODE');
     });
   });
 
