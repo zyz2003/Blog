@@ -157,18 +157,16 @@ export class StatisticsRepository {
       .where(eq(urlStats.urlPath, urlPath));
 
     if (existing) {
-      // Weighted average: (old_avg * old_count + new_duration) / (old_count + 1)
-      const newTotalViews = existing.totalViews + 1;
-      const newAvgDuration =
-        (existing.avgDuration * existing.totalViews + duration) / newTotalViews;
-
+      // Atomic increment using sql template — all fields computed in SQL
+      // to avoid stale-read issues under concurrent access.
+      // avgDuration: weighted average (old_avg * old_count + new_duration) / (old_count + 1)
       await this.db
         .update(urlStats)
         .set({
           totalViews: sql`${urlStats.totalViews} + 1`,
           uniqueViews: sql`${urlStats.uniqueViews} + ${isUnique ? 1 : 0}`,
           bounceCount: sql`${urlStats.bounceCount} + ${isBounce ? 1 : 0}`,
-          avgDuration: newAvgDuration,
+          avgDuration: sql`CASE WHEN ${urlStats.totalViews} = 0 THEN ${duration} ELSE (${urlStats.avgDuration} * ${urlStats.totalViews} + ${duration}) / (${urlStats.totalViews} + 1) END`,
           lastVisitedAt: new Date(),
           updatedAt: new Date(),
         })
