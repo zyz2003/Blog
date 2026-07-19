@@ -785,15 +785,19 @@ For each endpoint verification:
 | A4 | All config/backup endpoints (17-21) exist in NestJS | Section 1 | May be missing NestJS implementation |
 | A5 | Theme Mall endpoints (165-184) are fully implemented in NestJS | Section 1 | May be partially implemented or stubbed |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Go `expires` JSON serialization:** Does Go serialize `int64` as a number or string in the login response JSON? The `response.Success(c, gin.H{...})` pattern serializes Go values directly, so `int64` would become a JSON number. But the frontend type expects `string`. Need to check actual Go output.
+1. **Go `expires` JSON serialization:** Does Go serialize `int64` as a number or string in the login response JSON?
+   - **Resolution:** Go's `gin.H{"expires": expiresAt}` serializes `int64` as a JSON number. NestJS returns `String()` which serializes as a JSON string. This is a confirmed HIGH risk compatibility gap. Plan 02 Task 3 adds explicit type assertions and documents the finding.
 
-2. **Backup controller in NestJS:** Does the NestJS backend implement the config/backup endpoints (listBackups, createBackup, etc.)? These were not found in the controller grep scan.
+2. **Backup controller in NestJS:** Does the NestJS backend implement the config/backup endpoints (listBackups, createBackup, etc.)?
+   - **Resolution:** Plan 01 Task 3 cross-references all frontend endpoints against NestJS controllers. Any MISSING backup endpoints will be identified and documented in the gap summary.
 
-3. **Theme Mall controller in NestJS:** Does the NestJS backend implement theme-mall endpoints? These were not found in the controller grep scan.
+3. **Theme Mall controller in NestJS:** Does the NestJS backend implement theme-mall endpoints?
+   - **Resolution:** Plan 01 Task 3 cross-references all frontend endpoints against NestJS controllers. Any MISSING theme-mall endpoints will be identified and documented in the gap summary.
 
-4. **`files/share/create` endpoint:** Frontend defines `createShareLinkApi` hitting `/api/files/share/create`. This route does not appear in the Go router. Is this a frontend-only feature or was it added later?
+4. **`files/share/create` endpoint:** Frontend defines `createShareLinkApi` hitting `/api/files/share/create`. This route does not appear in the Go router.
+   - **Resolution:** This is a frontend-only definition with no Go backend route. It will be marked as MISSING in the inventory with a note that Go also lacks this endpoint (frontend-only feature).
 
 ## Environment Availability
 

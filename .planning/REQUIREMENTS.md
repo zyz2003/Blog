@@ -45,6 +45,16 @@
 - [ ] API-COMPAT-04: JWT Token 结构与原 Go 后端兼容（前端现有 Token 可正常使用）
 - [ ] API-COMPAT-05: 分页参数和响应格式与原 Go 后端一致
 - [ ] API-COMPAT-06: 错误码和错误消息与原 Go 后端一致
+- [ ] API-COMPAT-07: 前端所有 API 调用均可在新后端正常工作（逐接口验证）
+- [ ] API-COMPAT-08: 前端使用的每个响应字段均与 Go 后端一致（逐字段验证）
+
+### 前端集成验证（Phases 12-15）
+
+- [ ] VERIFY-01: 前端全部 API 调用已收集并编目（接口清单）
+- [ ] VERIFY-02: Auth + Settings 验证通过（Phase 12）
+- [ ] VERIFY-03: Content 验证通过：article/category/tag/page/file/comment/search（Phase 13）
+- [ ] VERIFY-04: Features 验证通过：stats/links/album/doc-series/SEO/music/notifications/cron/backup（Phase 14）
+- [ ] VERIFY-05: 全量回归通过，前端所有页面无错误运行（Phase 15）
 
 ### 基础设施
 
@@ -116,11 +126,28 @@
 - [ ] 所有 P0 验收标准通过
 - [ ] 前端连接新后端后所有 P0 功能正常工作（无前端修改）
 - [ ] API 兼容性测试通过（对比原 Go 后端的响应格式）
+- [ ] 前端全部 API 调用逐接口验证通过（VERIFY-01 ~ VERIFY-05）
 - [ ] SQLite WAL 模式 + busy_timeout 已配置
 - [ ] 数据库迁移可重复执行
 - [ ] `npm run dev` 一键启动
 - [ ] MIGRATION-01: PostgreSQL → SQLite 迁移工具可用
 - [ ] INTEGRATION-01: 端到端 API 兼容性测试套件通过
 
+## Verification Strategy
+
+Go 后端无法启动（需要 PostgreSQL + Redis），采用三层验证法（D-260）：
+
+| 层 | 方式 | 验证什么 |
+|---|---|---|
+| 1. 前端接口清单 | 扫描前端代码所有 API 调用 | 前端用了哪些接口、传了什么参数、期望什么字段 |
+| 2. Go 代码对照 | 读 Go handler 逐字段对比 | NestJS 返回的字段名、类型、嵌套结构是否和 Go 一致 |
+| 3. 端到端走查 | 浏览器操作前端 + NestJS 后端 | 功能是否正常工作、边界情况是否有 bug |
+
+验证分 4 个阶段（Phase 12-15）：
+- Phase 12: API 清单收集 + Auth + Settings 验证
+- Phase 13: Content 验证（article/category/tag/page/file/comment/search）
+- Phase 14: Features 验证（stats/links/album/doc-series/SEO/music/notifications/cron/backup）
+- Phase 15: 全量回归 + 浏览器端到端走查 + 生产切换
+
 ---
-*Last updated: 2026-06-28*
+*Last updated: 2026-07-19*

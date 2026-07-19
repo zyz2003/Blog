@@ -21,12 +21,16 @@
 - [x] 相册与文档系列 API 兼容：相册 CRUD + 分类 + 批量导入导出 + CreateOrRestore 去重；文档系列 CRUD + 文章关联 — Phase 08
 - [x] SEO/音乐/通知 API 兼容：RSS feed、Sitemap、音乐代理、邮件服务、通知系统、订阅管理 — Phase 09
 - [x] 后端监听端口 8091（与原 Go 后端一致） — Phase 01
-
-### Active
-
 - [x] 友链管理 API 兼容：友链 CRUD、分类、标签、申请、审核、健康检查 — Phase 07
 - [x] 数据迁移工具：从原 Go SQLite 导入数据到 NestJS SQLite — Phase 11 (MIGRATION-01)
 - [x] 端到端 API 兼容性测试：292 个测试覆盖所有已实现端点 — Phase 11 (INTEGRATION-01)
+- [x] 默认配置种子：启动时自动补全 Go definition.go 中的 331 个默认设置 — Post-11 fix
+- [x] ScheduleService 修复：时间戳转换修正 + 30天回溯上限 — Post-11 fix
+
+### Active
+
+- [ ] 前端集成验证：逐接口验证所有前端 API 调用与 Go 后端兼容 — Phases 12-15
+- [ ] 前端接口清单收集：扫描前端代码提取所有 API 调用 — Phase 12
 
 ### Out of Scope
 
@@ -40,10 +44,11 @@
 ## Context
 
 - 原项目：https://github.com/anzhiyu-c/anheyu-app
-- 原后端：Go v1.24.4 + Ent ORM + PostgreSQL 17 + Redis
+- 原后端：Go v1.24.4 + Ent ORM + PostgreSQL 17 + Redis（已归档至 _go-backend-archive/）
 - 前端：Next.js 16 + React 19 + TypeScript（已克隆到 anheyu-app/frontend）
 - 前端通过 next.config.ts 的 rewrites 将 /api/* 代理到后端 localhost:8091
 - 当前开发环境：Node.js v22.14.0，无 Go/Docker/PostgreSQL/Redis
+- Go 后端无法启动（缺 PostgreSQL + Redis），验证采用三层验证法：前端 API 扫描 + Go 代码对照 + 浏览器走查
 
 ## Constraints
 
@@ -52,16 +57,20 @@
 - **端口**: 8091 — 与原后端一致，前端 next.config.ts 无需修改
 - **部署**: 本地开发优先，npm run dev 一键启动前后端
 - **数据**: 需提供 PostgreSQL → SQLite 迁移工具
+- **验证方法**: 三层验证法（前端 API 扫描 + Go 源码对照 + 浏览器走查），不启动 Go 后端
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| NestJS 框架 | 结构化程度高，装饰器+模块化，与 Go 后端的 handler/service/repo 分层最接近 | — Pending |
-| Drizzle ORM | 轻量、类型安全、与 SQLite 搭配最好，无额外运行时 | — Pending |
-| SQLite 数据库 | 零安装零配置，文件级存储，适合个人博客场景 | — Pending |
-| 前端不动 | 降低风险和工作量，只要 API 兼容就行 | — Pending |
-| 端口 8091 | 保持与原后端一致，前端配置零改动 | — Pending |
+| NestJS 框架 | 结构化程度高，装饰器+模块化，与 Go 后端的 handler/service/repo 分层最接近 | ✓ Implemented |
+| Drizzle ORM | 轻量、类型安全、与 SQLite 搭配最好，无额外运行时 | ✓ Implemented |
+| SQLite 数据库 | 零安装零配置，文件级存储，适合个人博客场景 | ✓ Implemented |
+| 前端不动 | 降低风险和工作量，只要 API 兼容就行 | ✓ In progress |
+| 端口 8091 | 保持与原后端一致，前端配置零改动 | ✓ Implemented |
+| 三层验证法 | Go 后端无法启动，用前端 API 扫描 + Go 源码对照 + 浏览器走查替代实时对比 | Pending Phase 12 |
+| 前端驱动验证 | 前端实际调用的接口才是需要验证的，不是后端实现了什么 | Pending Phase 12 |
+| 4阶段验证 | 验证性质不同于开发，拆太细增加管理开销；4阶段覆盖：基础+内容+功能+收尾 | Pending Phase 12 |
 
 ## Evolution
 
@@ -81,4 +90,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-07-12 after Phase 08 completion*
+*Last updated: 2026-07-19 — verification phases consolidated to 12-15*
