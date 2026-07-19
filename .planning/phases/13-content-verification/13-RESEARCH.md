@@ -416,22 +416,19 @@ pagination: { page, pageSize, total }
 | A5 | FeedListResponse.page_size vs ArticleListResponse.pageSize distinction is intentional in Go | Common Pitfalls | If Go actually uses same key for both, NestJS should too |
 | A6 | File module permission:0 and capability:0 are acceptable placeholders | Common Pitfalls | Frontend may break on type mismatch (number vs null/string) |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Article import/export/batch delete 501 status**
+1. **Article import/export/batch delete 501 status** — RESOLVED by Plan 01 Task 1: verify 501 response and document as functional gap. Frontend usage will be checked during execution.
    - What we know: NestJS returns 501 for these endpoints; Go has full implementations; 12-RISK-MARKING.md marks them as NONE risk
-   - What's unclear: Whether the frontend actually calls these endpoints in production flows
-   - Recommendation: Check frontend code for actual usage; if used, reclassify as MEDIUM risk
+   - Resolution: Plan 01 Task 1 action verifies 501 status and documents as functional gap per RESEARCH.md Pitfall 5
 
-2. **FeedListResponse page_size vs ArticleListResponse pageSize**
+2. **FeedListResponse page_size vs ArticleListResponse pageSize** — RESOLVED by Plan 01 Task 1: read Go article handler to confirm exact response structure.
    - What we know: Frontend types define FeedListResponse with `page_size` and ArticleListResponse without explicit pageSize/page_size
-   - What's unclear: What Go's public article list actually returns for the page size key
-   - Recommendation: Read Go article handler ListPublic/ListHome to verify exact response structure
+   - Resolution: Plan 01 Task 1 action reads Go article_handler.ListPublic/ListHome to confirm exact key names
 
-3. **File module cursor-based pagination implementation**
+3. **File module cursor-based pagination implementation** — RESOLVED by Plan 03 Task 1: add next_token/is_cursor fields to match Go contract.
    - What we know: Go uses cursor-based pagination with next_token/is_cursor; NestJS uses offset-based with total
-   - What's unclear: Whether the frontend actually uses cursor-based pagination or falls back to offset-based
-   - Recommendation: Check frontend file-manager.ts pagination handling code
+   - Resolution: Plan 03 Task 1 adds next_token (empty string) and is_cursor (false) fields to pagination, matching Go Pagination struct
 
 ## Environment Availability
 

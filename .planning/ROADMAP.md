@@ -95,11 +95,22 @@ Plans:
 **Plans:** 6 plans
 
 Plans:
+**Wave 1**
+
 - [ ] 13-01-PLAN.md — CCP-1 schema audit + Article/Category/Tag field-by-field verification
 - [ ] 13-02-PLAN.md — Page module field-by-field verification
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 13-03-PLAN.md — File module fixes (pagination, toFileItem) + File field-by-field verification
 - [ ] 13-04-PLAN.md — Comment module field-by-field verification
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 13-05-PLAN.md — Search verification + drizzle-kit push
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
 - [ ] 13-06-PLAN.md — Full regression + Phase 13 test suite validation
 
 **Success Criteria:**
