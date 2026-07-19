@@ -106,8 +106,8 @@ current_phase_name: null
 ## Session
 
 **Last session:** 2026-07-19T07:57:08.311Z
-**Stopped at:** Phase 12 context gathered
-**Resume file:** .planning/phases/12-api-inventory-auth-verification/12-CONTEXT.md
+**Stopped at:** Completed 12-02 auth verification tests
+**Resume file:** .planning/phases/12-api-inventory-auth-verification/12-02-SUMMARY.md
 
 ## Performance Metrics
 
@@ -115,6 +115,7 @@ current_phase_name: null
 |-------|------|----------|-------|
 | Phase 11 P05 | 22m | 5 tasks | 6 files |
 | Phase 12 P01 | 18m | 3 tasks | 1 files |
+| Phase 12 P02 | 26m | 3 tasks | 2 files |
 | Phase 12 P03 | 27m | 3 tasks | 2 files |
 
 ## Decisions
@@ -155,3 +156,6 @@ current_phase_name: null
 - [Phase ?]: D-277-CONFIRMED: files/share/create is frontend-only -- Go router also lacks it
 - [Phase ?]: Removed 57 private keys from PUBLIC_SETTING_KEYS that were incorrectly exposed
 - [Phase ?]: Settings update test uses flat key-value format matching Go handler, not wrapped { settings: {...} } format
+- [Phase 12]: D-278: Login response field-by-field verification matches Go LoginUserInfoResponse struct (userGroupID is number, other IDs are Sqids strings)
+- [Phase 12]: D-279: ThrottlerStorage cleared between captcha behavior tests to avoid 429 rate limiting
+- [Phase 12]: D-280: Test user seeding uses onConflictDoUpdate on username (not onConflictDoNothing on id) to handle existing admin user in file DB
