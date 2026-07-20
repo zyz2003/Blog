@@ -14,6 +14,7 @@ import {
   EntityType,
 } from '../common/utils/sqids.util';
 import { ErrorCodes } from '../common/constants/error-codes';
+import { toISODateString } from '../common/utils/time.util';
 import { parseAnzhiyuURI, resolvePhysicalPath, inferMimeType } from './utils/path-resolver';
 import { ensureDirectoryExists, isThumbnailableExtension } from './utils/file-system';
 import { findOrCreateParentPath } from './utils/parent-path';
@@ -98,7 +99,7 @@ export class FileService {
     return {
       files: list.map((f: any) => this.toFileItem(f)),
       parent,
-      pagination: { page, pageSize, total },
+      pagination: { page, page_size: pageSize, next_token: '', is_cursor: true },
       props: { total },
       context_hint: '',
       storage_policy: storagePolicy,
@@ -809,13 +810,13 @@ export class FileService {
       name: file.name,
       type: file.type,
       size: file.size,
-      created_at: file.createdAt,
-      updated_at: file.updatedAt,
+      created_at: toISODateString(file.createdAt),
+      updated_at: toISODateString(file.updatedAt),
       path: '',
       owned: true,
       shared: false,
-      permission: 0,
-      capability: 0,
+      permission: null,
+      capability: '',
       primary_entity_public_id: file.primaryEntityId
         ? generatePublicID(file.primaryEntityId, EntityType.StorageEntity)
         : null,
