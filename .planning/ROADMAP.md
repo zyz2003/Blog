@@ -47,7 +47,7 @@ Phases 12-15 complete. Every frontend API call verified against Go backend sourc
 | Phase | Name | Goal | Priority | Dependencies |
 |-------|------|------|----------|--------------|
 | 12 | API Inventory & Auth & Settings Verification | 4/5 | Complete|  |
-| 13 | Content Verification | Verify article/category/tag/page/file/comment/search endpoints | P0 | Phase 12 |
+| 13 | Content Verification | 1/6 | Complete    | 2026-07-20 |
 | 14 | Features Verification | Verify statistics/links/album/doc-series/SEO/music/notifications/cron/backup | P1 | Phase 12 |
 | 15 | Final Integration & Cutover | Full regression, browser E2E walkthrough, production cutover | P0 | Phases 12-14 |
 
@@ -92,26 +92,26 @@ Plans:
 
 **Goal:** Verify all content-related endpoints match Go backend behavior — articles, categories, tags, pages, file upload, comments, search
 
-**Plans:** 6 plans
+**Plans:** 1/6 plans complete
 
 Plans:
 **Wave 1**
 
-- [ ] 13-01-PLAN.md — CCP-1 schema audit + Article/Category/Tag field-by-field verification
-- [ ] 13-02-PLAN.md — Page module field-by-field verification
+- [x] 13-01-PLAN.md — CCP-1 schema audit + Article/Category/Tag field-by-field verification
+- [x] 13-02-PLAN.md — Page module field-by-field verification
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 13-03-PLAN.md — File module fixes (pagination, toFileItem) + File field-by-field verification
-- [ ] 13-04-PLAN.md — Comment module field-by-field verification
+- [x] 13-03-PLAN.md — File module fixes (pagination, toFileItem) + File field-by-field verification
+- [x] 13-04-PLAN.md — Comment module field-by-field verification
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 13-05-PLAN.md — Search verification + drizzle-kit push
+- [x] 13-05-PLAN.md — Search verification + drizzle-kit push
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 13-06-PLAN.md — Full regression + Phase 13 test suite validation
+- [x] 13-06-PLAN.md — Full regression + Phase 13 test suite validation
 
 **Success Criteria:**
 
