@@ -1,8 +1,9 @@
 /**
  * AlbumResponseDto — TypeScript interface matching Go AlbumResponse structure exactly.
- * Reference: pkg/handler/album/handler.go inline struct.
+ * Reference: pkg/handler/album/handler.go inline struct + pkg/domain/model/album.go.
  * Albums use integer IDs (not Sqids) per D-183.
- * All JSON keys use snake_case matching Go JSON tags.
+ * camelCase fields match Go JSON tags per D-304.
+ * snake_case date fields match Go JSON tags per D-305.
  */
 export interface AlbumResponseDto {
   id: number;
@@ -24,6 +25,7 @@ export interface AlbumResponseDto {
   width: number;
   height: number;
   widthAndHeight: string;
+  fileHash: string | null;
   displayOrder: number;
   title: string;
   description: string;

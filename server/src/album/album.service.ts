@@ -35,6 +35,7 @@ export interface BatchImportResult {
   successCount: number;
   failCount: number;
   skipCount: number;
+  total: number;
   errors: BatchImportError[];
   duplicates: string[];
 }
@@ -374,6 +375,7 @@ export class AlbumService {
       successCount: 0,
       failCount: 0,
       skipCount: 0,
+      total: params.urls.length,
       errors: [],
       duplicates: [],
     };
@@ -996,6 +998,7 @@ export class AlbumService {
       width: album.width ?? 0,
       height: album.height ?? 0,
       widthAndHeight: album.width && album.height ? `${album.width}x${album.height}` : '',
+      fileHash: album.fileHash ?? null,
       displayOrder: album.displayOrder ?? 0,
       title: album.title ?? '',
       description: album.description ?? '',
