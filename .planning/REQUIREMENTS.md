@@ -88,8 +88,8 @@
 
 ### P1 功能
 
-- [ ] STATS-01: 统计：访客记录、趋势统计
-- [ ] STATS-02: 统计：来源分析、设备分析
+- [x] STATS-01: 统计：访客记录、趋势统计
+- [x] STATS-02: 统计：来源分析、设备分析
 - [x] COMMENT-01: 评论：CRUD、审核、嵌套回复
 - [ ] LINK-FRIEND-01: 友链：CRUD、分类、健康检查
 - [ ] STORAGE-01: 存储策略：CRUD
@@ -98,7 +98,7 @@
 ### P2 功能
 
 - [x] ALBUM-01: 相册：CRUD、分类
-- [ ] DOCSERIES-01: 文档系列：CRUD
+- [x] DOCSERIES-01: 文档系列：CRUD
 - [ ] RSS-01: RSS：XML 生成
 - [ ] SITEMAP-01: Sitemap：XML 生成
 - [ ] MUSIC-01: 音乐：数据接口

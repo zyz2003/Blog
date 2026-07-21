@@ -4,12 +4,12 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 14
 current_phase_name: features-verification
-current_plan: 3
+current_plan: 4
 status: executing
-stopped_at: Completed 14-02-PLAN.md
-last_updated: "2026-07-21T13:44:29Z"
+stopped_at: Completed 14-03-PLAN.md
+last_updated: "2026-07-21T14:15:00Z"
 last_activity: 2026-07-21
-last_activity_desc: Phase 14 plan 02 complete
+last_activity_desc: Phase 14 plan 03 complete
 progress:
   total_phases: 4
   completed_phases: 0
@@ -26,8 +26,8 @@ progress:
 |-------|-------|
 | Milestone | M4 - Frontend Integration Verification |
 | Phase | 14 (features-verification) — EXECUTING |
-| Current Plan | 2 |
-| Status | Executing Phase 14 — Plan 02 complete |
+| Current Plan | 3 |
+| Status | Executing Phase 14 — Plan 03 complete |
 | Last Activity | 2026-07-21 — Phase 14 execution started |
 
 ## Phase Status
@@ -47,7 +47,7 @@ progress:
 | 11 | Migration & Integration | Complete | 5 | 2026-07-18 |
 | 12 | API Inventory & Auth & Settings Verification | In Progress | 4/5 | 2026-07-19 |
 | 13 | Content Verification | Pending | — | — |
-| 14 | Features Verification | In Progress | 2/7 | 2026-07-21 |
+| 14 | Features Verification | In Progress | 3/7 | 2026-07-21 |
 | 15 | Final Integration & Cutover | Pending | — | — |
 
 ## Active Decisions
@@ -70,6 +70,9 @@ progress:
 | D-307 | Added fileHash to AlbumResponseDto — Go Album model has it but handler response omits it | Full field coverage; frontend AlbumForm type uses fileHash | 14 |
 | D-308 | Added total to BatchImportResult — Go handler adds total: len(req.URLs) | Frontend BatchImportAlbumsResult type has total field | 14 |
 | D-309 | widthAndHeight is known deviation — present in Go AlbumResponse handler and NestJS, not in Go Album model | Computed field matching Go handler behavior | 14 |
+| D-310 | Doc-series Sqids encoding verified consistent with Go — same DB id + same seed produces same Sqids string, EntityType.DocSeries=12 matches Go iota | Field verification confirms encoding consistency | 14 |
+| D-311 | Statistics date format per CCP-2: only assert valid ISO date string, not exact format (Go RFC3339 vs NestJS ISO 8601 with ms) | Both formats valid, frontend handles both | 14 |
+| D-312 | Statistics weekly/monthly trend arrays are always empty per Go backend | Go GetVisitorTrend only returns daily data | 14 |
 
 ## Blockers
 
@@ -110,9 +113,9 @@ progress:
 
 ## Session
 
-**Last session:** 2026-07-21T13:44:29Z
-**Stopped at:** Completed 14-02-PLAN.md
-**Resume file:** .planning/phases/14-features-verification/14-03-PLAN.md
+**Last session:** 2026-07-21T14:15:00Z
+**Stopped at:** Completed 14-03-PLAN.md
+**Resume file:** .planning/phases/14-features-verification/14-04-PLAN.md
 
 ## Performance Metrics
 
@@ -124,6 +127,7 @@ progress:
 | Phase 12 P03 | 27m | 3 tasks | 2 files |
 | Phase 12 P04 | 18m | 2 tasks | 1 files |
 | Phase 14 P02 | 25m | 2 tasks | 3 files |
+| Phase 14 P03 | 15m | 2 tasks | 2 files |
 
 ## Decisions
 
@@ -171,3 +175,6 @@ progress:
 - [Phase 12]: D-283: Link/LinkCategory/LinkTag ID type may be HIGH risk if frontend expects int (Go uses int, NestJS may use Sqids string)
 - [Phase ?]: D-301/D-303: Link.id returns raw DB int (number), not Sqids string, matching Go LinkDTO.id: int
 - [Phase ?]: D-301/D-303: BatchDeleteLinksRequestDto.ids and SortItem.id changed from string to number, matching Go []int
+- [Phase 14]: D-310: Doc-series Sqids encoding verified consistent with Go (EntityType.DocSeries=12)
+- [Phase 14]: D-311: Statistics date format per CCP-2 — only assert valid ISO, not exact format
+- [Phase 14]: D-312: Statistics weekly/monthly trend arrays always empty per Go backend

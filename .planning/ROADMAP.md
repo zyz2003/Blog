@@ -48,7 +48,7 @@ Phases 12-15 complete. Every frontend API call verified against Go backend sourc
 |-------|------|------|----------|--------------|
 | 12 | API Inventory & Auth & Settings Verification | 4/5 | Complete|  |
 | 13 | Content Verification | 1/6 | Complete    | 2026-07-20 |
-| 14 | Features Verification | 2/7 | In Progress| 2026-07-21 |
+| 14 | Features Verification | 3/7 | In Progress| 2026-07-21 |
 | 15 | Final Integration & Cutover | Full regression, browser E2E walkthrough, production cutover | P0 | Phases 12-14 |
 
 ---
@@ -137,7 +137,7 @@ Plans:
 
 **Goal:** Verify all auxiliary feature endpoints — statistics, friend links, albums, doc series, SEO, music, notifications, scheduled tasks, backup
 
-**Plans:** 2/7 plans executed
+**Plans:** 3/7 plans executed
 
 Plans:
 
@@ -148,7 +148,7 @@ Plans:
 
 **Wave 2** (MEDIUM risk verification, blocked on Wave 1)
 
-- [ ] 14-03-PLAN.md — Verify Doc-series (Sqids encoding) + Statistics (structures, dates) field-by-field
+- [x] 14-03-PLAN.md — Verify Doc-series (Sqids encoding) + Statistics (structures, dates) field-by-field
 - [ ] 14-04-PLAN.md — Fix storage-policy date serialization + UserGroup.description nullability + verify structures
 
 **Wave 3** (LOW/NONE risk verification, blocked on Wave 2)
