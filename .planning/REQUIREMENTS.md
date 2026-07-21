@@ -97,7 +97,7 @@
 
 ### P2 功能
 
-- [ ] ALBUM-01: 相册：CRUD、分类
+- [x] ALBUM-01: 相册：CRUD、分类
 - [ ] DOCSERIES-01: 文档系列：CRUD
 - [ ] RSS-01: RSS：XML 生成
 - [ ] SITEMAP-01: Sitemap：XML 生成

@@ -4,17 +4,17 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 14
 current_phase_name: features-verification
-current_plan: 2
+current_plan: 3
 status: executing
-stopped_at: Completed 14-01-PLAN.md
-last_updated: "2026-07-21T13:15:13.692Z"
+stopped_at: Completed 14-02-PLAN.md
+last_updated: "2026-07-21T13:44:29Z"
 last_activity: 2026-07-21
-last_activity_desc: Phase 14 execution started
+last_activity_desc: Phase 14 plan 02 complete
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 18
-  completed_plans: 6
+  completed_plans: 7
   percent: 0
 ---
 
@@ -26,8 +26,8 @@ progress:
 |-------|-------|
 | Milestone | M4 - Frontend Integration Verification |
 | Phase | 14 (features-verification) — EXECUTING |
-| Current Plan | 1 |
-| Status | Executing Phase 14 |
+| Current Plan | 2 |
+| Status | Executing Phase 14 — Plan 02 complete |
 | Last Activity | 2026-07-21 — Phase 14 execution started |
 
 ## Phase Status
@@ -47,7 +47,7 @@ progress:
 | 11 | Migration & Integration | Complete | 5 | 2026-07-18 |
 | 12 | API Inventory & Auth & Settings Verification | In Progress | 4/5 | 2026-07-19 |
 | 13 | Content Verification | Pending | — | — |
-| 14 | Features Verification | In Progress | 1/7 | 2026-07-21 |
+| 14 | Features Verification | In Progress | 2/7 | 2026-07-21 |
 | 15 | Final Integration & Cutover | Pending | — | — |
 
 ## Active Decisions
@@ -67,6 +67,9 @@ progress:
 | D-262 | Default settings seeded from Go definition.go on startup | Go backend writes 331 defaults on first run; NestJS must do the same | post-11 fix |
 | D-263 | sql<> template does NOT apply Drizzle mode:'timestamp' conversion | Use sql<number> + manual *1000 for raw SQL aggregate queries | post-11 fix |
 | D-264 | ScheduleService backfill capped at 30 days | Prevents log spam on startup after long downtime | post-11 fix |
+| D-307 | Added fileHash to AlbumResponseDto — Go Album model has it but handler response omits it | Full field coverage; frontend AlbumForm type uses fileHash | 14 |
+| D-308 | Added total to BatchImportResult — Go handler adds total: len(req.URLs) | Frontend BatchImportAlbumsResult type has total field | 14 |
+| D-309 | widthAndHeight is known deviation — present in Go AlbumResponse handler and NestJS, not in Go Album model | Computed field matching Go handler behavior | 14 |
 
 ## Blockers
 
@@ -107,9 +110,9 @@ progress:
 
 ## Session
 
-**Last session:** 2026-07-21T13:15:13.682Z
-**Stopped at:** Phase 14 context gathered
-**Resume file:** .planning/phases/14-features-verification/14-CONTEXT.md
+**Last session:** 2026-07-21T13:44:29Z
+**Stopped at:** Completed 14-02-PLAN.md
+**Resume file:** .planning/phases/14-features-verification/14-03-PLAN.md
 
 ## Performance Metrics
 
@@ -120,6 +123,7 @@ progress:
 | Phase 12 P02 | 26m | 3 tasks | 2 files |
 | Phase 12 P03 | 27m | 3 tasks | 2 files |
 | Phase 12 P04 | 18m | 2 tasks | 1 files |
+| Phase 14 P02 | 25m | 2 tasks | 3 files |
 
 ## Decisions
 

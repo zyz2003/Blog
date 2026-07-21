@@ -48,7 +48,7 @@ Phases 12-15 complete. Every frontend API call verified against Go backend sourc
 |-------|------|------|----------|--------------|
 | 12 | API Inventory & Auth & Settings Verification | 4/5 | Complete|  |
 | 13 | Content Verification | 1/6 | Complete    | 2026-07-20 |
-| 14 | Features Verification | 1/7 | In Progress|  |
+| 14 | Features Verification | 2/7 | In Progress| 2026-07-21 |
 | 15 | Final Integration & Cutover | Full regression, browser E2E walkthrough, production cutover | P0 | Phases 12-14 |
 
 ---
@@ -137,14 +137,14 @@ Plans:
 
 **Goal:** Verify all auxiliary feature endpoints — statistics, friend links, albums, doc series, SEO, music, notifications, scheduled tasks, backup
 
-**Plans:** 1/7 plans executed
+**Plans:** 2/7 plans executed
 
 Plans:
 
 **Wave 1** (MEDIUM risk fixes + verification)
 
 - [x] 14-01-PLAN.md — Fix Link.id to raw int + verify 25 link endpoints field-by-field
-- [ ] 14-02-PLAN.md — Add Album.fileHash + verify 15 album endpoints field-by-field
+- [x] 14-02-PLAN.md — Add Album.fileHash + verify 15 album endpoints field-by-field
 
 **Wave 2** (MEDIUM risk verification, blocked on Wave 1)
 
@@ -245,4 +245,4 @@ Plans:
 
 ---
 
-*Last updated: 2026-07-19*
+*Last updated: 2026-07-21*
