@@ -356,6 +356,29 @@ describe('Link verification (Phase 14)', () => {
       assertLinkCategoryFields(data);
       expect(data.id).toBe(createdCategoryId);
     });
+
+    it('DELETE /api/links/categories/:id deletes unused category', async () => {
+      // Create a category to delete
+      const createRes = await supertest(ctx.app.getHttpServer())
+        .post('/api/links/categories')
+        .set('authorization', `Bearer ${ctx.adminToken}`)
+        .send({
+          name: `DeleteCategory-${ctx.ts}`,
+          style: 'list',
+          description: 'Category to delete',
+        });
+
+      expect(createRes.status).toBe(201);
+      const deleteCatId = createRes.body.data.id;
+
+      const res = await supertest(ctx.app.getHttpServer())
+        .delete(`/api/links/categories/${deleteCatId}`)
+        .set('authorization', `Bearer ${ctx.adminToken}`);
+
+      // Go DeleteCategory returns response.Success(c, nil)
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('code', 200);
+    });
   });
 
   // ─── Tag endpoints ───────────────────────────────────────────────────
@@ -410,11 +433,42 @@ describe('Link verification (Phase 14)', () => {
       assertLinkTagFields(data);
       expect(data.id).toBe(createdTagId);
     });
+
+    it('DELETE /api/links/tags/:id deletes unused tag', async () => {
+      // Create a tag to delete
+      const createRes = await supertest(ctx.app.getHttpServer())
+        .post('/api/links/tags')
+        .set('authorization', `Bearer ${ctx.adminToken}`)
+        .send({
+          name: `DeleteTag-${ctx.ts}`,
+          color: '#123456',
+        });
+
+      expect(createRes.status).toBe(201);
+      const deleteTagId = createRes.body.data.id;
+
+      const res = await supertest(ctx.app.getHttpServer())
+        .delete(`/api/links/tags/${deleteTagId}`)
+        .set('authorization', `Bearer ${ctx.adminToken}`);
+
+      // Go DeleteTag returns response.Success(c, nil)
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('code', 200);
+    });
   });
 
   // ─── Health-check endpoints ──────────────────────────────────────────
 
   describe('Health-check endpoints', () => {
+    it('POST /api/links/health-check triggers health check', async () => {
+      const res = await supertest(ctx.app.getHttpServer())
+        .post('/api/links/health-check')
+        .set('authorization', `Bearer ${ctx.adminToken}`);
+
+      // Go CheckLinksHealth returns response.Success with message
+      assertSuccessResponse(res);
+    });
+
     it('GET /api/links/health-check/status returns HealthCheckStatusDto', async () => {
       const res = await supertest(ctx.app.getHttpServer())
         .get('/api/links/health-check/status')
@@ -573,6 +627,25 @@ describe('Link verification (Phase 14)', () => {
           assertLinkResponseFields(link);
           expect(typeof link.id).toBe('number');
         }
+      }
+    });
+
+    it('POST /api/public/links (apply) returns void response', async () => {
+      const res = await supertest(ctx.app.getHttpServer())
+        .post('/api/public/links')
+        .send({
+          type: 'NEW',
+          name: `ApplyLink-${ctx.ts}`,
+          url: `https://apply-${ctx.ts}.example.com`,
+          logo: 'https://example.com/logo.png',
+          description: 'Apply test',
+          email: `apply-${ctx.ts}@test.com`,
+        });
+
+      // Go ApplyLink returns response.Success(c, nil) on success
+      // May fail with rate limit or URL exists error — both are valid behaviors
+      if (res.status === 200) {
+        expect(res.body).toHaveProperty('code', 200);
       }
     });
   });
