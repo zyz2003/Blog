@@ -632,22 +632,19 @@ description: group.description ?? '',
 | A3 | Music controller wraps playlist as { songs, total } | Music Module | If not wrapped, response format differs from Go |
 | A4 | NestJS sitemap produces valid XML with declaration | SEO Module | If XML is malformed, RSS readers break |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Does the frontend use Album.fileHash?**
    - What we know: Go Album includes fileHash, NestJS toResponseDTO omits it
-   - What's unclear: Whether any frontend component reads album.fileHash
-   - Recommendation: Search frontend code for "fileHash" references
+   - Resolution: Plan 02 (14-02-PLAN.md) adds fileHash to Album response DTO and verifies it. If frontend doesn't use it, the extra field is harmless (Go omitempty pattern). Adding it ensures full Go compatibility.
 
 2. **Does the music controller wrap playlist correctly?**
    - What we know: Go returns { songs, total }, NestJS service returns Song[]
-   - What's unclear: Whether the controller adds the { songs, total } wrapper
-   - Recommendation: Read music.controller.ts to verify
+   - Resolution: Plan 05 (14-05-PLAN.md) Task 1 tests for { songs, total } wrapper. If the controller doesn't wrap, a fix will be added during execution. The test will catch the mismatch.
 
 3. **Are there more Link.id consumers in the frontend?**
    - What we know: FriendsTableView, use-friends-page, friendsApi all use link.id
-   - What's unclear: Whether public link pages (SiteCardGroup, FlinkList) use link.id for API calls
-   - Recommendation: Search for all link.id usages in frontend
+   - Resolution: Plan 01 (14-01-PLAN.md) fixes Link.id to return raw int (matching Go). All frontend consumers expect `number` type per LinkItem.id: number. The fix ensures type compatibility across all consumers.
 
 ## Environment Availability
 
@@ -655,7 +652,7 @@ description: group.description ?? '',
 |------------|------------|-----------|---------|----------|
 | Node.js | NestJS runtime | Yes | 22+ | -- |
 | better-sqlite3 | Database | Yes | 12.x | -- |
-| Jest | Test runner | Yes | 29.x | -- |
+| Vitest | Test runner | Yes | latest | -- |
 | supertest | HTTP testing | Yes | 6.x | -- |
 
 **Missing dependencies with no fallback:** None
@@ -667,29 +664,29 @@ description: group.description ?? '',
 ### Test Framework
 | Property | Value |
 |----------|-------|
-| Framework | Jest 29.x |
-| Config file | server/jest.config.ts |
-| Quick run command | `npx jest test/phase14-verification/ --passWithNoTests` |
-| Full suite command | `npx jest test/phase14-verification/ --verbose --forceExit` |
+| Framework | Vitest |
+| Config file | server/vitest.config.ts |
+| Quick run command | `npx vitest run server/test/phase14-verification/ --reporter=verbose` |
+| Full suite command | `npx vitest run server/test/phase14-verification/ server/test/api-compat/ --reporter=verbose` |
 
 ### Phase Requirements -> Test Map
 | Req ID | Behavior | Test Type | Automated Command | File Exists? |
 |--------|----------|-----------|-------------------|-------------|
-| LINK-FRIEND-01 | Link CRUD with correct ID type (int) | unit | `npx jest test/phase14-verification/link-verification.spec.ts -x` | No -- Wave 0 |
-| STATS-01 | Visitor tracking records visits | unit | `npx jest test/phase14-verification/statistics-verification.spec.ts -x` | No -- Wave 0 |
-| STATS-02 | Statistics analytics structure matches Go | unit | `npx jest test/phase14-verification/statistics-verification.spec.ts -x` | No -- Wave 0 |
-| ALBUM-01 | Album CRUD with camelCase fields | unit | `npx jest test/phase14-verification/album-verification.spec.ts -x` | No -- Wave 0 |
-| DOCSERIES-01 | Doc-series CRUD with Sqids IDs | unit | `npx jest test/phase14-verification/doc-series-verification.spec.ts -x` | No -- Wave 0 |
-| RSS-01 | RSS feed valid XML | unit | `npx jest test/phase14-verification/seo-verification.spec.ts -x` | No -- Wave 0 |
-| SITEMAP-01 | Sitemap valid XML | unit | `npx jest test/phase14-verification/seo-verification.spec.ts -x` | No -- Wave 0 |
-| MUSIC-01 | Music playlist structure | unit | `npx jest test/phase14-verification/music-verification.spec.ts -x` | No -- Wave 0 |
-| NOTIF-01 | Notification settings structure | unit | `npx jest test/phase14-verification/notification-verification.spec.ts -x` | No -- Wave 0 |
-| SUBSCRIBER-01 | Subscribe/unsubscribe | unit | `npx jest test/phase14-verification/notification-verification.spec.ts -x` | No -- Wave 0 |
-| CRON-01 | Schedule jobs execute | unit | `npx jest test/phase14-verification/schedule-verification.spec.ts -x` | No -- Wave 0 |
+| LINK-FRIEND-01 | Link CRUD with correct ID type (int) | integration | `npx vitest run server/test/phase14-verification/link-verification.spec.ts` | No -- Wave 0 |
+| STATS-01 | Visitor tracking records visits | integration | `npx vitest run server/test/phase14-verification/statistics-verification.spec.ts` | No -- Wave 0 |
+| STATS-02 | Statistics analytics structure matches Go | integration | `npx vitest run server/test/phase14-verification/statistics-verification.spec.ts` | No -- Wave 0 |
+| ALBUM-01 | Album CRUD with camelCase fields | integration | `npx vitest run server/test/phase14-verification/album-verification.spec.ts` | No -- Wave 0 |
+| DOCSERIES-01 | Doc-series CRUD with Sqids IDs | integration | `npx vitest run server/test/phase14-verification/doc-series-verification.spec.ts` | No -- Wave 0 |
+| RSS-01 | RSS feed valid XML | integration | `npx vitest run server/test/phase14-verification/seo-verification.spec.ts` | No -- Wave 0 |
+| SITEMAP-01 | Sitemap valid XML | integration | `npx vitest run server/test/phase14-verification/seo-verification.spec.ts` | No -- Wave 0 |
+| MUSIC-01 | Music playlist structure | integration | `npx vitest run server/test/phase14-verification/music-verification.spec.ts` | No -- Wave 0 |
+| NOTIF-01 | Notification settings structure | integration | `npx vitest run server/test/phase14-verification/notification-verification.spec.ts` | No -- Wave 0 |
+| SUBSCRIBER-01 | Subscribe/unsubscribe | integration | `npx vitest run server/test/phase14-verification/notification-verification.spec.ts` | No -- Wave 0 |
+| CRON-01 | Schedule jobs execute | integration | `npx vitest run server/test/phase14-verification/schedule-verification.spec.ts` | No -- Wave 0 |
 
 ### Sampling Rate
-- **Per task commit:** `npx jest test/phase14-verification/<file> -x`
-- **Per wave merge:** `npx jest test/phase14-verification/ --verbose --forceExit`
+- **Per task commit:** `npx vitest run server/test/phase14-verification/<file> --reporter=verbose`
+- **Per wave merge:** `npx vitest run server/test/phase14-verification/ server/test/api-compat/ --reporter=verbose`
 - **Phase gate:** Full suite green before `/gsd-verify-work`
 
 ### Wave 0 Gaps
