@@ -139,14 +139,14 @@ describe('DocSeries verification', () => {
   beforeAll(async () => {
     ctx = await createTestApp();
 
-    // Seed a doc series for GET tests
+    // Seed a doc series for GET tests (use onConflictDoNothing to handle re-runs)
     await ctx.db.insert(docSeries).values({
       name: 'Test Doc Series',
       description: 'A test doc series',
       coverUrl: 'https://example.com/cover.jpg',
       sort: 1,
       docCount: 0,
-    }).run();
+    }).onConflictDoNothing().run();
   });
 
   afterAll(async () => {
