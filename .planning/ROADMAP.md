@@ -137,6 +137,29 @@ Plans:
 
 **Goal:** Verify all auxiliary feature endpoints — statistics, friend links, albums, doc series, SEO, music, notifications, scheduled tasks, backup
 
+**Plans:** 7 plans
+
+Plans:
+
+**Wave 1** (MEDIUM risk fixes + verification)
+
+- [ ] 14-01-PLAN.md — Fix Link.id to raw int + verify 25 link endpoints field-by-field
+- [ ] 14-02-PLAN.md — Add Album.fileHash + verify 15 album endpoints field-by-field
+
+**Wave 2** (MEDIUM risk verification, blocked on Wave 1)
+
+- [ ] 14-03-PLAN.md — Verify Doc-series (Sqids encoding) + Statistics (structures, dates) field-by-field
+- [ ] 14-04-PLAN.md — Fix storage-policy date serialization + UserGroup.description nullability + verify structures
+
+**Wave 3** (LOW/NONE risk verification, blocked on Wave 2)
+
+- [ ] 14-05-PLAN.md — Verify Music, Notification/Subscriber, Backup response structures
+- [ ] 14-06-PLAN.md — Verify SEO (RSS/Sitemap/robots.txt) XML formats and headers
+
+**Wave 4** (Schedule + Regression, blocked on Wave 3)
+
+- [ ] 14-07-PLAN.md — Schedule/Cron job verification + full Phase 14 regression test suite
+
 **Success Criteria:**
 
 - Visitor tracking records visits correctly
