@@ -3,18 +3,18 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_phase: 14
-current_phase_name: Features Verification
-current_plan: Not started
+current_phase_name: features-verification
+current_plan: 2
 status: executing
-stopped_at: Phase 14 context gathered
-last_updated: "2026-07-21T12:02:12.320Z"
+stopped_at: Completed 14-01-PLAN.md
+last_updated: "2026-07-21T13:15:13.692Z"
 last_activity: 2026-07-21
-last_activity_desc: Phase 14 planning complete
+last_activity_desc: Phase 14 execution started
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 11
-  completed_plans: 5
+  total_plans: 18
+  completed_plans: 6
   percent: 0
 ---
 
@@ -25,10 +25,10 @@ progress:
 | Field | Value |
 |-------|-------|
 | Milestone | M4 - Frontend Integration Verification |
-| Phase | 14 — Features Verification |
-| Current Plan | Not started |
-| Status | Ready to execute |
-| Last Activity | 2026-07-21 — Phase 14 planning complete |
+| Phase | 14 (features-verification) — EXECUTING |
+| Current Plan | 1 |
+| Status | Executing Phase 14 |
+| Last Activity | 2026-07-21 — Phase 14 execution started |
 
 ## Phase Status
 
@@ -47,7 +47,7 @@ progress:
 | 11 | Migration & Integration | Complete | 5 | 2026-07-18 |
 | 12 | API Inventory & Auth & Settings Verification | In Progress | 4/5 | 2026-07-19 |
 | 13 | Content Verification | Pending | — | — |
-| 14 | Features Verification | Pending | — | — |
+| 14 | Features Verification | In Progress | 1/7 | 2026-07-21 |
 | 15 | Final Integration & Cutover | Pending | — | — |
 
 ## Active Decisions
@@ -107,7 +107,7 @@ progress:
 
 ## Session
 
-**Last session:** 2026-07-20T13:22:15.435Z
+**Last session:** 2026-07-21T13:15:13.682Z
 **Stopped at:** Phase 14 context gathered
 **Resume file:** .planning/phases/14-features-verification/14-CONTEXT.md
 
@@ -165,3 +165,5 @@ progress:
 - [Phase 12]: D-281: CCP-1 created_at/updated_at nullability is MEDIUM risk (DB likely has NOT NULL constraints, but needs verification in Phase 13)
 - [Phase 12]: D-282: Album camelCase field naming may be HIGH risk if frontend depends on camelCase (Go uses camelCase, NestJS may normalize to snake_case)
 - [Phase 12]: D-283: Link/LinkCategory/LinkTag ID type may be HIGH risk if frontend expects int (Go uses int, NestJS may use Sqids string)
+- [Phase ?]: D-301/D-303: Link.id returns raw DB int (number), not Sqids string, matching Go LinkDTO.id: int
+- [Phase ?]: D-301/D-303: BatchDeleteLinksRequestDto.ids and SortItem.id changed from string to number, matching Go []int
