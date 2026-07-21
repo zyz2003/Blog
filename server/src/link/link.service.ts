@@ -3,11 +3,6 @@ import { LinkRepository, CreateLinkParams } from './link.repository';
 import { LinkApplyRateLimiter } from './link-apply-rate-limiter';
 import { SettingsService } from '../settings/settings.service';
 import { ScheduleService } from '../schedule/schedule.service';
-import {
-  generatePublicID,
-  decodePublicID,
-  EntityType,
-} from '../common/utils/sqids.util';
 import { ErrorCodes } from '../common/constants/error-codes';
 import { ApplyLinkRequestDto } from './dto/apply-link-request.dto';
 import { AdminCreateLinkRequestDto } from './dto/admin-create-link-request.dto';
@@ -52,7 +47,7 @@ const SETTINGS_KEYS = {
  * Per D-172: Health check runs async with 10s timeout and max 10 concurrent.
  * Per D-173: ImportLinks handles category/tag resolution and dedup.
  * Per D-174: BatchUpdateSort, getRandomLinks, checkLinkExists.
- * Per D-175: Link IDs encoded with EntityType.Link.
+ * Per D-301/D-303: Link IDs are raw DB integers (not Sqids-encoded), matching Go LinkDTO.id: int.
  * Per D-176: Pushoo notification on ApplyLink.
  * Per D-177: Card style requires siteshot.
  * Per D-178: listPublicLinks grouped by category.
@@ -86,7 +81,8 @@ export class LinkService {
 
   /**
    * Convert a link record to API response DTO.
-   * Per D-175: link ID encoded with EntityType.Link using generatePublicID.
+   * Per D-301/D-303: link ID is raw DB integer (not Sqids-encoded),
+   * matching Go LinkDTO.id: int.
    * Per D-179: category and tag IDs are raw integers (NOT Sqids-encoded),
    * matching Go backend LinkCategoryDTO/LinkTagDTO which use int IDs.
    */
@@ -96,7 +92,7 @@ export class LinkService {
     tag?: any | null,
   ): Promise<LinkResponseDto> {
     const dto = new LinkResponseDto();
-    dto.id = generatePublicID(link.id, EntityType.Link) as any;
+    dto.id = link.id;
     dto.name = link.name;
     dto.url = link.url;
     dto.rss_url = link.rssUrl ?? undefined;
@@ -409,24 +405,20 @@ export class LinkService {
    * Admin update a link.
    * Per D-170: if link was APPROVED and status is changing, set status='UPDATED'
    * (requires re-review).
+   * Per D-301/D-303: link path param is raw DB int, matching Go strconv.Atoi.
    */
   async adminUpdateLink(
-    publicId: string,
+    id: string,
     dto: UpdateLinkRequestDto,
   ): Promise<LinkResponseDto> {
-    // Decode public ID
-    let decoded: { dbID: number; entityType: number };
-    try {
-      decoded = decodePublicID(publicId);
-    } catch {
+    // Parse raw DB int ID, matching Go strconv.Atoi
+    const dbID = parseInt(id, 10);
+    if (isNaN(dbID) || dbID <= 0) {
       throw new NotFoundException(ErrorCodes.LINK_NOT_FOUND);
-    }
-    if (decoded.entityType !== EntityType.Link) {
-      throw new BadRequestException(ErrorCodes.INVALID_PUBLIC_ID);
     }
 
     // Get existing link
-    const existing = await this.repo.findById(decoded.dbID);
+    const existing = await this.repo.findById(dbID);
     if (!existing) {
       throw new BadRequestException(ErrorCodes.LINK_NOT_FOUND);
     }
@@ -454,17 +446,17 @@ export class LinkService {
     if (dto.sort_order !== undefined) updateData.sortOrder = dto.sort_order;
     if (dto.skip_health_check !== undefined) updateData.skipHealthCheck = dto.skip_health_check;
 
-    const updatedLink = await this.repo.update(decoded.dbID, updateData);
+    const updatedLink = await this.repo.update(dbID, updateData);
 
     // Update link-tag pivot if tag_id provided
     if (dto.tag_id !== undefined) {
-      await this.repo.setLinkTag(decoded.dbID, dto.tag_id);
+      await this.repo.setLinkTag(dbID, dto.tag_id);
     }
 
     // Get category and tag for response
     const categoryId = dto.category_id ?? existing.categoryId;
     const category = await this.repo.findCategoryById(categoryId);
-    const tag = await this.repo.getLinkTag(decoded.dbID);
+    const tag = await this.repo.getLinkTag(dbID);
 
     return this.toLinkResponseDTO(updatedLink, category, tag);
   }
@@ -474,19 +466,15 @@ export class LinkService {
   // ============================================================
 
   /**
-   * Soft-delete a link by public ID.
+   * Soft-delete a link by ID.
+   * Per D-301/D-303: link path param is raw DB int, matching Go strconv.Atoi.
    */
-  async adminDeleteLink(publicId: string): Promise<void> {
-    let decoded: { dbID: number; entityType: number };
-    try {
-      decoded = decodePublicID(publicId);
-    } catch {
+  async adminDeleteLink(id: string): Promise<void> {
+    const dbID = parseInt(id, 10);
+    if (isNaN(dbID) || dbID <= 0) {
       throw new NotFoundException(ErrorCodes.LINK_NOT_FOUND);
     }
-    if (decoded.entityType !== EntityType.Link) {
-      throw new BadRequestException(ErrorCodes.INVALID_PUBLIC_ID);
-    }
-    await this.repo.softDelete([decoded.dbID]);
+    await this.repo.softDelete([dbID]);
 
     // Dispatch link cleanup after deletion
     // Matches Go: linkSvc.Delete() dispatches LinkCleanupJob
@@ -499,33 +487,29 @@ export class LinkService {
 
   /**
    * Soft-delete multiple links.
+   * Per D-301/D-303: IDs are raw DB ints, matching Go BatchDeleteLinksRequest.IDs []int.
    * Returns {total, success, failed, failed_list}.
    */
   async adminBatchDeleteLinks(
     dto: BatchDeleteLinksRequestDto,
-  ): Promise<{ total: number; success: number; failed: number; failed_list: Array<{ id: string; reason: string }> }> {
+  ): Promise<{ total: number; success: number; failed: number; failed_list: Array<{ id: number; reason: string }> }> {
     const result = {
       total: dto.ids.length,
       success: 0,
       failed: 0,
-      failed_list: [] as Array<{ id: string; reason: string }>,
+      failed_list: [] as Array<{ id: number; reason: string }>,
     };
 
     const validDbIds: number[] = [];
 
-    for (const publicId of dto.ids) {
-      try {
-        const decoded = decodePublicID(publicId);
-        if (decoded.entityType !== EntityType.Link) {
-          result.failed++;
-          result.failed_list.push({ id: publicId, reason: ErrorCodes.INVALID_PUBLIC_ID });
-          continue;
-        }
-        validDbIds.push(decoded.dbID);
-      } catch {
+    for (const id of dto.ids) {
+      // IDs are already raw DB ints per Go BatchDeleteLinksRequest.IDs []int
+      if (typeof id !== 'number' || id <= 0) {
         result.failed++;
-        result.failed_list.push({ id: publicId, reason: ErrorCodes.INVALID_PUBLIC_ID });
+        result.failed_list.push({ id, reason: ErrorCodes.INVALID_PUBLIC_ID });
+        continue;
       }
+      validDbIds.push(id);
     }
 
     if (validDbIds.length > 0) {
@@ -539,7 +523,7 @@ export class LinkService {
       } catch (error) {
         result.failed += validDbIds.length;
         for (const dbId of validDbIds) {
-          result.failed_list.push({ id: String(dbId), reason: String(error) });
+          result.failed_list.push({ id: dbId, reason: String(error) });
         }
       }
     }
@@ -554,24 +538,20 @@ export class LinkService {
   /**
    * Review a link application.
    * Per D-170: validates card style siteshot requirement.
+   * Per D-301/D-303: link path param is raw DB int, matching Go strconv.Atoi.
    */
   async reviewLink(
-    publicId: string,
+    id: string,
     dto: ReviewLinkRequestDto,
   ): Promise<void> {
-    // Decode public ID
-    let decoded: { dbID: number; entityType: number };
-    try {
-      decoded = decodePublicID(publicId);
-    } catch {
+    // Parse raw DB int ID, matching Go strconv.Atoi
+    const dbID = parseInt(id, 10);
+    if (isNaN(dbID) || dbID <= 0) {
       throw new NotFoundException(ErrorCodes.LINK_NOT_FOUND);
-    }
-    if (decoded.entityType !== EntityType.Link) {
-      throw new BadRequestException(ErrorCodes.INVALID_PUBLIC_ID);
     }
 
     // Get existing link
-    const link = await this.repo.findById(decoded.dbID);
+    const link = await this.repo.findById(dbID);
     if (!link) {
       throw new BadRequestException(ErrorCodes.LINK_NOT_FOUND);
     }
@@ -590,7 +570,7 @@ export class LinkService {
 
     // Update status
     await this.repo.updateStatus(
-      decoded.dbID,
+      dbID,
       dto.status,
       dto.siteshot,
       dto.reject_reason,
@@ -1043,19 +1023,15 @@ export class LinkService {
 
   /**
    * Batch update sortOrder for multiple links.
-   * Per D-174: decode public IDs to DB IDs, update sort orders.
+   * Per D-301/D-303: IDs are raw DB ints, matching Go LinkSortItem.ID int.
    */
   async batchUpdateSort(dto: BatchUpdateSortRequestDto): Promise<void> {
     const items: Array<{ id: number; sortOrder: number }> = [];
 
     for (const item of dto.items) {
-      try {
-        const decoded = decodePublicID(item.id);
-        if (decoded.entityType === EntityType.Link) {
-          items.push({ id: decoded.dbID, sortOrder: item.sort_order });
-        }
-      } catch {
-        // Skip invalid IDs
+      // IDs are already raw DB ints per Go LinkSortItem.ID int
+      if (typeof item.id === 'number' && item.id > 0) {
+        items.push({ id: item.id, sortOrder: item.sort_order });
       }
     }
 

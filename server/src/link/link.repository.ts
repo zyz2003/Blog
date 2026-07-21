@@ -4,7 +4,7 @@ import { links } from '../database/schemas/link.schema';
 import { linkCategories } from '../database/schemas/link-category.schema';
 import { linkTags } from '../database/schemas/link-tag.schema';
 import { linkTagPivot } from '../database/schemas/link-tag-pivot.schema';
-import { isNull, eq, and, desc, like, sql, inArray, asc, exists } from 'drizzle-orm';
+import { isNull, eq, and, desc, like, sql, inArray, asc, exists, SQL } from 'drizzle-orm';
 
 export interface CreateLinkParams {
   name: string;
@@ -280,18 +280,19 @@ export class LinkRepository {
   async batchUpdateSort(items: Array<{ id: number; sortOrder: number }>) {
     if (items.length === 0) return;
 
-    const caseParts = items.map(
-      (item, i) => `WHEN ${links.id.name} = ${item.id} THEN ${item.sortOrder}`,
-    );
-    const idList = items.map((item) => item.id).join(',');
+    // Build CASE WHEN clauses with parameterized values
+    const whenClauses: SQL[] = [];
+    const idParams: SQL[] = [];
 
+    for (const item of items) {
+      whenClauses.push(sql`WHEN ${item.id} THEN ${item.sortOrder}`);
+      idParams.push(sql`${item.id}`);
+    }
+
+    // Use subquery alias to avoid table-qualified column names in SET clause
+    // SQLite does not allow "table"."column" in SET — only "column"
     await this.db.run(
-      sql`UPDATE ${links} SET ${links.sortOrder} = CASE ${links.id} ${sql.join(
-        items.map(
-          (item) =>
-            sql`WHEN ${item.id} THEN ${item.sortOrder}`,
-        ),
-      )} END WHERE ${links.id} IN ${sql`(${sql.join(items.map((item) => sql`${item.id}`), sql`, `)})`}`,
+      sql`UPDATE links SET sort_order = CASE id ${sql.join(whenClauses, sql` `)} END WHERE id IN (${sql.join(idParams, sql`, `)})`,
     );
   }
 

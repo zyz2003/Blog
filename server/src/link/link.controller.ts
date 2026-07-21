@@ -43,6 +43,7 @@ import { UpdateTagRequestDto } from './dto/update-tag-request.dto';
  *   - POST /links — Create link
  *   - GET /links — List links with filters
  *   - DELETE /links/batch-delete — Batch delete (BEFORE /links/:id)
+ *   - PUT /links/sort — Batch update sort (BEFORE /links/:id)
  *   - PUT /links/:id — Update link
  *   - DELETE /links/:id — Delete link
  *   - PUT /links/:id/review — Review link
@@ -50,12 +51,12 @@ import { UpdateTagRequestDto } from './dto/update-tag-request.dto';
  *   - GET /links/export — Export links
  *   - POST /links/health-check — Trigger health check
  *   - GET /links/health-check/status — Get health check status
- *   - PUT /links/sort — Batch update sort
  *   - GET/POST/PUT/DELETE /links/categories — Category CRUD
  *   - GET/POST/PUT/DELETE /links/tags — Tag CRUD
  *
- * CRITICAL route ordering: @Delete('links/batch-delete') and @Get('links/health-check/status')
- * MUST be defined before parametric routes to prevent NestJS from matching them as :id.
+ * CRITICAL route ordering: Literal routes (batch-delete, sort, health-check/status,
+ * import, export) MUST be defined BEFORE parametric routes (:id) to prevent
+ * NestJS from matching them as :id.
  */
 @Controller()
 export class LinkController {
@@ -186,10 +187,23 @@ export class LinkController {
   }
 
   /**
+   * PUT /api/links/sort
+   * Batch update sort order (admin).
+   * Matches Go BatchUpdateLinkSort (router.go) — returns 200.
+   * CRITICAL: Must be defined BEFORE @Put('links/:id') to avoid route conflict.
+   */
+  @HttpCode(HttpStatus.OK)
+  @Put('links/sort')
+  async batchUpdateSort(@Body() dto: BatchUpdateSortRequestDto) {
+    return this.linkService.batchUpdateSort(dto);
+  }
+
+  /**
    * PUT /api/links/:id
    * Update a link (admin).
-   * Matches Go AdminUpdateLink (router.go).
+   * Matches Go AdminUpdateLink (router.go) — returns 200.
    */
+  @HttpCode(HttpStatus.OK)
   @Put('links/:id')
   async adminUpdateLink(
     @Param('id') id: string,
@@ -211,8 +225,9 @@ export class LinkController {
   /**
    * PUT /api/links/:id/review
    * Review a link application (admin).
-   * Matches Go ReviewLink (router.go).
+   * Matches Go ReviewLink (router.go) — returns 200.
    */
+  @HttpCode(HttpStatus.OK)
   @Put('links/:id/review')
   async reviewLink(
     @Param('id') id: string,
@@ -225,6 +240,7 @@ export class LinkController {
    * POST /api/links/import
    * Import links (admin).
    * Matches Go ImportLinks (router.go).
+   * CRITICAL: Must be defined BEFORE any @Get('links/:id') route.
    */
   @Post('links/import')
   async importLinks(@Body() dto: ImportLinksRequestDto) {
@@ -235,6 +251,7 @@ export class LinkController {
    * GET /api/links/export
    * Export links (admin).
    * Matches Go ExportLinks (router.go).
+   * CRITICAL: Must be defined BEFORE any @Get('links/:id') route.
    */
   @Get('links/export')
   async exportLinks(
@@ -269,21 +286,11 @@ export class LinkController {
    * GET /api/links/health-check/status
    * Get health check status (admin).
    * Matches Go GetHealthCheckStatus (router.go).
-   * CRITICAL: Must be defined BEFORE any @Get('links/:id') route if it existed.
+   * CRITICAL: Must be defined BEFORE any @Get('links/:id') route.
    */
   @Get('links/health-check/status')
   async getHealthCheckStatus() {
     return this.linkService.getHealthCheckStatus();
-  }
-
-  /**
-   * PUT /api/links/sort
-   * Batch update sort order (admin).
-   * Matches Go BatchUpdateLinkSort (router.go).
-   */
-  @Put('links/sort')
-  async batchUpdateSort(@Body() dto: BatchUpdateSortRequestDto) {
-    return this.linkService.batchUpdateSort(dto);
   }
 
   // ─── Category CRUD (admin) ────────────────────────────────────────
@@ -311,8 +318,9 @@ export class LinkController {
   /**
    * PUT /api/links/categories/:id
    * Update a category (admin).
-   * Matches Go UpdateCategory (router.go).
+   * Matches Go UpdateCategory (router.go) — returns 200.
    */
+  @HttpCode(HttpStatus.OK)
   @Put('links/categories/:id')
   async updateCategory(
     @Param('id') id: string,
@@ -356,8 +364,9 @@ export class LinkController {
   /**
    * PUT /api/links/tags/:id
    * Update a tag (admin).
-   * Matches Go UpdateTag (router.go).
+   * Matches Go UpdateTag (router.go) — returns 200.
    */
+  @HttpCode(HttpStatus.OK)
   @Put('links/tags/:id')
   async updateTag(
     @Param('id') id: string,

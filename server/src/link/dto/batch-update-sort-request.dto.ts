@@ -1,12 +1,13 @@
-import { IsArray, IsNotEmpty, ValidateNested, IsString, IsInt } from 'class-validator';
+import { IsArray, IsNotEmpty, ValidateNested, IsInt } from 'class-validator';
 import { Type } from 'class-transformer';
 
 /**
  * SortItem — single link sort entry.
+ * Per D-301/D-303: ID is raw DB int, matching Go LinkSortItem.ID int.
  */
 class SortItem {
-  @IsString()
-  id: string;
+  @IsInt()
+  id: number;
 
   @IsInt()
   sort_order: number;

@@ -42,10 +42,11 @@ function assertLinkResponseFields(data: any) {
   expect(data).toHaveProperty('url');
   expect(typeof data.url).toBe('string');
 
-  // rss_url: string (omitempty in Go)
-  expect(data).toHaveProperty('rss_url');
-  if (data.rss_url !== null && data.rss_url !== undefined) {
-    expect(typeof data.rss_url).toBe('string');
+  // rss_url: string (omitempty in Go) — may be absent when empty
+  if (data.rss_url !== undefined) {
+    if (data.rss_url !== null) {
+      expect(typeof data.rss_url).toBe('string');
+    }
   }
 
   expect(data).toHaveProperty('logo');
@@ -61,34 +62,39 @@ function assertLinkResponseFields(data: any) {
   expect(data).toHaveProperty('status');
   expect(typeof data.status).toBe('string');
 
-  // siteshot: string (omitempty in Go)
-  expect(data).toHaveProperty('siteshot');
-  if (data.siteshot !== null && data.siteshot !== undefined) {
-    expect(typeof data.siteshot).toBe('string');
+  // siteshot: string (omitempty in Go) — may be absent when empty
+  if (data.siteshot !== undefined) {
+    if (data.siteshot !== null) {
+      expect(typeof data.siteshot).toBe('string');
+    }
   }
 
-  // email: string (omitempty in Go)
-  expect(data).toHaveProperty('email');
-  if (data.email !== null && data.email !== undefined) {
-    expect(typeof data.email).toBe('string');
+  // email: string (omitempty in Go) — may be absent when empty
+  if (data.email !== undefined) {
+    if (data.email !== null) {
+      expect(typeof data.email).toBe('string');
+    }
   }
 
-  // type: string (omitempty in Go)
-  expect(data).toHaveProperty('type');
-  if (data.type !== null && data.type !== undefined) {
-    expect(typeof data.type).toBe('string');
+  // type: string (omitempty in Go) — may be absent when empty
+  if (data.type !== undefined) {
+    if (data.type !== null) {
+      expect(typeof data.type).toBe('string');
+    }
   }
 
-  // original_url: string (omitempty in Go)
-  expect(data).toHaveProperty('original_url');
-  if (data.original_url !== null && data.original_url !== undefined) {
-    expect(typeof data.original_url).toBe('string');
+  // original_url: string (omitempty in Go) — may be absent when empty
+  if (data.original_url !== undefined) {
+    if (data.original_url !== null) {
+      expect(typeof data.original_url).toBe('string');
+    }
   }
 
-  // update_reason: string (omitempty in Go)
-  expect(data).toHaveProperty('update_reason');
-  if (data.update_reason !== null && data.update_reason !== undefined) {
-    expect(typeof data.update_reason).toBe('string');
+  // update_reason: string (omitempty in Go) — may be absent when empty
+  if (data.update_reason !== undefined) {
+    if (data.update_reason !== null) {
+      expect(typeof data.update_reason).toBe('string');
+    }
   }
 
   expect(data).toHaveProperty('sort_order');
@@ -195,7 +201,8 @@ describe('Link verification (Phase 14)', () => {
           skip_health_check: false,
         });
 
-      assertSuccessResponse(res);
+      // Per D-244: link create returns 201
+      assertSuccessResponse(res, 201);
       const data = res.body.data;
       assertLinkResponseFields(data);
       // Critical: id must be number
@@ -248,7 +255,8 @@ describe('Link verification (Phase 14)', () => {
           skip_health_check: false,
         });
 
-      assertSuccessResponse(createRes);
+      // Per D-244: link create returns 201
+      assertSuccessResponse(createRes, 201);
       const batchDeleteId = createRes.body.data.id;
       expect(typeof batchDeleteId).toBe('number');
 
@@ -280,14 +288,17 @@ describe('Link verification (Phase 14)', () => {
           skip_health_check: false,
         });
 
-      assertSuccessResponse(createRes);
+      // Per D-244: link create returns 201
+      assertSuccessResponse(createRes, 201);
       const deleteId = createRes.body.data.id;
 
       const res = await supertest(ctx.app.getHttpServer())
         .delete(`/api/links/${deleteId}`)
         .set('authorization', `Bearer ${ctx.adminToken}`);
 
-      assertSuccessResponse(res);
+      // Go AdminDeleteLink returns response.Success(c, nil) — data may be null/absent
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('code', 200);
     });
   });
 
@@ -466,7 +477,8 @@ describe('Link verification (Phase 14)', () => {
           create_tags: false,
         });
 
-      assertSuccessResponse(res);
+      // Per D-244: link import returns 201
+      assertSuccessResponse(res, 201);
       const data = res.body.data;
       expect(data).toHaveProperty('total');
       expect(typeof data.total).toBe('number');
@@ -584,7 +596,8 @@ describe('Link verification (Phase 14)', () => {
           skip_health_check: false,
         });
 
-      assertSuccessResponse(createRes);
+      // Per D-244: link create returns 201
+      assertSuccessResponse(createRes, 201);
       const sortLinkId = createRes.body.data.id;
       expect(typeof sortLinkId).toBe('number');
 
@@ -595,7 +608,9 @@ describe('Link verification (Phase 14)', () => {
           items: [{ id: sortLinkId, sort_order: 99 }],
         });
 
-      assertSuccessResponse(res);
+      // Go BatchUpdateLinkSort returns response.Success(c, nil) — data may be null/absent
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('code', 200);
     });
   });
 
@@ -618,7 +633,8 @@ describe('Link verification (Phase 14)', () => {
           skip_health_check: false,
         });
 
-      assertSuccessResponse(createRes);
+      // Per D-244: link create returns 201
+      assertSuccessResponse(createRes, 201);
       const reviewLinkId = createRes.body.data.id;
       expect(typeof reviewLinkId).toBe('number');
 
@@ -627,9 +643,12 @@ describe('Link verification (Phase 14)', () => {
         .set('authorization', `Bearer ${ctx.adminToken}`)
         .send({
           status: 'APPROVED',
+          siteshot: 'https://example.com/siteshot.png',
         });
 
-      assertSuccessResponse(res);
+      // Go ReviewLink returns response.Success(c, nil) — data may be null/absent
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('code', 200);
     });
   });
 });
