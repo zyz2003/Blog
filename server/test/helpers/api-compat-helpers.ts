@@ -11,6 +11,7 @@ import { ThrottlerStorage } from '@nestjs/throttler';
 import supertest from 'supertest';
 import * as bcryptjs from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
+import { eq } from 'drizzle-orm';
 import { AppModule } from '../../src/app.module';
 import { SettingsService } from '../../src/settings/settings.service';
 import { initSqidsEncoderWithSeed, generatePublicID, EntityType } from '../../src/common/utils/sqids.util';
@@ -75,8 +76,19 @@ export async function createTestApp(): Promise<TestContext> {
   const settingsService = app.get(SettingsService);
   await settingsService.ensureLoaded();
 
-  // Generate admin JWT token
-  const adminToken = generateAdminToken(TEST_SEED, TEST_JWT_SECRET);
+  // Generate admin JWT token using actual admin user ID from DB.
+  // The seed data uses onConflictDoUpdate on username, so the admin user's
+  // DB ID may not be 1 if prior test runs accumulated data in the file DB.
+  // We must query the actual ID to generate a valid token.
+  const [adminUser] = await db
+    .select()
+    .from(users)
+    .where(eq(users.username, 'admin'))
+    .limit(1);
+
+  const adminToken = adminUser
+    ? generateAdminTokenWithId(adminUser.id, adminUser.userGroupId, TEST_JWT_SECRET)
+    : generateAdminToken(TEST_SEED, TEST_JWT_SECRET);
 
   const ts = Date.now();
 
@@ -181,6 +193,33 @@ export async function seedBaseData(db: any): Promise<void> {
 export function generateAdminToken(seed: string, jwtSecret: string): string {
   const userId = generatePublicID(1, EntityType.User);
   const groupId = generatePublicID(1, EntityType.UserGroup);
+
+  return jwt.sign(
+    {
+      user_id: userId,
+      user_group_id: groupId,
+      permissions: [0, 1, 2, 3],
+      iss: 'anheyu-app',
+    },
+    jwtSecret,
+    { algorithm: 'HS256', expiresIn: '15m' },
+  );
+}
+
+// ─── generateAdminTokenWithId ───────────────────────────────────────────
+
+/**
+ * Generate admin JWT token using actual DB IDs.
+ * Required because seed data uses onConflictDoUpdate on username,
+ * so the admin user's DB ID may not be 1 in the file DB.
+ */
+export function generateAdminTokenWithId(
+  userDbId: number,
+  groupDbId: number,
+  jwtSecret: string,
+): string {
+  const userId = generatePublicID(userDbId, EntityType.User);
+  const groupId = generatePublicID(groupDbId, EntityType.UserGroup);
 
   return jwt.sign(
     {

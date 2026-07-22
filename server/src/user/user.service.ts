@@ -56,7 +56,7 @@ export class UserService {
       userGroup: {
         id: generatePublicID(userGroup.id, EntityType.UserGroup),
         name: userGroup.name,
-        description: userGroup.description,
+        description: userGroup.description ?? '',
       },
       status: user.status,
     };
@@ -170,7 +170,7 @@ export class UserService {
         userGroup: {
           id: generatePublicID(group.id, EntityType.UserGroup),
           name: group.name,
-          description: group.description,
+          description: group.description ?? '',
         },
         status: user.status,
       };
@@ -232,7 +232,7 @@ export class UserService {
       userGroup: {
         id: generatePublicID(group.id, EntityType.UserGroup),
         name: group.name,
-        description: group.description,
+        description: group.description ?? '',
       },
       status: user.status,
     };
@@ -334,7 +334,7 @@ export class UserService {
     return rows.map((group: any) => ({
       id: generatePublicID(group.id, EntityType.UserGroup),
       name: group.name,
-      description: group.description,
+      description: group.description ?? '',
     }));
   }
 }

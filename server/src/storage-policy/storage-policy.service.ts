@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { StoragePolicyRepository } from './storage-policy.repository';
 import { generatePublicID, decodePublicID, EntityType } from '../common/utils/sqids.util';
+import { toISODateString } from '../common/utils/time.util';
 import { ErrorCodes } from '../common/constants/error-codes';
 
 const ALLOWED_FLAGS = ['article_image', 'comment_image', 'user_avatar'];
@@ -250,8 +251,8 @@ export class StoragePolicyService implements OnModuleInit {
   toApiResponse(policy: any) {
     return {
       id: generatePublicID(policy.id, EntityType.StoragePolicy),
-      created_at: policy.createdAt,
-      updated_at: policy.updatedAt,
+      created_at: toISODateString(policy.createdAt),
+      updated_at: toISODateString(policy.updatedAt),
       name: policy.name,
       type: policy.type,
       flag: policy.flag,
