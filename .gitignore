@@ -24,3 +24,4 @@ anheyu-app/
 .codegraph/
 _go-backend-archive/
 server/data/uploads/
+server/test-db.sqlite
