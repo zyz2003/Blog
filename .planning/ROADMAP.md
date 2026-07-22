@@ -188,6 +188,22 @@ Plans:
 
 **Goal:** Full regression test and production cutover
 
+**Plans:** 3 plans
+
+Plans:
+
+**Wave 1** (Fix pre-existing test failures)
+
+- [ ] 15-01-PLAN.md — Fix 5 pre-existing test failures (PostCategory.description null, comment export/import stale 404, auth refresh-token isolation)
+
+**Wave 2** (Full regression + cross-module integration, blocked on Wave 1)
+
+- [ ] 15-02-PLAN.md — Run full regression (561 tests) + add cross-module integration tests in phase15-verification/
+
+**Wave 3** (Browser walkthrough + deployment docs, blocked on Wave 2)
+
+- [ ] 15-03-PLAN.md — Browser critical path walkthrough + deployment README + migration tool verification
+
 **Success Criteria:**
 
 - All frontend pages work without errors
