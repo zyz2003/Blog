@@ -259,30 +259,36 @@ describe('Comment API Compat', () => {
   });
 
   // ─── 16. POST /api/comments/export (JWT+Admin) ──────────────────────
-  // Note: export/import endpoints are not implemented in the admin controller.
-  // They return 404 (route not found) since the handlers don't exist.
 
   describe('POST /api/comments/export', () => {
-    it('returns 404 for unimplemented export', async () => {
+    it('returns success response for export', async () => {
       const res = await supertest(ctx.app.getHttpServer())
         .post('/api/comments/export')
-        .set('authorization', `Bearer ${ctx.adminToken}`);
+        .set('authorization', `Bearer ${ctx.adminToken}`)
+        .send({ ids: [] });
 
-      // Export endpoint not implemented — route not found
-      expect(res.status).toBe(404);
+      // Export endpoint returns JSON file download with attachment header
+      expect(res.status).toBe(200);
+      expect(res.headers['content-disposition']).toContain('comments_export');
     });
   });
 
   // ─── 17. POST /api/comments/import (JWT+Admin) ──────────────────────
 
   describe('POST /api/comments/import', () => {
-    it('returns 404 for unimplemented import', async () => {
+    it('returns success response for import', async () => {
       const res = await supertest(ctx.app.getHttpServer())
         .post('/api/comments/import')
-        .set('authorization', `Bearer ${ctx.adminToken}`);
+        .set('authorization', `Bearer ${ctx.adminToken}`)
+        .attach('file', Buffer.from('[]'), 'comments.json');
 
-      // Import endpoint not implemented — route not found
-      expect(res.status).toBe(404);
+      // Import endpoint returns 200 with result structure
+      assertSuccessResponse(res, 200);
+      const data = res.body.data;
+      expect(data).toHaveProperty('total_count');
+      expect(data).toHaveProperty('success_count');
+      expect(data).toHaveProperty('skipped_count');
+      expect(data).toHaveProperty('failed_count');
     });
   });
 });
