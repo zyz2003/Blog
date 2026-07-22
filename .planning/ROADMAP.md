@@ -48,7 +48,7 @@ Phases 12-15 complete. Every frontend API call verified against Go backend sourc
 |-------|------|------|----------|--------------|
 | 12 | API Inventory & Auth & Settings Verification | 4/5 | Complete|  |
 | 13 | Content Verification | 1/6 | Complete    | 2026-07-20 |
-| 14 | Features Verification | 6/7 | In Progress|  |
+| 14 | Features Verification | 7/7 | Complete   | 2026-07-22 |
 | 15 | Final Integration & Cutover | Full regression, browser E2E walkthrough, production cutover | P0 | Phases 12-14 |
 
 ---
@@ -137,7 +137,7 @@ Plans:
 
 **Goal:** Verify all auxiliary feature endpoints — statistics, friend links, albums, doc series, SEO, music, notifications, scheduled tasks, backup
 
-**Plans:** 6/7 plans executed
+**Plans:** 7/7 plans complete
 
 Plans:
 
@@ -158,7 +158,7 @@ Plans:
 
 **Wave 4** (Schedule + Regression, blocked on Wave 3)
 
-- [ ] 14-07-PLAN.md — Schedule/Cron job verification + full Phase 14 regression test suite
+- [x] 14-07-PLAN.md — Schedule/Cron job verification + full Phase 14 regression test suite (completed 2026-07-22)
 
 **Success Criteria:**
 
