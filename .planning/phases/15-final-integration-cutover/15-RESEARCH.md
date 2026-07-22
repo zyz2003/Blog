@@ -341,22 +341,25 @@ cd frontend && npm run dev
 | A4 | No .env file is needed for local development | Environment | If JWT_SECRET Joi validation blocks startup, workaround needed |
 | A5 | The frontend npm run dev works without modification | Frontend Config | If frontend has issues connecting to backend, walkthrough will fail |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should stale test files (phase02, phase08) be updated or removed?**
    - What we know: These tests have 44+ failures from stale expectations (201 vs 200, Go-issued JWT, etc.)
    - What's unclear: Whether they provide any value beyond what Phase 13-14 verification already covers
    - Recommendation: Update the 5 specific failures in Phase 13-14/api-compat suites. Leave phase02/phase08 as-is since they are superseded by the verification suites.
+   - RESOLVED: Fix only the 5 failures in regression scope (Plan 01), leave phase02/08 as-is per recommendation
 
 2. **Should the test DB be reset before regression runs?**
    - What we know: Shared file DB causes isolation failures; tests pass individually but fail in batch
    - What's unclear: Whether deleting data/anheyu.db before each suite run is acceptable
    - Recommendation: Delete data/anheyu.db before running the full regression. The app auto-creates and seeds it.
+   - RESOLVED: Delete data/anheyu.db between suite runs (Plan 02 Task 1 implements this)
 
 3. **What cross-module integration tests should Phase 15 add?**
    - What we know: Phase 14 regression.spec.ts tests 5 cross-module scenarios (Link.id, Storage-policy dates, UserGroup.description, Album.fileHash, Article CRUD)
    - What's unclear: What additional cross-module scenarios are worth testing
    - Recommendation: Test scenarios that span multiple services in a single request flow: (1) Create article with categories/tags, verify public list includes it; (2) Upload file, create direct link, verify public access; (3) Post comment on article, verify it appears in admin comment list; (4) Create friend link, verify it appears in public link list
+   - RESOLVED: 4 cross-module scenarios as recommended (Plan 02 Task 2 implements all 4)
 
 ## Environment Availability
 
