@@ -83,6 +83,32 @@ describe('Category Field Verification', () => {
     });
   });
 
+  // ─── D-314 pattern: description null coalescing ──────────────────────
+
+  describe('PostCategory.description null coalescing (D-314 pattern)', () => {
+    it('returns empty string for null description, never null', async () => {
+      // Create a category without description (DB column will be null)
+      const res = await supertest(ctx.app.getHttpServer())
+        .post('/api/post-categories')
+        .set('authorization', `Bearer ${ctx.adminToken}`)
+        .send({
+          name: `Null Desc Cat ${ctx.ts}`,
+          slug: `null-desc-cat-${ctx.ts}`,
+          // description intentionally omitted → DB column is null
+          is_series: false,
+          sort_order: 0,
+        });
+
+      assertSuccessResponse(res, 200);
+      const data = res.body.data;
+
+      // Per D-314: description must be string (empty string for null DB values),
+      // matching Go string zero value — never null
+      expect(data).toHaveProperty('description');
+      expect(typeof data.description).toBe('string');
+    });
+  });
+
   // ─── MEDIUM-risk: POST category ────────────────────────────────────────
 
   describe('POST /api/post-categories (MEDIUM)', () => {

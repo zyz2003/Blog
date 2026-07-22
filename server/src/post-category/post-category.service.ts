@@ -95,7 +95,7 @@ export class PostCategoryService {
       updated_at: toISODateString(category.updatedAt),
       name: category.name,
       slug: category.slug,
-      description: category.description,
+      description: category.description ?? '',
       count: category.count,
       is_series: category.isSeries,
       sort_order: category.sortOrder,
