@@ -504,4 +504,73 @@ describe('UserManagement Field Verification', () => {
       expect(typeof data.allowCommentReplyNotification).toBe('boolean');
     });
   });
+
+  // ─── UserGroup.description edge case ───────────────────────────────────
+
+  describe('UserGroup.description nullability edge case', () => {
+    it('returns empty string for null description in DB (Go string zero value)', async () => {
+      // Insert a user group with null description directly into DB
+      const { userGroups } = await import('../../src/database/schemas/user-group.schema');
+      await ctx.db.insert(userGroups).values({
+        name: `NullDescGroup ${ctx.ts}`,
+        description: null, // Explicitly null
+        permissions: JSON.stringify([]),
+        maxStorage: 0,
+        speedLimit: 0,
+        settings: JSON.stringify({}),
+      }).onConflictDoNothing().run();
+
+      // Fetch user groups via API
+      const res = await supertest(ctx.app.getHttpServer())
+        .get('/api/admin/user-groups')
+        .set('authorization', `Bearer ${ctx.adminToken}`);
+
+      assertSuccessResponse(res);
+      const groups = res.body.data;
+
+      // Find the group with null description
+      const nullDescGroup = groups.find((g: any) => g.name === `NullDescGroup ${ctx.ts}`);
+      if (nullDescGroup) {
+        // Go UserGroup.Description is string type — zero value is ""
+        // NestJS must return "" for null DB values
+        expect(nullDescGroup.description).toBe('');
+        expect(typeof nullDescGroup.description).toBe('string');
+      }
+    });
+  });
+
+  // ─── GetUserInfoResponse.userGroupID inconsistency ─────────────────────
+
+  describe('GetUserInfoResponse.userGroupID type inconsistency', () => {
+    it('userGroupID is raw number in GetUserInfoResponse (Go uint inconsistency)', async () => {
+      const res = await supertest(ctx.app.getHttpServer())
+        .get('/api/user/info')
+        .set('authorization', `Bearer ${ctx.adminToken}`);
+
+      assertSuccessResponse(res);
+      const data = res.body.data;
+
+      // Go GetUserInfoResponse.userGroupID is uint (raw number)
+      // This differs from AdminUserDTO.userGroupID which is string (Sqids)
+      // This is a Go design inconsistency that NestJS replicates
+      expect(data).toHaveProperty('userGroupID');
+      expect(typeof data.userGroupID).toBe('number');
+    });
+
+    it('AdminUserDTO.userGroupID is Sqids string (different from GetUserInfo)', async () => {
+      const res = await supertest(ctx.app.getHttpServer())
+        .get('/api/admin/users?page=1&pageSize=10')
+        .set('authorization', `Bearer ${ctx.adminToken}`);
+
+      assertSuccessResponse(res);
+      const users = res.body.data.users;
+
+      if (users.length > 0) {
+        // AdminUserDTO.userGroupID is string (Sqids) — different from GetUserInfo
+        expect(typeof users[0].userGroupID).toBe('string');
+        const decoded = decodePublicID(users[0].userGroupID);
+        expect(decoded.entityType).toBe(EntityType.UserGroup);
+      }
+    });
+  });
 });
