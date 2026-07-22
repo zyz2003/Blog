@@ -8,7 +8,11 @@ import {
   clearThrottleStorage,
   TestContext,
   ADMIN_PASSWORD,
+  TEST_JWT_SECRET,
 } from '../helpers/api-compat-helpers';
+import * as bcryptjs from 'bcryptjs';
+import { eq } from 'drizzle-orm';
+import { users } from '../../src/database/schemas/user.schema';
 
 /**
  * Auth API Compatibility Tests
@@ -182,6 +186,34 @@ describe('Auth API Compat', () => {
   // ─── 3. POST /api/auth/refresh-token -- dual-channel ────────────────
 
   describe('POST /api/auth/refresh-token -- dual-channel', () => {
+    // Re-seed admin user before refresh-token tests to ensure correct DB state.
+    // In batch runs, other test files may modify admin user state (password, status),
+    // causing login to fail and refresh-token tests to break.
+    beforeAll(async () => {
+      const passwordHash = await bcryptjs.hash(ADMIN_PASSWORD, 10);
+      await ctx.db
+        .insert(users)
+        .values({
+          id: 1,
+          username: 'admin',
+          passwordHash,
+          email: 'admin@test.com',
+          nickname: 'Admin',
+          userGroupId: 1,
+          status: 1,
+        })
+        .onConflictDoUpdate({
+          target: users.username,
+          set: {
+            passwordHash,
+            email: 'admin@test.com',
+            userGroupId: 1,
+            status: 1,
+          },
+        })
+        .run();
+    });
+
     it('refreshes via Authorization header', async () => {
       // First login to get refresh token
       const loginRes = await supertest(ctx.app.getHttpServer())
