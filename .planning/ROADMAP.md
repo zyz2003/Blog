@@ -49,7 +49,7 @@ Phases 12-15 complete. Every frontend API call verified against Go backend sourc
 | 12 | API Inventory & Auth & Settings Verification | 4/5 | Complete|  |
 | 13 | Content Verification | 1/6 | Complete    | 2026-07-20 |
 | 14 | Features Verification | 7/7 | Complete    | 2026-07-22 |
-| 15 | Final Integration & Cutover | Full regression, browser E2E walkthrough, production cutover | P0 | Phases 12-14 |
+| 15 | Final Integration & Cutover | 1/3 | In Progress|  |
 
 ---
 
@@ -188,13 +188,13 @@ Plans:
 
 **Goal:** Full regression test and production cutover
 
-**Plans:** 3 plans
+**Plans:** 1/3 plans executed
 
 Plans:
 
 **Wave 1** (Fix pre-existing test failures)
 
-- [ ] 15-01-PLAN.md — Fix 5 pre-existing test failures (PostCategory.description null, comment export/import stale 404, auth refresh-token isolation)
+- [x] 15-01-PLAN.md — Fix 5 pre-existing test failures (PostCategory.description null, comment export/import stale 404, auth refresh-token isolation)
 
 **Wave 2** (Full regression + cross-module integration, blocked on Wave 1)
 
