@@ -157,8 +157,14 @@ export class ArticleController {
     }
 
     // 8. Return response matching Go backend UploadImage format
+    // Frontend expects { url, file_id } — url is the static-accessible path
+    const publicId = generatePublicID(fileRecord.id, EntityType.File);
+    const relativePath = `${policy.basePath || 'data/uploads'}/articles/${uniqueName}`;
+    const url = relativePath.replace(/^data\/uploads/, '/uploads');
+
     return {
-      file_id: generatePublicID(fileRecord.id, EntityType.File),
+      url,
+      file_id: publicId,
       name: file.originalname,
       size: file.size,
     };
