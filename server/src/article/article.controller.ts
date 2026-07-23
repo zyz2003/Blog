@@ -29,6 +29,7 @@ import { DRIZZLE } from '../database/database.module';
 import { eq, isNull, and } from 'drizzle-orm';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { DirectLinkService } from '../direct-link/direct-link.service';
 
 @Controller('articles')
 export class ArticleController {
@@ -36,6 +37,7 @@ export class ArticleController {
     private readonly articleService: ArticleService,
     private readonly policyService: StoragePolicyService,
     private readonly thumbnailService: ThumbnailService,
+    private readonly directLinkService: DirectLinkService,
     @Inject(DRIZZLE) private readonly db: any,
   ) {}
 
@@ -91,7 +93,6 @@ export class ArticleController {
   @UseInterceptors(FileInterceptor('file'))
   async uploadImage(
     @UploadedFile() file: Express.Multer.File,
-    @Body() body: { skip_image_style?: string },
     @CurrentUser() user: any,
   ) {
     if (!file) {
@@ -99,7 +100,8 @@ export class ArticleController {
     }
 
     const ownerId = this.extractOwnerDbId(user);
-    const skipImageStyle = body.skip_image_style === 'true';
+    // Per Go backend: skip_image_style only controls URL style suffix (CDN image processing).
+    // It does NOT change storage directory. Local storage ignores it.
 
     // 1. Get default article_image policy per D-113
     const policy = await this.policyService.findByFlag('article_image');
@@ -115,9 +117,7 @@ export class ArticleController {
     const uniqueName = `${timestamp}-${file.originalname}`;
 
     // 3. Ensure target directory exists
-    // skip_image_style=true means icon/favicon — store in icons/ subdirectory
-    const subDir = skipImageStyle ? 'icons' : 'articles';
-    const targetDir = path.join(policy.basePath || 'data/uploads', subDir);
+    const targetDir = path.join(policy.basePath || 'data/uploads', 'articles');
     await fs.mkdir(targetDir, { recursive: true });
 
     // 4. Write uploaded file to target path
@@ -160,11 +160,11 @@ export class ArticleController {
       // Thumbnail failure does not block upload per D-106
     }
 
-    // 8. Return response matching Go backend UploadImage format
-    // Frontend expects { url, file_id } — url is the static-accessible path
+    // Create direct link (matches Go GetOrCreateDirectLinks) and return /api/f/ URL.
+    // Local storage has no image style suffix, so skip_image_style is effectively a no-op.
     const publicId = generatePublicID(fileRecord.id, EntityType.File);
-    const relativePath = `${policy.basePath || 'data/uploads'}/${subDir}/${uniqueName}`;
-    const url = relativePath.replace(/^data\/uploads/, '/uploads');
+    const links = await this.directLinkService.createDirectLinks([publicId], ownerId);
+    const url = links[0]?.file_url || '';
 
     return {
       url,

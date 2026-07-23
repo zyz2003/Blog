@@ -11,6 +11,7 @@ import { StoragePolicyModule } from '../storage-policy/storage-policy.module';
 import { ThumbnailModule } from '../thumbnail/thumbnail.module';
 import { SearchModule } from '../search/search.module';
 import { RssModule } from '../rss/rss.module';
+import { DirectLinkModule } from '../direct-link/direct-link.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { RssModule } from '../rss/rss.module';
     ThumbnailModule,
     SearchModule,
     forwardRef(() => RssModule),
+    forwardRef(() => DirectLinkModule),
   ],
   controllers: [ArticleController, PublicArticleController],
   providers: [ArticleService, ArticleRepository],
