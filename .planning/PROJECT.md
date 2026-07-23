@@ -41,6 +41,15 @@
 - AI 播客生成、AI 写作辅助 — 后续阶段
 - 前端代码修改 — 坚持不改，API 兼容即可
 
+### Future Work（已确认的后续实现项，Phase 15 收尾时记录）
+
+- **501 端点功能实现（11 个）** — 当前返回 501 NOT_IMPLEMENTED，前端已优雅处理。包括：auth 5 个（register/activate/forgot-password/reset-password/check-email）、test-email、OneDrive 2 个（upload/download）、config/export + config/import、proxy/download。按需实现，详见 [DEPLOYMENT.md](DEPLOYMENT.md) Section 7
+- **主题/SSR-theme 端点（20 个）** — NestJS 后端暂无 theme controller，前端 Theme Mall 功能依赖这些端点。未来阶段实现
+- **全量浏览器 E2E 走查** — Phase 15 仅走了 5 个关键路径，所有页面的全量走查未来按需进行
+- **Playwright 自动化 E2E 测试** — 当前走查为手动，未来可引入 Playwright 自动化
+- **自动化性能测试和基准** — Phase 15 仅做主观性能感受，未做预优化；未来按需进行
+- **生产环境部署方案（Docker、CI/CD 等）** — 当前为本地开发环境，未来按需
+
 ## Context
 
 - 原项目：https://github.com/anzhiyu-c/anheyu-app
