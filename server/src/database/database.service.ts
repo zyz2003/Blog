@@ -12,7 +12,7 @@ export class DatabaseService implements OnModuleDestroy {
   private readonly db: BetterSQLite3Database<typeof schema>;
 
   constructor(private readonly configService: ConfigService) {
-    const dbPath = this.configService.get<string>('DB_PATH', 'data/anheyu.db');
+    const dbPath = this.configService.get<string>('DB_PATH', 'data/blog.db');
 
     // Ensure data/ directory exists
     const dir = dirname(dbPath);

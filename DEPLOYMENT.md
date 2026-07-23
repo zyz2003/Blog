@@ -25,7 +25,7 @@ Open http://localhost:3000 in your browser. The frontend proxies all `/api/*` re
 
 ## 3. Database
 
-- **Location:** `server/data/anheyu.db` (auto-created on first startup)
+- **Location:** `server/data/blog.db` (auto-created on first startup)
 - **Engine:** SQLite with WAL mode (concurrent reads, serialized writes)
 - **Configuration:** `busy_timeout=5000`, `foreign_keys=ON`
 - **Schema:** Applied via `drizzle-kit push` (run once after fresh install):
@@ -44,7 +44,7 @@ No `.env` file is required for local development. All configuration is stored in
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PORT` | `8091` | Backend HTTP port (matches Go backend, frontend expects this) |
-| `DB_PATH` | `data/anheyu.db` | SQLite database file path (relative to `server/` directory) |
+| `DB_PATH` | `data/blog.db` | SQLite database file path (relative to `server/` directory) |
 | `NODE_TLS_REJECT_UNAUTHORIZED` | — | Set to `0` to bypass SSL verification for music proxy (matches Go `InsecureSkipVerify`) |
 
 **JWT_SECRET** is auto-generated and stored in the database `settings` table on first startup — not in a `.env` file. This matches the Go backend behavior where the secret is persisted in the database.
@@ -57,10 +57,10 @@ The migration tool transfers data from a Go backend SQLite database to the NestJ
 
 ```bash
 # Run migration (with auto-backup and post-migration verification)
-cd server && npm run migrate -- --source /path/to/go-backend.db --target ./data/anheyu.db
+cd server && npm run migrate -- --source /path/to/go-backend.db --target ./data/blog.db
 
 # Dry run (preview changes without writing)
-cd server && npm run migrate:dry-run -- --source /path/to/go-backend.db --target ./data/anheyu.db
+cd server && npm run migrate:dry-run -- --source /path/to/go-backend.db --target ./data/blog.db
 ```
 
 **Options:**
