@@ -91,6 +91,7 @@ export class ArticleController {
   @UseInterceptors(FileInterceptor('file'))
   async uploadImage(
     @UploadedFile() file: Express.Multer.File,
+    @Body() body: { skip_image_style?: string },
     @CurrentUser() user: any,
   ) {
     if (!file) {
@@ -98,6 +99,7 @@ export class ArticleController {
     }
 
     const ownerId = this.extractOwnerDbId(user);
+    const skipImageStyle = body.skip_image_style === 'true';
 
     // 1. Get default article_image policy per D-113
     const policy = await this.policyService.findByFlag('article_image');
@@ -113,7 +115,9 @@ export class ArticleController {
     const uniqueName = `${timestamp}-${file.originalname}`;
 
     // 3. Ensure target directory exists
-    const targetDir = path.join(policy.basePath || 'data/uploads', 'articles');
+    // skip_image_style=true means icon/favicon — store in icons/ subdirectory
+    const subDir = skipImageStyle ? 'icons' : 'articles';
+    const targetDir = path.join(policy.basePath || 'data/uploads', subDir);
     await fs.mkdir(targetDir, { recursive: true });
 
     // 4. Write uploaded file to target path
@@ -159,7 +163,7 @@ export class ArticleController {
     // 8. Return response matching Go backend UploadImage format
     // Frontend expects { url, file_id } — url is the static-accessible path
     const publicId = generatePublicID(fileRecord.id, EntityType.File);
-    const relativePath = `${policy.basePath || 'data/uploads'}/articles/${uniqueName}`;
+    const relativePath = `${policy.basePath || 'data/uploads'}/${subDir}/${uniqueName}`;
     const url = relativePath.replace(/^data\/uploads/, '/uploads');
 
     return {
