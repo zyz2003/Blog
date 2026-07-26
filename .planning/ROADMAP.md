@@ -22,6 +22,10 @@ Phases 10-11 complete. Scheduled tasks running, migration tool available, end-to
 
 Phases 12-15 complete. Every frontend API call verified against Go backend source code. All compatibility issues found and fixed. Frontend runs on new backend with zero modifications.
 
+### M5: AI Features
+
+Phases 16-19 (planned). AI assistant with streaming + tool calling + RAG, unified multi-model dispatching. Architecture designed with swappable framework (AI SDK now, LangGraph later). See `.planning/ai-assistant-architecture.md` for full design.
+
 ---
 
 ## Phase Overview
@@ -50,6 +54,15 @@ Phases 12-15 complete. Every frontend API call verified against Go backend sourc
 | 13 | Content Verification | 1/6 | Complete    | 2026-07-20 |
 | 14 | Features Verification | 7/7 | Complete    | 2026-07-22 |
 | 15 | Final Integration & Cutover | 3/3 | Complete    | 2026-07-23 |
+
+### AI Features (M5 - Planned)
+
+| Phase | Name | Goal | Status | Dependencies |
+|-------|------|------|--------|--------------|
+| 16 | AI Model Router & Summary Migration | ModelResolver + ai_profiles config, migrate raw-fetch summary to AI SDK generateText | Planned | - |
+| 17 | AI Tools & Chat History Storage | Framework-agnostic ToolDef + article-tools (search/get), Drizzle chat tables + ChatHistoryService | Planned | 16 |
+| 18 | Streaming Chat Endpoint | ChatService (streamText + tools + RAG) + POST /api/ai/chat with SSE streaming | Planned | 17 |
+| 19 | Chat Hardening & Frontend Integration | Token compression, disconnect handling, auth timing, useChat frontend + ai_profiles admin UI | Planned | 18 |
 
 ---
 
@@ -214,6 +227,80 @@ Plans:
 
 ---
 
+### Phase 16: AI Model Router & Summary Migration
+
+**Goal:** Build the AI infrastructure foundation - ModelResolver that reads `ai_profiles` config and returns AI SDK model instances. Migrate the existing raw-fetch summary generation (`server/src/ai/ai.service.ts`) to AI SDK `generateText`. Establish clean `ports/adapters/tools/model` directory skeleton with framework-agnostic boundaries.
+
+**Architecture:** See `.planning/ai-assistant-architecture.md` - ports/adapters (Hexagonal) pattern. Domain layer zero AI framework dependency. Only `adapters/`, `chat.service.ts`, `model-resolver.service.ts`, and controllers touch `ai`/`@ai-sdk/*`.
+
+**Requirements:** AI-01, AI-02, AI-02F, AI-02A
+
+**Already done (先期工作，归入本 phase 验收):**
+- 后端 AI 摘要接口 `POST /api/ai/generate-summary/:id` + 权限守卫
+- 后台 AiSummaryForm 表单（服务商/API地址/Key/模型/Prompt/AI名字）
+- 编辑器 "AI 生成" 按钮
+- 前台 ArticleLeadSummary 打字机效果 + 进入视口 + AI名字
+
+**Plans:** 3 plans
+
+Plans:
+
+**Wave 1** (Backend core — no dependencies)
+
+- [ ] 16-01-PLAN.md — Rebuild server/src/ai/ with ports/adapters/model architecture + AI SDK 7 generateText migration + unit tests (AI-01, AI-02)
+
+**Wave 2** (Frontend settings — depends on 16-01)
+
+- [ ] 16-02-PLAN.md — New "AI 功能" nav group + AiModelsForm multi-profile management + upgraded AiSummaryForm + placeholder forms (AI-02A, AI-01)
+
+**Wave 3** (End-to-end verification — depends on 16-01 + 16-02)
+
+- [ ] 16-03-PLAN.md — Verify typewriter display + admin form round-trip + legacy fallback + public key security (AI-02F, AI-01, AI-02, AI-02A)
+
+### Phase 17: AI Tools & Chat History Storage
+
+**Goal:** Build framework-agnostic assets that survive a future LangGraph migration unchanged - tool definitions and chat history storage.
+
+**Key deliverables:**
+- `server/src/ai/tools/tool-def.ts` - ToolDef type (Zod schema + pure execute), framework-agnostic
+- `server/src/ai/tools/article-tools.ts` - search_articles (calls SearchService.search FTS5) + get_article (calls ArticleService.getPublic). Zero AI library imports
+- `server/src/ai/chat.schema.ts` - Drizzle tables: chat_conversations, chat_messages
+- `server/src/ai/chat-history.service.ts` - CRUD + history truncation, pure DB ops, framework-agnostic
+- Drizzle migration for chat tables
+
+**Critical:** These files must NOT import `ai` or `@langchain/*`. They are the migration-protected assets.
+
+### Phase 18: Streaming Chat Endpoint
+
+**Goal:** Implement the streaming chat assistant endpoint with tool calling and RAG. Build the frontend chat widget.
+
+**Key deliverables:**
+- `server/src/ai/chat.service.ts` - ChatService.chat(): streamText + articleTools + stopWhen:stepCountIs(5) + toolChoice:auto + onFinish persistence + onError logging. Returns UIMessageStream ReadableStream
+- `server/src/ai/ports/ai.port.ts` - add ChatService contract (UIMessage[] in, ReadableStream<Uint8Array> out)
+- `server/src/ai/ai-chat.controller.ts` - POST /api/ai/chat, @Res() + pipeUIMessageStreamToResponse, pre-stream sync auth/validation, user message persisted before stream starts
+- Ensure CORS streaming headers in main.ts
+- **前台前端**: 聊天组件 - 右下角浮动按钮 + 对话窗口（useChat + DefaultChatTransport 指向 /api/ai/chat），流式渲染 token
+- **前台前端**: 对话历史展示、工具调用结果（文章链接）渲染
+- Verify: frontend useChat consumes stream, tokens arrive incrementally, tool calls return article results, history saved
+
+**Key risks:** @Res() bypasses Nest enhancers; streamText doesn't throw (errors go into stream); CORS buffering.
+
+### Phase 19: Chat Hardening & Frontend Integration
+
+**Goal:** Production-harden the chat and wire up the admin config UI + final frontend polish.
+
+**Key deliverables:**
+- Context compression (prepareStep truncates when messages.length > threshold)
+- Token usage recording (onStepFinish)
+- Disconnect handling (consumeStream before persist, avoid state corruption)
+- Auth timing (JwtAuthGuard runs before stream starts, 401 not SSE error frame)
+- **后台前端**: ai_profiles 多 profile 管理表单（增删改、设默认、按用途 summary/chat/writing 标记）- 与 Phase 16 的基础表单衔接
+- **后台前端**: 对话历史查看页（管理员可查看用户对话）
+- **前台前端**: 聊天组件打磨（建议问题、欢迎语、断线重连提示、错误状态）
+- Verify: long conversations don't blow token budget, disconnect doesn't corrupt state, unauthorized returns 401, end-to-end usable
+
+---
+
 ## Requirement Traceability
 
 | Requirement ID | Phase | Verification Phase | Description |
@@ -258,7 +345,17 @@ Plans:
 | CRON-01 | 10 | 14 | Scheduled tasks (8 job types) |
 | MIGRATION-01 | 11 | — | SQLite to SQLite migration tool |
 | INTEGRATION-01 | 11 | 15 | End-to-end API compatibility testing |
+| AI-01 | 16 | - | AI model router (ModelResolver) + ai_profiles multi-profile config |
+| AI-02 | 16 | - | Migrate summary generation from raw fetch to AI SDK generateText |
+| AI-02F | 16 | - | 前台 AI 摘要打字机展示验收（已做，归入 Phase 16 验收） |
+| AI-02A | 16 | - | 后台 ai_profiles 多 profile 管理表单 + AI 设置导航分组 |
+| AI-03 | 17 | - | Framework-agnostic tool definitions (search_articles, get_article) |
+| AI-04 | 17 | - | Chat history storage (Drizzle tables + ChatHistoryService) |
+| AI-05 | 18 | - | Streaming chat endpoint with tool calling and RAG |
+| AI-05F | 18 | - | 前台聊天组件（useChat + 浮动按钮 + 对话窗口） |
+| AI-06 | 19 | - | Chat hardening (token compression, disconnect, auth timing) |
+| AI-07 | 19 | - | 后台 ai_profiles 管理 UI + 对话历史查看 + 前台聊天打磨 |
 
 ---
 
-*Last updated: 2026-07-21*
+*Last updated: 2026-07-26*
