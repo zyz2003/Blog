@@ -8,7 +8,19 @@ import { useSiteConfigStore } from "@/store/site-config-store";
 import type { PageOneImageItem } from "@/types/site-config";
 import styles from "./OneImageBanner.module.css";
 
-type OneImageRouteKey = "home" | "link" | "categories" | "tags" | "archives";
+type OneImageRouteKey =
+  | "home"
+  | "link"
+  | "categories"
+  | "tags"
+  | "archives"
+  | "about"
+  | "equipment"
+  | "recentcomments"
+  | "article-statistics"
+  | "user-center"
+  | "air-conditioner"
+  | "update";
 
 function getRouteKey(pathname: string | null): OneImageRouteKey | null {
   if (!pathname) return null;
@@ -17,6 +29,13 @@ function getRouteKey(pathname: string | null): OneImageRouteKey | null {
   if (pathname === "/categories") return "categories";
   if (pathname === "/tags") return "tags";
   if (pathname.startsWith("/archives")) return "archives";
+  if (pathname === "/about") return "about";
+  if (pathname === "/equipment") return "equipment";
+  if (pathname.startsWith("/recentcomments")) return "recentcomments";
+  if (pathname === "/article-statistics") return "article-statistics";
+  if (pathname === "/user-center") return "user-center";
+  if (pathname === "/air-conditioner") return "air-conditioner";
+  if (pathname === "/update") return "update";
   return null;
 }
 
@@ -355,6 +374,9 @@ export function OneImageBanner() {
   }, [isVideoMuted]);
 
   if (!isEnabled) return null;
+
+  // background-only 模式：只设置全屏背景（CSS 变量 + class 已在 useEffect 中处理），不渲染文字层
+  if (currentConfig?.mode === "background-only") return null;
 
   return (
     <section className={styles.oneImageBanner}>

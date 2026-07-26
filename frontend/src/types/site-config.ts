@@ -5,6 +5,8 @@ import type { AboutPageConfig } from "./about";
 
 export interface PageOneImageItem {
   enable?: boolean;
+  /** 显示模式：full=完整一图流（背景+标题/副标题/打字机），background-only=仅全屏背景图 */
+  mode?: "full" | "background-only";
   background?: string;
   mediaType?: "image" | "video";
   mainTitle?: string;
@@ -99,6 +101,13 @@ export interface SiteConfigData {
         categories?: PageOneImageItem;
         tags?: PageOneImageItem;
         archives?: PageOneImageItem;
+        about?: PageOneImageItem;
+        equipment?: PageOneImageItem;
+        recentcomments?: PageOneImageItem;
+        "article-statistics"?: PageOneImageItem;
+        "user-center"?: PageOneImageItem;
+        "air-conditioner"?: PageOneImageItem;
+        update?: PageOneImageItem;
       };
       hitokoto_api?: string;
       typing_speed?: number;
@@ -109,6 +118,13 @@ export interface SiteConfigData {
       categories?: PageOneImageItem;
       tags?: PageOneImageItem;
       archives?: PageOneImageItem;
+      about?: PageOneImageItem;
+      equipment?: PageOneImageItem;
+      recentcomments?: PageOneImageItem;
+      "article-statistics"?: PageOneImageItem;
+      "user-center"?: PageOneImageItem;
+      "air-conditioner"?: PageOneImageItem;
+      update?: PageOneImageItem;
     };
   };
 
