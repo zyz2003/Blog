@@ -236,18 +236,19 @@ Plans:
 **Requirements:** AI-01, AI-02, AI-02F, AI-02A
 
 **Already done (先期工作，归入本 phase 验收):**
+
 - 后端 AI 摘要接口 `POST /api/ai/generate-summary/:id` + 权限守卫
 - 后台 AiSummaryForm 表单（服务商/API地址/Key/模型/Prompt/AI名字）
 - 编辑器 "AI 生成" 按钮
 - 前台 ArticleLeadSummary 打字机效果 + 进入视口 + AI名字
 
-**Plans:** 3 plans
+**Plans:** 1/3 plans executed
 
 Plans:
 
 **Wave 1** (Backend core — no dependencies)
 
-- [ ] 16-01-PLAN.md — Rebuild server/src/ai/ with ports/adapters/model architecture + AI SDK 7 generateText migration + unit tests (AI-01, AI-02)
+- [x] 16-01-PLAN.md — Rebuild server/src/ai/ with ports/adapters/model architecture + AI SDK 7 generateText migration + unit tests (AI-01, AI-02)
 
 **Wave 2** (Frontend settings — depends on 16-01)
 
@@ -262,6 +263,7 @@ Plans:
 **Goal:** Build framework-agnostic assets that survive a future LangGraph migration unchanged - tool definitions and chat history storage.
 
 **Key deliverables:**
+
 - `server/src/ai/tools/tool-def.ts` - ToolDef type (Zod schema + pure execute), framework-agnostic
 - `server/src/ai/tools/article-tools.ts` - search_articles (calls SearchService.search FTS5) + get_article (calls ArticleService.getPublic). Zero AI library imports
 - `server/src/ai/chat.schema.ts` - Drizzle tables: chat_conversations, chat_messages
@@ -275,6 +277,7 @@ Plans:
 **Goal:** Implement the streaming chat assistant endpoint with tool calling and RAG. Build the frontend chat widget.
 
 **Key deliverables:**
+
 - `server/src/ai/chat.service.ts` - ChatService.chat(): streamText + articleTools + stopWhen:stepCountIs(5) + toolChoice:auto + onFinish persistence + onError logging. Returns UIMessageStream ReadableStream
 - `server/src/ai/ports/ai.port.ts` - add ChatService contract (UIMessage[] in, ReadableStream<Uint8Array> out)
 - `server/src/ai/ai-chat.controller.ts` - POST /api/ai/chat, @Res() + pipeUIMessageStreamToResponse, pre-stream sync auth/validation, user message persisted before stream starts
@@ -290,6 +293,7 @@ Plans:
 **Goal:** Production-harden the chat and wire up the admin config UI + final frontend polish.
 
 **Key deliverables:**
+
 - Context compression (prepareStep truncates when messages.length > threshold)
 - Token usage recording (onStepFinish)
 - Disconnect handling (consumeStream before persist, avoid state corruption)
