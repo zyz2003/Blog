@@ -476,17 +476,19 @@ export class AiModule {}
 | A4 | The `ai_profiles` JSON stored in settings table can be arbitrarily large (no SQLite TEXT column size limit concern for a few profiles) | Schema/Migration | If profiles array grows very large, might hit SQLite limits — unlikely for personal blog |
 | A5 | `SettingsService.get()` cache is populated before AI module methods are called (onModuleInit runs before HTTP requests) | Pattern 2 | If cache is empty on first request, resolveProfiles returns empty array — but this matches current behavior |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **zod v3 vs v4 for AI SDK 7**
+1. **zod v3 vs v4 for AI SDK 7** (RESOLVED)
    - What we know: AI SDK 7 peer dep accepts `^3.25.76 || ^4.1.8`. Project has no existing zod.
    - What's unclear: Whether zod v4 has any subtle incompatibilities with AI SDK 7's `inputSchema` consumption that v3 doesn't.
    - Recommendation: Use zod v4 (^4.4.3) — it's the current major, AI SDK explicitly supports it, and the project has no existing zod to conflict with.
+   - RESOLVED: Plan 01 installs zod@^4.4.3. Decision locked.
 
-2. **Provider instance caching in ModelResolver**
+2. **Provider instance caching in ModelResolver** (RESOLVED)
    - What we know: `createOpenAICompatible` creates a new provider object each call. The architecture doc creates it inline in `resolve()`.
    - What's unclear: Whether creating a provider per request has any overhead (HTTP connection setup, etc.).
    - Recommendation: Create provider per-request for now (matches architecture doc). AI SDK providers are lightweight factory objects — the actual HTTP connection is per-request anyway. If profiling shows overhead, add a Map cache keyed by profile ID.
+   - RESOLVED: Plan 01 creates provider per-request in resolve(). Decision locked.
 
 ## Environment Availability
 
