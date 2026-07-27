@@ -88,6 +88,18 @@ export const postManagementApi = {
     }
   },
 
+  /**
+   * AI 生成文章摘要
+   * POST /api/ai/generate-summary/:id
+   */
+  async generateAiSummary(id: string): Promise<{ summary: string }> {
+    const response = await apiClient.post<{ summary: string }>(`/api/ai/generate-summary/${id}`);
+    if (response.code === 200 && response.data) {
+      return response.data;
+    }
+    throw new Error(response.message || "AI 摘要生成失败");
+  },
+
   async batchDeleteArticles(articleIds: string[]): Promise<void> {
     const response = await apiClient.delete<unknown>("/api/articles/batch", {
       data: { ids: articleIds } as BatchDeleteRequest,

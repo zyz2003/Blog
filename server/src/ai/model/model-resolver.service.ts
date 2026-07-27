@@ -3,6 +3,7 @@ import { SettingsService } from '../../settings/settings.service';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { LanguageModel } from 'ai';
 import { resolveProfiles } from './ai-profile';
+import { DomainError } from '../domain-error';
 
 @Injectable()
 export class ModelResolver {
@@ -26,7 +27,7 @@ export class ModelResolver {
       profiles.find((p) => p.id === (profileId ?? defaultId) && p.enabled) ||
       profiles.find((p) => p.enabled);
 
-    if (!profile) throw new Error('未配置可用的 AI 模型');
+    if (!profile) throw new DomainError('未配置可用的 AI 模型');
 
     const provider = createOpenAICompatible({
       name: profile.provider, // REQUIRED in AI SDK 7

@@ -321,4 +321,7 @@ export const PUBLIC_SETTING_KEYS = new Set([
 
   // ─── Auth/registration ───
   'ENABLE_REGISTRATION',
+
+  // ─── AI summary display (frontend reads these to render) ───
+  'ai_summary_gpt_name',
 ]);

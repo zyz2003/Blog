@@ -315,6 +315,32 @@
   user-select: none;
 }
 
+.articleLeadStatus {
+  margin-left: 6px;
+  font-size: 0.75rem;
+  font-weight: normal;
+  color: var(--muted-foreground);
+  user-select: none;
+}
+
+.articleLeadCursor {
+  display: inline-block;
+  margin-left: 2px;
+  font-weight: 400;
+  color: var(--primary);
+  animation: articleLeadBlink 1s infinite;
+}
+
+@keyframes articleLeadBlink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
 .articleLeadText {
   font-size: 0.95rem;
   line-height: 1.6;

@@ -38,6 +38,7 @@ import { DatabaseModule } from './database/database.module';
 import { CommonModule } from './common/common.module';
 import { ScheduleModule } from './schedule/schedule.module';
 import { BackupModule } from './backup/backup.module';
+import { AiModule } from './ai/ai.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
@@ -94,6 +95,8 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     ScheduleModule,
     // Phase 10 — Backup: BackupModule for BackupService + BackupController
     BackupModule,
+    // AI 功能：文章摘要生成等
+    AiModule,
   ],
   providers: [
     // ThrottlerGuard runs before auth — rate limiting before JWT validation

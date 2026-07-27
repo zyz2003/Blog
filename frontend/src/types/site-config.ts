@@ -436,6 +436,9 @@ export interface SiteConfigData {
     [key: string]: unknown;
   };
 
+  // AI 摘要展示配置（前台读取）
+  ai_summary_gpt_name?: string;
+
   // 版权配置
   copyright?: {
     license?: string;

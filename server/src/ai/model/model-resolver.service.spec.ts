@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { Test } from '@nestjs/testing';
 import { ModelResolver } from './model-resolver.service';
 import { SettingsService } from '../../settings/settings.service';
+import { DomainError } from '../domain-error';
 
 /**
  * Create a mock SettingsService with the given key-value pairs.
@@ -111,6 +112,7 @@ describe('ModelResolver', () => {
 
     const resolver = module.get(ModelResolver);
 
+    expect(() => resolver.resolve()).toThrow(DomainError);
     expect(() => resolver.resolve()).toThrow('未配置可用的 AI 模型');
   });
 
@@ -123,7 +125,7 @@ describe('ModelResolver', () => {
 
     const resolver = module.get(ModelResolver);
 
-    expect(() => resolver.resolve()).toThrow('未配置可用的 AI 模型');
+    expect(() => resolver.resolve()).toThrow(DomainError);
   });
 
   it('uses legacy fallback profile when ai_profiles is empty', async () => {

@@ -24,6 +24,7 @@ import {
   Loader2,
   Upload,
   TextQuote,
+  Sparkles,
 } from "lucide-react";
 import {
   addToast,
@@ -47,6 +48,7 @@ import type { ArticleStatus } from "@/types/post-management";
 import type { PostCategory, PostTag } from "@/types/article";
 import type { ArticleMeta } from "./use-article-meta";
 import { clipSummaryPlainText, SUMMARY_AUTO_MAX_CHARS } from "@/lib/article-summary";
+import { aiApi } from "@/lib/api/ai";
 import { SeoScorePanel } from "./SeoScorePanel";
 
 // ═══════════════════════════════════════════
@@ -67,6 +69,8 @@ interface EditorSidebarProps {
   getCompleteHtmlForAISummary?: () => string;
   editor?: Editor | null;
   articleTitle?: string;
+  /** 文章公开 ID（编辑模式才有，用于 AI 生成摘要） */
+  articleId?: string;
 }
 
 const STATUS_OPTIONS: {
@@ -776,6 +780,7 @@ interface SettingsContentProps {
   isLoadingTags?: boolean;
   editorVariant: EditorSidebarProps["editorVariant"];
   getBodyPlainTextForSummary?: EditorSidebarProps["getBodyPlainTextForSummary"];
+  articleId?: string;
 }
 
 function SettingsContent({
@@ -788,6 +793,7 @@ function SettingsContent({
   isLoadingTags,
   editorVariant,
   getBodyPlainTextForSummary,
+  articleId,
 }: SettingsContentProps) {
   const queryClient = useQueryClient();
   const topImgInputRef = useRef<HTMLInputElement>(null);
@@ -796,8 +802,35 @@ function SettingsContent({
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [fillSummaryDialogOpen, setFillSummaryDialogOpen] = useState(false);
   const [pendingSummaryClip, setPendingSummaryClip] = useState<string | null>(null);
+  const [isGeneratingAiSummary, setIsGeneratingAiSummary] = useState(false);
 
   const maxSummarySlots = editorVariant === "pro" ? 3 : 1;
+
+  // AI 生成摘要
+  const handleGenerateAiSummary = useCallback(async () => {
+    if (!articleId) {
+      addToast({ title: "请先保存文章后再生成 AI 摘要", color: "warning" });
+      return;
+    }
+    if (isGeneratingAiSummary) return;
+    setIsGeneratingAiSummary(true);
+    try {
+      const summary = await aiApi.generateSummary(articleId);
+      if (editorVariant === "app") {
+        onUpdateField("summaries", summary.trim() ? [summary] : []);
+      } else {
+        onUpdateField(
+          "summaries",
+          [summary, ...meta.summaries.slice(1, maxSummarySlots)].slice(0, maxSummarySlots)
+        );
+      }
+      addToast({ title: "AI 摘要生成成功", color: "success" });
+    } catch (err: any) {
+      addToast({ title: err?.message || "AI 摘要生成失败", color: "danger" });
+    } finally {
+      setIsGeneratingAiSummary(false);
+    }
+  }, [articleId, isGeneratingAiSummary, editorVariant, onUpdateField, meta.summaries, maxSummarySlots]);
 
   const confirmFillSummaryOverwrite = useCallback(() => {
     const clip = pendingSummaryClip;
@@ -1072,6 +1105,20 @@ function SettingsContent({
               <TextQuote className="w-3 h-3 shrink-0" />
               取自正文前{SUMMARY_AUTO_MAX_CHARS}字
             </button>
+            <button
+              type="button"
+              className="sb-add-btn py-1! px-2! text-[11px]!"
+              onClick={handleGenerateAiSummary}
+              disabled={isGeneratingAiSummary || !articleId}
+              title={!articleId ? "请先保存文章后再生成 AI 摘要" : "调用 AI 生成摘要"}
+            >
+              {isGeneratingAiSummary ? (
+                <Loader2 className="w-3 h-3 shrink-0 animate-spin" />
+              ) : (
+                <Sparkles className="w-3 h-3 shrink-0" />
+              )}
+              {isGeneratingAiSummary ? "生成中…" : "AI 生成"}
+            </button>
           </div>
           <div className="space-y-1.5">
             {editorVariant === "app" ? (
@@ -1325,6 +1372,7 @@ export function EditorSidebar({
   getBodyPlainTextForSummary,
   editor,
   articleTitle,
+  articleId,
 }: EditorSidebarProps) {
   const [activeTab, setActiveTab] = useState<"settings" | "seo">("settings");
 
@@ -1364,6 +1412,7 @@ export function EditorSidebar({
             isLoadingTags={isLoadingTags}
             editorVariant={editorVariant}
             getBodyPlainTextForSummary={getBodyPlainTextForSummary}
+            articleId={articleId}
           />
         ) : (
           <div className="p-4">

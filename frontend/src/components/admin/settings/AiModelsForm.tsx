@@ -10,22 +10,7 @@ import {
   KEY_AI_PROFILES,
   KEY_AI_DEFAULT_PROFILE_ID,
 } from "@/lib/settings/setting-keys";
-
-/** AI 模型配置项 */
-interface AiProfile {
-  id: string;
-  name: string;
-  provider: "openai" | "deepseek" | "custom";
-  api_url: string;
-  model: string;
-  api_key: string;
-  enabled: boolean;
-  purposes: {
-    summary?: boolean;
-    chat?: boolean;
-    writing?: boolean;
-  };
-}
+import type { AiProfile } from "@/lib/settings/ai-profile";
 
 /** 服务商预设映射 */
 const PROVIDER_PRESETS: Record<string, { api_url: string; model: string }> = {

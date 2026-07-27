@@ -113,4 +113,55 @@ describe('resolveProfiles', () => {
 
     expect(result[0].model).toBe('');
   });
+
+  it('normalizes purposes from object format { summary: true } to array ["summary"]', () => {
+    const rawProfiles = [
+      {
+        id: '1',
+        name: 'GPT-4',
+        provider: 'openai',
+        api_url: 'https://api.openai.com/v1',
+        model: 'gpt-4',
+        enabled: true,
+        api_key: 'sk-test',
+        purposes: { summary: true, chat: false, writing: true },
+      },
+    ];
+    const settings = mockSettings({ ai_profiles: JSON.stringify(rawProfiles) });
+
+    const result = resolveProfiles(settings);
+
+    expect(result[0].purposes).toEqual(['summary', 'writing']);
+  });
+
+  it('normalizes purposes from array format and keeps it as-is', () => {
+    const rawProfiles = [
+      {
+        id: '1',
+        name: 'GPT-4',
+        provider: 'openai',
+        api_url: 'https://api.openai.com/v1',
+        model: 'gpt-4',
+        enabled: true,
+        api_key: 'sk-test',
+        purposes: ['summary', 'chat'],
+      },
+    ];
+    const settings = mockSettings({ ai_profiles: JSON.stringify(rawProfiles) });
+
+    const result = resolveProfiles(settings);
+
+    expect(result[0].purposes).toEqual(['summary', 'chat']);
+  });
+
+  it('defaults purposes to ["summary"] when missing or invalid', () => {
+    const rawProfiles = [
+      { id: '1', name: 'GPT-4', provider: 'openai', api_url: 'https://api.openai.com/v1', model: 'gpt-4', enabled: true, api_key: 'sk-test' },
+    ];
+    const settings = mockSettings({ ai_profiles: JSON.stringify(rawProfiles) });
+
+    const result = resolveProfiles(settings);
+
+    expect(result[0].purposes).toEqual(['summary']);
+  });
 });

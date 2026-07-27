@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing';
 import { SummaryAdapter } from './summary.adapter';
 import { ModelResolver } from '../model/model-resolver.service';
 import { SettingsService } from '../../settings/settings.service';
+import { DomainError } from '../domain-error';
 
 // Mock sqids.util at module level so decodePublicID doesn't need real encoder
 vi.mock('../../common/utils/sqids.util', () => ({
@@ -98,53 +99,52 @@ describe('SummaryAdapter', () => {
       expect(result).toEqual({ summary: '这是一段摘要' });
     });
 
-    it('throws "文章不存在或无正文内容" for missing article', async () => {
-      // Mock DB returning no rows
+    it('throws DomainError "文章不存在或无正文内容" for missing article', async () => {
       mockDb.limit.mockResolvedValueOnce([]);
 
-      await expect(adapter.summarizeArticle('abcd1234')).rejects.toThrow(
-        '文章不存在或无正文内容',
-      );
+      const err = await adapter.summarizeArticle('abcd1234').catch(e => e);
+      expect(err).toBeInstanceOf(DomainError);
+      expect(err.message).toBe('文章不存在或无正文内容');
     });
 
-    it('throws "文章不存在或无正文内容" for article with empty contentHtml', async () => {
+    it('throws DomainError "文章不存在或无正文内容" for article with empty contentHtml', async () => {
       mockDb.limit.mockResolvedValueOnce([{ contentHtml: null, title: 'Test' }]);
 
-      await expect(adapter.summarizeArticle('abcd1234')).rejects.toThrow(
-        '文章不存在或无正文内容',
-      );
+      const err = await adapter.summarizeArticle('abcd1234').catch(e => e);
+      expect(err).toBeInstanceOf(DomainError);
+      expect(err.message).toBe('文章不存在或无正文内容');
     });
 
-    it('throws "无效的文章 ID" for non-article entity type', async () => {
+    it('throws DomainError "无效的文章 ID" for non-article entity type', async () => {
       mockDecodePublicID.mockReturnValueOnce({ dbID: 1, entityType: EntityType.File });
 
-      await expect(adapter.summarizeArticle('abcd1234')).rejects.toThrow(
-        '无效的文章 ID',
-      );
+      const err = await adapter.summarizeArticle('abcd1234').catch(e => e);
+      expect(err).toBeInstanceOf(DomainError);
+      expect(err.message).toBe('无效的文章 ID');
     });
 
-    it('throws "AI 服务返回了空结果" when generateText returns empty text', async () => {
+    it('throws DomainError "AI 服务返回了空结果" when generateText returns empty text', async () => {
       mockGenerateText.mockResolvedValueOnce({ text: '' });
 
-      await expect(adapter.summarizeArticle('abcd1234')).rejects.toThrow(
-        'AI 服务返回了空结果，请重试',
-      );
+      const err = await adapter.summarizeArticle('abcd1234').catch(e => e);
+      expect(err).toBeInstanceOf(DomainError);
+      expect(err.message).toBe('AI 服务返回了空结果，请重试');
     });
 
-    it('throws "AI 服务返回了空结果" when generateText returns undefined text', async () => {
+    it('throws DomainError "AI 服务返回了空结果" when generateText returns undefined text', async () => {
       mockGenerateText.mockResolvedValueOnce({ text: undefined });
 
-      await expect(adapter.summarizeArticle('abcd1234')).rejects.toThrow(
-        'AI 服务返回了空结果，请重试',
-      );
+      const err = await adapter.summarizeArticle('abcd1234').catch(e => e);
+      expect(err).toBeInstanceOf(DomainError);
+      expect(err.message).toBe('AI 服务返回了空结果，请重试');
     });
 
-    it('wraps LLM errors with generic message (no API key leakage)', async () => {
+    it('wraps LLM errors with generic DomainError (no API key leakage)', async () => {
       mockGenerateText.mockRejectedValueOnce(new Error('API key sk-abc123 is invalid'));
 
-      await expect(adapter.summarizeArticle('abcd1234')).rejects.toThrow(
-        'AI 摘要生成失败，请稍后重试',
-      );
+      const err = await adapter.summarizeArticle('abcd1234').catch(e => e);
+      expect(err).toBeInstanceOf(DomainError);
+      expect(err.message).toBe('AI 摘要生成失败，请稍后重试');
     });
 
     it('uses default system prompt when ai_summary_system_prompt is not set', async () => {
@@ -190,15 +190,14 @@ describe('SummaryAdapter', () => {
       expect(mockModelResolver.resolve).toHaveBeenCalledWith(undefined);
     });
 
-    it('throws "文章正文为空" when htmlToPlainText produces empty output', async () => {
-      // Article with only script/style tags — htmlToPlainText returns empty
+    it('throws DomainError "文章正文为空" when htmlToPlainText produces empty output', async () => {
       mockDb.limit.mockResolvedValueOnce([
         { contentHtml: '<script>var x=1;</script>', title: 'Test' },
       ]);
 
-      await expect(adapter.summarizeArticle('abcd1234')).rejects.toThrow(
-        '文章正文为空，无法生成摘要',
-      );
+      const err = await adapter.summarizeArticle('abcd1234').catch(e => e);
+      expect(err).toBeInstanceOf(DomainError);
+      expect(err.message).toBe('文章正文为空，无法生成摘要');
     });
   });
 });

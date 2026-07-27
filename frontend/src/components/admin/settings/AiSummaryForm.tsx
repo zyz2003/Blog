@@ -12,22 +12,7 @@ import {
   KEY_AI_SUMMARY_SYSTEM_PROMPT,
   KEY_AI_SUMMARY_GPT_NAME,
 } from "@/lib/settings/setting-keys";
-
-/** AI 模型配置项（与 AiModelsForm 保持一致） */
-interface AiProfile {
-  id: string;
-  name: string;
-  provider: string;
-  api_url: string;
-  model: string;
-  api_key: string;
-  enabled: boolean;
-  purposes?: {
-    summary?: boolean;
-    chat?: boolean;
-    writing?: boolean;
-  };
-}
+import type { AiProfile } from "@/lib/settings/ai-profile";
 
 interface AiSummaryFormProps {
   values: Record<string, string>;
@@ -46,7 +31,7 @@ export function AiSummaryForm({ values, onChange, loading }: AiSummaryFormProps)
       if (!raw?.trim()) return [];
       const parsed = JSON.parse(raw);
       if (!Array.isArray(parsed)) return [];
-      return parsed.filter((p: AiProfile) => p.enabled);
+      return parsed.filter((p: Record<string, unknown>) => p.enabled) as AiProfile[];
     } catch {
       return [];
     }

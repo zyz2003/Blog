@@ -8,6 +8,7 @@ import { decodePublicID, EntityType } from '../../common/utils/sqids.util';
 import { ArticleAiPort } from '../ports/ai.port';
 import { ModelResolver } from '../model/model-resolver.service';
 import { htmlToPlainText } from './html-to-text';
+import { DomainError } from '../domain-error';
 
 @Injectable()
 export class SummaryAdapter implements ArticleAiPort {
@@ -23,7 +24,7 @@ export class SummaryAdapter implements ArticleAiPort {
     // 1. Decode public ID -> database ID
     const { dbID, entityType } = decodePublicID(publicId);
     if (entityType !== EntityType.Article) {
-      throw new Error('无效的文章 ID');
+      throw new DomainError('无效的文章 ID');
     }
 
     // 2. Fetch article content from database
@@ -34,7 +35,7 @@ export class SummaryAdapter implements ArticleAiPort {
       .limit(1);
 
     if (!rows?.length || !rows[0].contentHtml) {
-      throw new Error('文章不存在或无正文内容');
+      throw new DomainError('文章不存在或无正文内容');
     }
 
     const { contentHtml, title } = rows[0];
@@ -49,12 +50,20 @@ export class SummaryAdapter implements ArticleAiPort {
     const truncated = plainText.slice(0, 4000);
 
     if (!truncated.trim()) {
-      throw new Error('文章正文为空，无法生成摘要');
+      throw new DomainError('文章正文为空，无法生成摘要');
     }
 
     // 5. Resolve the summary-specific model profile
     const summaryProfileId = this.settings.get('ai_summary_profile_id') || undefined;
-    const model = this.modelResolver.resolve(summaryProfileId);
+    let model;
+    try {
+      model = this.modelResolver.resolve(summaryProfileId);
+    } catch (error) {
+      // ModelResolver throws DomainError for '未配置可用的 AI 模型'
+      throw error instanceof DomainError
+        ? error
+        : new DomainError('AI 模型配置异常，请检查设置');
+    }
 
     // 6. Call LLM via AI SDK 7 generateText
     try {
@@ -73,7 +82,7 @@ export class SummaryAdapter implements ArticleAiPort {
       });
 
       if (!text) {
-        throw new Error('AI 服务返回了空结果，请重试');
+        throw new DomainError('AI 服务返回了空结果，请重试');
       }
 
       this.logger.log(
@@ -82,14 +91,7 @@ export class SummaryAdapter implements ArticleAiPort {
       return { summary: text };
     } catch (error: any) {
       // Re-throw our own domain errors as-is
-      if (
-        error.message?.includes('请先在设置') ||
-        error.message?.includes('AI 服务') ||
-        error.message?.includes('空结果') ||
-        error.message?.includes('超时') ||
-        error.message?.includes('文章') ||
-        error.message?.includes('未配置可用的 AI 模型')
-      ) {
+      if (error instanceof DomainError) {
         throw error;
       }
       // Wrap LLM errors — no API key leakage
@@ -97,7 +99,7 @@ export class SummaryAdapter implements ArticleAiPort {
         `AI 摘要生成失败: ${error.message}`,
         error.stack,
       );
-      throw new Error('AI 摘要生成失败，请稍后重试');
+      throw new DomainError('AI 摘要生成失败，请稍后重试');
     }
   }
 }

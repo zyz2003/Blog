@@ -396,6 +396,7 @@ export function ArticleEditorPage({ articleId }: ArticleEditorPageProps) {
               getBodyPlainTextForSummary={getBodyPlainTextForSummary}
               editor={editor}
               articleTitle={title}
+              articleId={articleId}
             />
           </div>
         )}
