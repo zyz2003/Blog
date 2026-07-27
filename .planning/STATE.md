@@ -26,8 +26,8 @@ current_phase_name: null
 |-------|-------|
 | Milestone | M5 - AI Features |
 | Phase | 16 - AI Model Router & Summary Migration |
-| Current Plan | 02/03 complete |
-| Status | Executing — Plans 01-02 done, Plan 03 remaining |
+| Current Plan | 03/03 complete (pending human verify) |
+| Status | Executing — All 3 plans done + quality fixes, awaiting human UAT |
 | Last Activity | 2026-07-27 — Plan 02: Frontend AI settings multi-profile upgrade |
 
 ## Phase Status
@@ -49,7 +49,7 @@ current_phase_name: null
 | 13 | Content Verification | Complete | 6/6 | 2026-07-20 |
 | 14 | Features Verification | Complete | 7/7 | 2026-07-22 |
 | 15 | Final Integration & Cutover | Complete | 3/3 | 2026-07-23 |
-| 16 | AI Model Router & Summary Migration | Executing | 2/3 | 2026-07-27 |
+| 16 | AI Model Router & Summary Migration | Executing | 3/3 (pending human verify) | 2026-07-27 |
 
 ## Active Decisions
 
@@ -74,6 +74,9 @@ current_phase_name: null
 | D-310 | Doc-series Sqids encoding verified consistent with Go — same DB id + same seed produces same Sqids string, EntityType.DocSeries=12 matches Go iota | Field verification confirms encoding consistency | 14 |
 | D-311 | Statistics date format per CCP-2: only assert valid ISO date string, not exact format (Go RFC3339 vs NestJS ISO 8601 with ms) | Both formats valid, frontend handles both | 14 |
 | D-312 | Statistics weekly/monthly trend arrays are always empty per Go backend | Go GetVisitorTrend only returns daily data | 14 |
+| D-340a | Custom DomainError class replaces fragile string-matching in AI error catch blocks | instanceof check is safer than error.message?.includes('文章') — LLM error messages could contain those keywords | 16 |
+| D-340b | normalizePurposes + normalizeProfile in resolveProfiles handle frontend object-format purposes { summary: true } → backend array ['summary'] | Frontend AiModelsForm stores purposes as object (checkbox state), backend AiProfile expects string[]; prevents type mismatch in Phase 18/19 chat | 16 |
+| D-340c | Shared AiProfile type extracted to frontend/src/lib/settings/ai-profile.ts | AiModelsForm and AiSummaryForm both need the type; duplication caused drift risk | 16 |
 
 ## Blockers
 

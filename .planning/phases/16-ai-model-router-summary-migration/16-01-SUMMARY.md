@@ -2,13 +2,13 @@
 phase: 16
 plan: 01
 subsystem: ai
-tags: [ports-adapters, ai-sdk-7, model-resolver, summary-adapter, unit-tests]
+tags: [ports-adapters, ai-sdk-7, model-resolver, summary-adapter, unit-tests, domain-error, normalize-purposes]
 requires: [settings-service, database-module, drizzle-orm]
-provides: [article-ai-port, model-resolver, summary-adapter, ai-summary-controller]
+provides: [article-ai-port, model-resolver, summary-adapter, ai-summary-controller, domain-error]
 affects: [server/src/ai/]
 tech-stack:
   added: [ai@7.0.37, @ai-sdk/openai-compatible@3.0.14, zod@4.4.3]
-  patterns: [ports-and-adapters, dependency-inversion]
+  patterns: [ports-and-adapters, dependency-inversion, custom-error-class]
 key-files:
   created:
     - server/src/ai/ports/ai.port.ts
@@ -17,6 +17,7 @@ key-files:
     - server/src/ai/adapters/html-to-text.ts
     - server/src/ai/adapters/summary.adapter.ts
     - server/src/ai/ai-summary.controller.ts
+    - server/src/ai/domain-error.ts
     - server/src/ai/model/ai-profile.spec.ts
     - server/src/ai/model/model-resolver.service.spec.ts
     - server/src/ai/adapters/summary.adapter.spec.ts
@@ -33,11 +34,14 @@ decisions:
   - Used ARTICLE_AI_PORT injection token for dependency inversion
   - resolveProfiles returns empty array (not throws) when no profiles configured, letting ModelResolver throw domain error
   - Error wrapping in SummaryAdapter catches LLM errors with generic message to prevent API key leakage
+  - D-340a: Custom DomainError class replaces fragile string-matching in error catch blocks
+  - D-340b: normalizePurposes + normalizeProfile in resolveProfiles handle frontend object-format purposes { summary: true } → backend array ['summary']
 metrics:
   duration: 934s
-  completed: 2026-07-26
+  completed: 2026-07-27
   tasks: 2
-  tests: 34
+  tests: 37
+  quality_fix_commit: 7301503
 status: complete
 ---
 
@@ -61,32 +65,39 @@ Rebuilt server/src/ai/ with ports/adapters/model architecture, replacing raw fet
 
 ### Task 2: Unit tests
 
-- `ai-profile.spec.ts` — 8 tests: valid JSON parsing, legacy fallback for empty/undefined/invalid `ai_profiles`, empty array when no config, missing key/url edge cases
-- `model-resolver.service.spec.ts` — 6 tests: profileId match, defaultId fallback, first-enabled fallback, no-profile error, empty config, legacy profile resolution
-- `summary.adapter.spec.ts` — 11 tests: AI SDK 7 parameter verification, missing article, empty contentHtml, invalid entity type, empty/undefined text, LLM error wrapping, default prompt, profile ID passthrough, empty plaintext
+- `ai-profile.spec.ts` — 11 tests: valid JSON parsing, legacy fallback for empty/undefined/invalid `ai_profiles`, empty array when no config, missing key/url edge cases, purposes normalization (object→array, array passthrough, missing→default)
+- `model-resolver.service.spec.ts` — 6 tests: profileId match, defaultId fallback, first-enabled fallback, no-profile DomainError, empty config, legacy profile resolution
+- `summary.adapter.spec.ts` — 11 tests: AI SDK 7 parameter verification, missing article, empty contentHtml, invalid entity type, empty/undefined text, LLM error wrapping via DomainError, default prompt, profile ID passthrough, empty plaintext
 - `html-to-text.spec.ts` — 9 tests: tag stripping, entity decoding, code block removal, script/style removal, whitespace collapse, complex HTML
+
+### Quality Review Fixes (commit 7301503)
+
+- **DomainError class** (D-340a): Replaced fragile `error.message?.includes(...)` string-matching in SummaryAdapter catch block with `instanceof DomainError` check. ModelResolver also throws DomainError for '未配置可用的 AI 模型'. Eliminates risk of LLM error messages containing keywords like "文章" being misidentified as domain errors.
+- **normalizePurposes + normalizeProfile** (D-340b): Frontend AiModelsForm stores purposes as object `{ summary: true, chat: false }`, but backend AiProfile interface expects `string[]`. Added normalization in `resolveProfiles()` to convert both formats to `string[]`, preventing type mismatch bugs in Phase 18/19 when chat features filter profiles by purpose.
+- **Test fix**: Changed double `await expect(...).rejects.toThrow()` pattern to single-call `catch(e => e)` + assert on error instance, avoiding mock consumption race conditions.
 
 ## Verification
 
 1. `npx nest build` — compiled without errors
-2. `npx vitest run src/ai/` — 34/34 tests passed across 4 test files
+2. `(after quality fixes)` npx vitest run src/ai/` — 37/37 tests passed across 4 test files
 
 ## Deviations from Plan
 
-None — plan executed exactly as written.
+None — plan executed exactly as written. Quality fixes addressed review findings post-execution.
 
 ## Key Architecture Decisions
 
 1. **AI SDK 7 parameter names** — `instructions` (not `system`), `maxOutputTokens` (not `maxTokens`), `name` required in `createOpenAICompatible`
 2. **Ports/Adapters pattern** — `ArticleAiPort` interface allows swapping LLM implementations without touching the controller or module wiring
 3. **Legacy fallback** — `resolveProfiles()` gracefully handles users who only configured the old `ai_summary_*` keys, synthesizing a single profile with `id='legacy'`
-4. **Error wrapping** — SummaryAdapter catches LLM errors and returns generic messages to prevent API key leakage in error responses
-5. **Profile resolution chain** — ModelResolver tries: explicit profileId -> ai_default_profile_id -> first enabled profile
+4. **DomainError** — Custom error class distinguishes business-logic errors from LLM API errors, preventing API key leakage in error responses
+5. **Purposes normalization** — Handles frontend/backend format mismatch transparently in resolveProfiles
+6. **Profile resolution chain** — ModelResolver tries: explicit profileId -> ai_default_profile_id -> first enabled profile
 
 ## Self-Check: PASSED
 
-- All 11 created files exist on disk
-- Both commit hashes (71dddcc, 9076aaf) found in git log
+- All 12 created files exist on disk (including domain-error.ts)
+- Commits 71dddcc, 9076aaf, 7301503 found in git log
 - Old ai.controller.ts and ai.service.ts confirmed deleted
 - Build compiles without errors
-- 34/34 unit tests pass
+- 37/37 unit tests pass

@@ -2,17 +2,18 @@
 phase: 16
 plan: 02
 subsystem: ai
-tags: [frontend, settings, multi-profile, ai-models, ai-summary, nav-group]
+tags: [frontend, settings, multi-profile, ai-models, ai-summary, nav-group, shared-type]
 requires: [setting-descriptors, setting-keys, settings-nav, settings-forms]
-provides: [AiModelsForm, AiSummaryForm-upgraded, AiPlaceholderForm, AI-nav-group]
+provides: [AiModelsForm, AiSummaryForm-upgraded, AiPlaceholderForm, AI-nav-group, shared-AiProfile-type]
 affects: [frontend/src/lib/settings/, frontend/src/app/admin/settings/, frontend/src/components/admin/settings/]
 tech-stack:
   added: []
-  patterns: [multi-profile-management, provider-presets, lazy-form-registration]
+  patterns: [multi-profile-management, provider-presets, lazy-form-registration, shared-type-extraction]
 key-files:
   created:
     - frontend/src/components/admin/settings/AiModelsForm.tsx
     - frontend/src/components/admin/settings/AiPlaceholderForm.tsx
+    - frontend/src/lib/settings/ai-profile.ts
   modified:
     - frontend/src/lib/settings/setting-descriptors.ts
     - frontend/src/app/admin/settings/_config/settings-nav.ts
@@ -24,11 +25,13 @@ decisions:
   - AiSummaryForm reads KEY_AI_PROFILES to populate profile selector, uses KEY_AI_SUMMARY_PROFILE_ID for selection
   - Legacy keys (ai_summary_provider, api_url, api_key, model) excluded from all category descriptors
   - AiPlaceholderForm uses Bot icon and shared Spinner-free pattern for coming-soon categories
+  - D-340c: Extracted shared AiProfile type to frontend/src/lib/settings/ai-profile.ts (AiModelsForm + AiSummaryForm both import)
 metrics:
   duration: 3770s
   completed: 2026-07-27
   tasks: 2
-  files: 6
+  files: 7
+  quality_fix_commit: 7301503
 status: complete
 ---
 
@@ -71,16 +74,21 @@ Upgraded the frontend AI settings from a single-profile form to a multi-profile 
 
 - **AiPlaceholderForm**: Simple coming-soon component with Bot icon and "敬请期待" text, used for both ai-chat and ai-writing categories
 
+### Quality Review Fix (commit 7301503)
+
+- **Shared AiProfile type extraction** (D-340c): Both AiModelsForm and AiSummaryForm previously defined their own `AiProfile` interface (duplicate). Extracted to `frontend/src/lib/settings/ai-profile.ts` and both forms now import from the shared source. Also fixed `enabledProfiles` filter in AiSummaryForm to use `Record<string, unknown>` before casting to `AiProfile`, avoiding type narrowing issues with JSON.parse results.
+
 ## Verification
 
 1. `cd frontend && npx tsc --noEmit` — no TypeScript errors in changed files (only pre-existing error in unrelated `poster-generator.test.ts`)
 
 ## Deviations from Plan
 
-None — plan executed exactly as written.
+None — plan executed exactly as written. Quality fix (shared type extraction) addressed review finding post-execution.
 
 ## Self-Check: PASSED
 
-- All 6 modified/created files exist on disk
-- Both commit hashes (ef06bd0, 07b0718) found in git log
+- All 7 modified/created files exist on disk (including shared ai-profile.ts)
+- Commits ef06bd0, 07b0718, 7301503 found in git log
 - TypeScript compilation passes for all changed files
+
