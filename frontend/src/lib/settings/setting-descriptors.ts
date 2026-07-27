@@ -40,7 +40,11 @@ export type SettingCategoryId =
   | "pages-music"
   | "advanced-captcha"
   | "advanced-wechat-share"
-  | "advanced-backup";
+  | "advanced-backup"
+  | "ai-models"
+  | "ai-summary"
+  | "ai-chat"
+  | "ai-writing";
 
 /** 文章版权声明默认模板（与前台渲染兜底保持一致） */
 const DEFAULT_POST_COPYRIGHT_TEMPLATE_ORIGINAL =
@@ -831,4 +835,15 @@ const categoryDescriptors: Record<SettingCategoryId, SettingDescriptor[]> = {
     { backendKey: K.KEY_WECHAT_SHARE_APP_SECRET, type: "password" },
   ],
   "advanced-backup": [],
+  "ai-models": [
+    { backendKey: K.KEY_AI_PROFILES, type: "json" },
+    { backendKey: K.KEY_AI_DEFAULT_PROFILE_ID, type: "string" },
+  ],
+  "ai-summary": [
+    { backendKey: K.KEY_AI_SUMMARY_PROFILE_ID, type: "string" },
+    { backendKey: K.KEY_AI_SUMMARY_SYSTEM_PROMPT, type: "string" },
+    { backendKey: K.KEY_AI_SUMMARY_GPT_NAME, type: "string" },
+  ],
+  "ai-chat": [],
+  "ai-writing": [],
 };
