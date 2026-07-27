@@ -242,7 +242,7 @@ Plans:
 - 编辑器 "AI 生成" 按钮
 - 前台 ArticleLeadSummary 打字机效果 + 进入视口 + AI名字
 
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 
@@ -252,7 +252,7 @@ Plans:
 
 **Wave 2** (Frontend settings — depends on 16-01)
 
-- [ ] 16-02-PLAN.md — New "AI 功能" nav group + AiModelsForm multi-profile management + upgraded AiSummaryForm + placeholder forms (AI-02A, AI-01)
+- [x] 16-02-PLAN.md — New "AI 功能" nav group + AiModelsForm multi-profile management + upgraded AiSummaryForm + placeholder forms (AI-02A, AI-01)
 
 **Wave 3** (End-to-end verification — depends on 16-01 + 16-02)
 
