@@ -40,6 +40,7 @@ export const EntityType = {
   Notification: 20,
   ArticleHistory: 21,
   Link: 22,
+  ChatConversation: 23,
 } as const;
 
 export type EntityTypeValue = (typeof EntityType)[keyof typeof EntityType];
