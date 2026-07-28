@@ -291,6 +291,8 @@ Plans:
 
 **Goal:** Implement the streaming chat assistant endpoint with tool calling and RAG. Build the frontend chat widget.
 
+**Requirements:** AI-05, AI-05F
+
 **Key deliverables:**
 
 - `server/src/ai/chat.service.ts` - ChatService.chat(): streamText + articleTools + stopWhen:stepCountIs(5) + toolChoice:auto + onFinish persistence + onError logging. Returns UIMessageStream ReadableStream
@@ -302,6 +304,22 @@ Plans:
 - Verify: frontend useChat consumes stream, tokens arrive incrementally, tool calls return article results, history saved
 
 **Key risks:** @Res() bypasses Nest enhancers; streamText doesn't throw (errors go into stream); CORS buffering.
+
+**Plans:** 3 plans
+
+Plans:
+
+**Wave 1** (Backend tracer — no dependencies)
+
+- [ ] 18-01-PLAN.md — Tracer: tool-bridge + ChatService + ai.port + ai-chat.controller + CORS + AiModule wiring (AI-05)
+
+**Wave 2** (Frontend chat widget — depends on 18-01)
+
+- [ ] 18-02-PLAN.md — Frontend: ChatWidget + ChatWindow (useChat) + MessageList + ToolResultCard + ChatInput (AI-05F)
+
+**Wave 3** (Hardening — depends on 18-01 + 18-02)
+
+- [ ] 18-03-PLAN.md — Unit tests: tool-bridge.spec + chat.service.spec + ai-chat.controller.spec (AI-05, AI-05F)
 
 ### Phase 19: Chat Hardening & Frontend Integration
 
