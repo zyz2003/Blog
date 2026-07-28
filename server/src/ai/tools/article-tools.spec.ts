@@ -29,7 +29,11 @@ describe('article-tools', () => {
       path.resolve(__dirname, 'tool-def.ts'),
       'utf-8',
     );
-    const lines = source.split('\n').filter((l) => !l.trim().startsWith('//'));
+    // Filter out comments (// and * JSDoc style) and blank lines
+    const lines = source
+      .split('\n')
+      .map((l) => l.trim())
+      .filter((l) => l && !l.startsWith('//') && !l.startsWith('*'));
     const hasAiImport = lines.some(
       (l) => l.includes("from 'ai'") || l.includes('@ai-sdk'),
     );
@@ -260,11 +264,11 @@ describe('article-tools', () => {
       path.resolve(__dirname, 'article-tools.ts'),
       'utf-8',
     );
-    // Exclude type-only imports and comments from the check
+    // Filter out comments (// and * JSDoc style), type-only imports, and blank lines
     const lines = source
       .split('\n')
-      .filter((l) => !l.trim().startsWith('//'))
-      .filter((l) => !l.trim().startsWith('import type'));
+      .map((l) => l.trim())
+      .filter((l) => l && !l.startsWith('//') && !l.startsWith('*') && !l.startsWith('import type'));
     const hasAiImport = lines.some(
       (l) => l.includes("from 'ai'") || l.includes('@ai-sdk'),
     );
