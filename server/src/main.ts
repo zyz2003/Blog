@@ -31,7 +31,7 @@ async function bootstrap() {
     allowedHeaders:
       'Authorization,Content-Type,X-CSRF-Token,X-Requested-With,Range,Accept-Ranges,Content-Range,Content-Length,Content-Disposition',
     exposedHeaders:
-      'Authorization,Content-Range,Content-Length,Content-Length,Content-Disposition',
+      'Authorization,Content-Range,Content-Length,Content-Disposition,Cache-Control,X-Accel-Buffering',
   });
 
   // Global validation pipe
