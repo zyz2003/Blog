@@ -262,6 +262,8 @@ Plans:
 
 **Goal:** Build framework-agnostic assets that survive a future LangGraph migration unchanged - tool definitions and chat history storage.
 
+**Requirements:** AI-03, AI-04
+
 **Key deliverables:**
 
 - `server/src/ai/tools/tool-def.ts` - ToolDef type (Zod schema + pure execute), framework-agnostic
@@ -271,6 +273,19 @@ Plans:
 - Drizzle migration for chat tables
 
 **Critical:** These files must NOT import `ai` or `@langchain/*`. They are the migration-protected assets.
+
+**Plans:** 3 plans
+
+Plans:
+
+**Wave 1** (parallel — no file conflicts)
+
+- [ ] 17-01-PLAN.md — ToolDef type + article-tools (search_articles + get_article) with framework-agnostic service delegation (AI-03)
+- [ ] 17-02-PLAN.md — Drizzle chat schema (chat_conversations + chat_messages + ChatMessagePart) + schema index registration (AI-04)
+
+**Wave 2** (blocked on Wave 1 — depends on 17-02 schema + shares ai.module.ts with 17-01)
+
+- [ ] 17-03-PLAN.md — ChatHistoryService CRUD + truncation + AiModule registration + EntityType.ChatConversation (AI-04)
 
 ### Phase 18: Streaming Chat Endpoint
 
