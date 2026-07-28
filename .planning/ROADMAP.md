@@ -274,7 +274,7 @@ Plans:
 
 **Critical:** These files must NOT import `ai` or `@langchain/*`. They are the migration-protected assets.
 
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans executed
 
 Plans:
 
@@ -285,7 +285,7 @@ Plans:
 
 **Wave 2** (blocked on Wave 1 — depends on 17-02 schema + shares ai.module.ts with 17-01)
 
-- [ ] 17-03-PLAN.md — ChatHistoryService CRUD + truncation + AiModule registration + EntityType.ChatConversation (AI-04)
+- [x] 17-03-PLAN.md — ChatHistoryService CRUD + truncation + AiModule registration + EntityType.ChatConversation (AI-04)
 
 ### Phase 18: Streaming Chat Endpoint
 

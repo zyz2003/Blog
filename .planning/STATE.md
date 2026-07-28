@@ -4,12 +4,12 @@ milestone: M5
 milestone_name: AI Features
 current_phase: 17
 current_phase_name: ai-tools-chat-history-storage
-current_plan: 1
+current_plan: 3
 status: executing
-stopped_at: Completed 17-02-PLAN.md
-last_updated: "2026-07-28T01:13:50.330Z"
+stopped_at: Completed 17-03-PLAN.md
+last_updated: "2026-07-28T01:30:36Z"
 last_activity: 2026-07-28
-last_activity_desc: Phase 17 execution started
+last_activity_desc: Completed Plan 03 — ChatHistoryService CRUD + AiModule wiring
 progress:
   total_phases: 8
   completed_phases: 3
@@ -50,6 +50,7 @@ progress:
 | 14 | Features Verification | Complete | 7/7 | 2026-07-22 |
 | 15 | Final Integration & Cutover | Complete | 3/3 | 2026-07-23 |
 | 16 | AI Model Router & Summary Migration | Executing | 3/3 (pending human verify) | 2026-07-27 |
+| 17 | AI Tools & Chat History Storage | Executing | 3/3 | 2026-07-28 |
 
 ## Active Decisions
 
@@ -77,6 +78,8 @@ progress:
 | D-340a | Custom DomainError class replaces fragile string-matching in AI error catch blocks | instanceof check is safer than error.message?.includes('文章') — LLM error messages could contain those keywords | 16 |
 | D-340b | normalizePurposes + normalizeProfile in resolveProfiles handle frontend object-format purposes { summary: true } → backend array ['summary'] | Frontend AiModelsForm stores purposes as object (checkbox state), backend AiProfile expects string[]; prevents type mismatch in Phase 18/19 chat | 16 |
 | D-340c | Shared AiProfile type extracted to frontend/src/lib/settings/ai-profile.ts | AiModelsForm and AiSummaryForm both need the type; duplication caused drift risk | 16 |
+| D-355 | EntityType.ChatConversation = 23 for Sqids public ID encoding | Next value after Link=22, follows Go-compatible iota pattern | 17 |
+| D-356 | Chainable mock with thenable chain nodes for Drizzle query builder testing | Avoids the "thenable trap" where NestJS DI resolves objects with .then as Promises; only chain nodes are thenable, not the mock db itself | 17 |
 
 ## Blockers
 
@@ -117,8 +120,8 @@ progress:
 
 ## Session
 
-**Last session:** 2026-07-28T01:13:50.315Z
-**Stopped at:** Completed 17-02-PLAN.md
+**Last session:** 2026-07-28T01:30:36Z
+**Stopped at:** Completed 17-03-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -144,6 +147,7 @@ progress:
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | Phase 17 P02 | 3 | 1 tasks | 3 files |
+| Phase 17 P03 | 13 | 1 tasks | 4 files |
 
 ## Decisions
 
