@@ -33,3 +33,6 @@ export * from './tag.schema';
 export * from './article-post-category-pivot.schema';
 export * from './article-post-tag-pivot.schema';
 export * from './notification.schema';
+
+// Chat history tables (lives in ai/ — framework-agnostic storage asset)
+export { chatConversations, chatMessages } from '../../ai/chat.schema';
