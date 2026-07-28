@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "@/providers";
+import { ChatWidget } from "@/components/chat";
 import { renderCustomBodyHtml, renderCustomHeadHtml } from "@/lib/custom-html";
 import {
   buildWebSiteJsonLd,
@@ -140,6 +141,7 @@ export default async function RootLayout({
           <span className="sr-only">页面加载中</span>
         </div>
         <Providers>{children}</Providers>
+        <ChatWidget />
         {renderCustomBodyHtml(customFooterHtml)}
       </body>
     </html>

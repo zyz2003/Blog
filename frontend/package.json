@@ -10,6 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@ai-sdk/react": "^4.0.40",
     "@fancyapps/ui": "^6.1.10",
     "@heroui/react": "^2.8.9",
     "@iconify/react": "^6.0.2",
@@ -39,6 +40,7 @@
     "@tiptap/starter-kit": "^3.19.0",
     "@tiptap/suggestion": "^3.22.3",
     "@types/qrcode": "^1.5.6",
+    "ai": "^7.0.37",
     "axios": "^1.13.4",
     "blueimp-md5": "^2.19.0",
     "clsx": "^2.1.1",
