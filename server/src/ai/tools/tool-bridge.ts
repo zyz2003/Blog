@@ -14,11 +14,15 @@ import type { ToolDef, ToolContext } from './tool-def';
  * delegates to def.execute(input, ctx).
  *
  * AI SDK 7 tool() uses `inputSchema` as the key for the Zod schema.
+ * Throws if duplicate tool names are found.
  */
 export function toAiSdkTools(defs: ToolDef[], ctx: ToolContext): ToolSet {
   const tools: ToolSet = {};
 
   for (const def of defs) {
+    if (tools[def.name]) {
+      throw new Error(`Duplicate tool name: "${def.name}"`);
+    }
     tools[def.name] = tool({
       description: def.description,
       inputSchema: def.inputSchema,

@@ -23,6 +23,7 @@ import { ChatHistoryService } from './chat-history.service';
 import { DomainError } from './domain-error';
 import { toAiSdkTools } from './tools/tool-bridge';
 import { articleTools } from './tools/article-tools';
+import { decodePublicID, EntityType } from '../common/utils/sqids.util';
 import type { ToolContext } from './tools/tool-def';
 import type { ChatMessagePart } from './chat.schema';
 
@@ -71,10 +72,24 @@ export class ChatService {
     // 1. Resolve model — re-throw DomainError for controller 4xx/5xx handling
     const model = this.modelResolver.resolve(options?.profileId);
 
-    // 2. Resolve conversationId
-    const conversationId =
-      options?.conversationId ??
-      (await this.chatHistory.createConversation(undefined, options?.profileId));
+    // 2. Resolve conversationId — wrap decodePublicID errors as DomainError
+    let conversationId: string;
+    if (options?.conversationId) {
+      try {
+        // Validate that the provided ID is a valid Sqids-encoded conversation ID
+        const { dbID, entityType } = decodePublicID(options.conversationId);
+        if (entityType !== EntityType.ChatConversation) {
+          throw new DomainError('无效的会话 ID');
+        }
+        conversationId = options.conversationId;
+      } catch (err) {
+        throw err instanceof DomainError
+          ? err
+          : new DomainError('无效的会话 ID');
+      }
+    } else {
+      conversationId = await this.chatHistory.createConversation(undefined, options?.profileId);
+    }
 
     // 3. Persist last user message before stream (per D-371)
     const lastUserMsg = [...messages].reverse().find((m) => m.role === 'user');
@@ -103,14 +118,24 @@ export class ChatService {
       },
       onFinish: async ({ text, steps, usage }) => {
         // 5. Persist assistant message in onFinish (per D-371)
-        const parts = extractPartsFromSteps(steps);
-        await this.chatHistory.appendMessage(conversationId, {
-          role: 'assistant',
-          content: text ?? '',
-          parts: parts.length > 0 ? parts : undefined,
-          inputTokens: usage.inputTokens ?? undefined,
-          outputTokens: usage.outputTokens ?? undefined,
-        });
+        // Note: errors here are logged but not propagated — the stream
+        // has already been sent to the client. A missed persist means
+        // the assistant message won't appear in conversation history.
+        try {
+          const parts = extractPartsFromSteps(steps);
+          await this.chatHistory.appendMessage(conversationId, {
+            role: 'assistant',
+            content: text ?? '',
+            parts: parts.length > 0 ? parts : undefined,
+            inputTokens: usage.inputTokens ?? undefined,
+            outputTokens: usage.outputTokens ?? undefined,
+          });
+        } catch (err) {
+          this.logger.error(
+            `Failed to persist assistant message for conversation ${conversationId}: ${err instanceof Error ? err.message : String(err)}`,
+            err instanceof Error ? err.stack : undefined,
+          );
+        }
       },
     });
 

@@ -3,7 +3,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls } from "ai";
-import type { UIMessage } from "ai";
 import { X } from "lucide-react";
 import { MessageList } from "./MessageList";
 import { ChatInput } from "./ChatInput";
@@ -12,33 +11,25 @@ interface ChatWindowProps {
   onClose: () => void;
 }
 
-const STORAGE_KEY = "chat_conversation_id";
-
-function getOrCreateConversationId(): string {
-  if (typeof window === "undefined") return "";
-  const existing = localStorage.getItem(STORAGE_KEY);
-  if (existing) return existing;
-  // Generate a simple unique ID for new conversations
-  const id = crypto.randomUUID();
-  localStorage.setItem(STORAGE_KEY, id);
-  return id;
-}
-
 /**
- * Chat window with useChat streaming, tool result rendering,
- * and localStorage conversationId persistence.
+ * Chat window with useChat streaming, tool result rendering.
  *
  * Desktop: 380x580 fixed bottom-right. Mobile: fullscreen overlay.
+ *
+ * Note: conversationId is NOT sent from the frontend. The backend creates
+ * conversations and generates Sqids-encoded IDs. Frontend-sent UUIDs would
+ * crash decodePublicID() on the backend. Phase 19 can add conversationId
+ * recovery once the SSE protocol supports returning the server-generated ID.
  */
 export function ChatWindow({ onClose }: ChatWindowProps) {
-  const [conversationId] = useState(() => getOrCreateConversationId());
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { messages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/ai/chat",
-      body: { conversationId },
+      // No conversationId sent — backend creates conversations with Sqids IDs.
+      // Sending a UUID would crash decodePublicID() on the server.
     }),
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
   });

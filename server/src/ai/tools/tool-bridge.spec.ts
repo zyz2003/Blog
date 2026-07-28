@@ -77,4 +77,23 @@ describe('toAiSdkTools', () => {
     expect(mockExecute).toHaveBeenCalledWith(input, ctx);
     expect(result).toEqual({ data: 'result' });
   });
+
+  it('throws on duplicate tool names', () => {
+    const dupTool: ToolDef = {
+      name: 'duplicate',
+      description: 'First',
+      inputSchema: z.object({ x: z.string() }),
+      execute: vi.fn().mockResolvedValue({}),
+    };
+    const dupTool2: ToolDef = {
+      name: 'duplicate',
+      description: 'Second',
+      inputSchema: z.object({ y: z.string() }),
+      execute: vi.fn().mockResolvedValue({}),
+    };
+
+    expect(() => toAiSdkTools([dupTool, dupTool2], ctx)).toThrow(
+      'Duplicate tool name: "duplicate"',
+    );
+  });
 });

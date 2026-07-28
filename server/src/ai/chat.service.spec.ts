@@ -4,8 +4,10 @@
  * Verifies:
  * - ModelResolver DomainError propagation
  * - createConversation called when no conversationId
+ * - Invalid conversationId → DomainError
  * - User message persisted before streamText
  * - onFinish persists assistant message with role + parts
+ * - onFinish appendMessage failure is logged, not thrown
  *
  * Strategy: Mock all external dependencies (ModelResolver, ChatHistoryService,
  * SettingsService, ModuleRef, DRIZZLE). Mock the `ai` module's streamText
@@ -19,6 +21,17 @@ import { ChatHistoryService } from './chat-history.service';
 import { SettingsService } from '../settings/settings.service';
 import { DomainError } from './domain-error';
 import { DRIZZLE } from '../database/database.module';
+import { ModuleRef } from '@nestjs/core';
+
+// Mock sqids.util — decodePublicID + EntityType
+vi.mock('../common/utils/sqids.util', () => ({
+  decodePublicID: vi.fn(),
+  EntityType: { ChatConversation: 23 },
+}));
+
+import { decodePublicID } from '../common/utils/sqids.util';
+
+const mockDecodePublicID = vi.mocked(decodePublicID);
 
 // Mock the `ai` module — streamText, convertToModelMessages, stepCountIs, toUIMessageStream, tool
 vi.mock('ai', async (importOriginal) => {
@@ -62,6 +75,9 @@ describe('ChatService', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
 
+    // Default: decodePublicID returns a valid ChatConversation ID
+    mockDecodePublicID.mockReturnValue({ dbID: 1, entityType: 23 });
+
     const module = await Test.createTestingModule({
       providers: [
         ChatService,
@@ -88,7 +104,7 @@ describe('ChatService', () => {
           useValue: {},
         },
         {
-          provide: 'ModuleRef',
+          provide: ModuleRef,
           useValue: { get: vi.fn() },
         },
       ],
@@ -223,5 +239,71 @@ describe('ChatService', () => {
         outputTokens: 100,
       }),
     );
+  });
+
+  it('invalid conversationId (decodePublicID throws) → DomainError', async () => {
+    mockDecodePublicID.mockImplementation(() => {
+      throw new Error('无法从公共ID解码出预期数量的数字');
+    });
+
+    await expect(
+      service.chat([createUIMessage('user', 'hello')], {
+        conversationId: 'invalid-uuid-format',
+      }),
+    ).rejects.toThrow(DomainError);
+
+    await expect(
+      service.chat([createUIMessage('user', 'hello')], {
+        conversationId: 'invalid-uuid-format',
+      }),
+    ).rejects.toThrow('无效的会话 ID');
+  });
+
+  it('conversationId with wrong entity type → DomainError', async () => {
+    // Return a valid Sqids decode but wrong entity type (e.g. Article=3)
+    mockDecodePublicID.mockReturnValue({ dbID: 1, entityType: 3 });
+
+    await expect(
+      service.chat([createUIMessage('user', 'hello')], {
+        conversationId: 'article-id-not-conversation',
+      }),
+    ).rejects.toThrow(DomainError);
+
+    await expect(
+      service.chat([createUIMessage('user', 'hello')], {
+        conversationId: 'article-id-not-conversation',
+      }),
+    ).rejects.toThrow('无效的会话 ID');
+  });
+
+  it('onFinish appendMessage failure is logged, not thrown', async () => {
+    let onFinishCallback: any;
+
+    mockStreamText.mockImplementation((opts: any) => {
+      onFinishCallback = opts.onFinish;
+      return {
+        stream: { [Symbol.asyncIterator]: async function* () {} },
+      } as any;
+    });
+
+    // Make appendMessage fail for the assistant message (second call)
+    let callCount = 0;
+    vi.mocked(chatHistory.appendMessage).mockImplementation(async () => {
+      callCount++;
+      if (callCount > 1) throw new Error('DB write failed');
+    });
+
+    const messages = [createUIMessage('user', 'hello')];
+    await service.chat(messages, { conversationId: 'conv-err' });
+
+    // onFinish should not throw even though appendMessage fails
+    expect(onFinishCallback).toBeDefined();
+    await expect(
+      onFinishCallback({
+        text: 'response',
+        steps: [],
+        usage: { inputTokens: 10, outputTokens: 20 },
+      }),
+    ).resolves.toBeUndefined();
   });
 });
