@@ -26,6 +26,7 @@
 - [x] 端到端 API 兼容性测试：292 个测试覆盖所有已实现端点 — Phase 11 (INTEGRATION-01)
 - [x] 默认配置种子：启动时自动补全 Go definition.go 中的 331 个默认设置 — Post-11 fix
 - [x] ScheduleService 修复：时间戳转换修正 + 30天回溯上限 — Post-11 fix
+- [x] AI 工具层与对话历史存储：框架无关的 ToolDef 类型 + article-tools（search_articles/get_article）+ Drizzle chat schema + ChatHistoryService CRUD — Phase 17 (AI-03, AI-04)
 
 ### Active
 
@@ -99,4 +100,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-07-23 — Phase 15 complete: full integration verified, 566 tests passing, browser walkthrough green, DEPLOYMENT.md written. All 15 phases done.*
+*Last updated: 2026-07-28 — Phase 17 complete: framework-agnostic AI tools + chat history storage, 56 AI tests passing, zero AI library imports in migration-protected assets.*
