@@ -39,6 +39,9 @@ key-decisions:
   - "D-369: Pre-stream validation returns { code, data, message } JSON format"
   - "D-370: CORS exposedHeaders includes Cache-Control + X-Accel-Buffering for streaming"
   - "D-371: User message persisted BEFORE streamText; assistant message in onFinish"
+  - "D-374: onFinish appendMessage wrapped in try-catch — DB write failure logged, not swallowed"
+  - "D-375: ChatService validates conversationId via decodePublicID + EntityType check before use"
+  - "D-376: toAiSdkTools throws on duplicate tool names instead of silent overwrite"
 
 patterns-established:
   - "tool-bridge pattern: ToolDef[] → AI SDK ToolSet via toAiSdkTools(defs, ctx)"

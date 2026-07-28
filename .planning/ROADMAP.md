@@ -61,7 +61,7 @@ Phases 16-19 (planned). AI assistant with streaming + tool calling + RAG, unifie
 |-------|------|------|--------|--------------|
 | 16 | AI Model Router & Summary Migration | ModelResolver + ai_profiles config, migrate raw-fetch summary to AI SDK generateText | Planned | - |
 | 17 | AI Tools & Chat History Storage | Framework-agnostic ToolDef + article-tools (search/get), Drizzle chat tables + ChatHistoryService | Planned | 16 |
-| 18 | Streaming Chat Endpoint | ChatService (streamText + tools + RAG) + POST /api/ai/chat with SSE streaming | Planned | 17 |
+| 18 | Streaming Chat Endpoint | ChatService (streamText + tools + RAG) + POST /api/ai/chat with SSE streaming | Complete | 17 |
 | 19 | Chat Hardening & Frontend Integration | Token compression, disconnect handling, auth timing, useChat frontend + ai_profiles admin UI | Planned | 18 |
 
 ---

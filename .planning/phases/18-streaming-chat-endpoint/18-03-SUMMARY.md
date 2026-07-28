@@ -28,6 +28,10 @@ key-files:
 
 key-decisions:
   - "D-372: Partial mock of 'ai' module using importOriginal — preserves tool() for ChatService constructor while mocking streamText/pipeUIMessageStreamToResponse"
+  - "D-373: Frontend must NOT generate conversationId — backend creates Sqids IDs (UUID → decodePublicID crash)"
+  - "D-374: onFinish appendMessage wrapped in try-catch — DB write failure logged, not swallowed"
+  - "D-375: ChatService validates conversationId via decodePublicID + EntityType check before use"
+  - "D-376: toAiSdkTools throws on duplicate tool names instead of silent overwrite"
 
 patterns-established:
   - "Partial vi.mock('ai') with importOriginal: needed when production code calls tool() at construction time but tests need streamText/pipeUIMessageStreamToResponse mocked"
@@ -68,7 +72,7 @@ status: complete
 
 # Phase 18 Plan 03: Unit Tests for Streaming Chat Summary
 
-**12 unit tests covering tool-bridge conversion, ChatService persistence + error handling, and AiChatController pre-stream validation + stream piping**
+**16 unit tests covering tool-bridge conversion, ChatService persistence + error handling + conversationId validation, and AiChatController pre-stream validation + stream piping**
 
 ## Performance
 
@@ -79,20 +83,21 @@ status: complete
 - **Files modified:** 3
 
 ## Accomplishments
-- tool-bridge.spec.ts: 4 tests verifying toAiSdkTools conversion (single tool names, article tool names, description matching, execute delegation with correct input + context)
-- chat.service.spec.ts: 4 tests verifying ChatService.chat (DomainError propagation from ModelResolver, createConversation when no conversationId, user message persisted before streamText via call order tracking, onFinish persists assistant message with role + parts + tokens)
+- tool-bridge.spec.ts: 5 tests verifying toAiSdkTools conversion (single tool names, article tool names, description matching, execute delegation with correct input + context, duplicate name throws)
+- chat.service.spec.ts: 7 tests verifying ChatService.chat (DomainError propagation from ModelResolver, createConversation when no conversationId, user message persisted before streamText via call order tracking, onFinish persists assistant message with role + parts + tokens, invalid conversationId → DomainError, wrong entity type → DomainError, onFinish appendMessage failure logged not thrown)
 - ai-chat.controller.spec.ts: 4 tests verifying AiChatController (empty messages array returns 400, undefined messages returns 400, valid messages calls ChatService.chat + pipeUIMessageStreamToResponse, DomainError returns 500 with error message)
-- All 12 tests pass; all 105 AI module tests pass; no regressions in new code
+- All 16 tests pass; all 109 AI module tests pass; no regressions in new code
 
 ## Task Commits
 
 Each task was committed atomically:
 
 1. **Task 1: Unit tests for tool-bridge + ChatService + AiChatController** - `c5902e7` (test)
+2. **Code review fixes: conversationId validation, onFinish error logging, ModuleRef mock, duplicate tool check** - `ef2f52f` (fix)
 
 ## Files Created/Modified
-- `server/src/ai/tools/tool-bridge.spec.ts` - 4 tests for toAiSdkTools conversion correctness
-- `server/src/ai/chat.service.spec.ts` - 4 tests for ChatService persistence + error handling
+- `server/src/ai/tools/tool-bridge.spec.ts` - 5 tests for toAiSdkTools conversion correctness + duplicate name check
+- `server/src/ai/chat.service.spec.ts` - 7 tests for ChatService persistence + error handling + conversationId validation
 - `server/src/ai/ai-chat.controller.spec.ts` - 4 tests for controller validation + stream piping
 
 ## Decisions Made

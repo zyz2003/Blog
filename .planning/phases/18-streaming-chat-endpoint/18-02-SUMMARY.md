@@ -36,12 +36,13 @@ key-files:
     - frontend/src/app/layout.tsx
 
 key-decisions:
-  - "D-361: conversationId stored in localStorage for history recovery"
+  - "D-361: conversationId removed from frontend — backend creates conversations with Sqids IDs (D-373)"
   - "D-366: 380x580 desktop, fullscreen below 640px mobile breakpoint"
   - "D-367: Tool loading state with spinner + Chinese text, article link cards"
   - "D-368: @ai-sdk/react@4 pairs with ai@7 (separate versioning)"
   - "Used status !== 'ready' for isLoading (AI SDK 7 removed isLoading from useChat)"
   - "Typed tool parts (tool-search_articles) instead of generic tool-call/tool-result"
+  - "D-373: Frontend must NOT generate conversationId — UUID crashes decodePublicID on backend"
 
 patterns-established:
   - "useChat pattern: sendMessage({ text }) + manual useState for input"

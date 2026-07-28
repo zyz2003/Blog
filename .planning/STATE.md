@@ -81,6 +81,10 @@ last_activity_desc: Phase 18 execution started
 | D-340c | Shared AiProfile type extracted to frontend/src/lib/settings/ai-profile.ts | AiModelsForm and AiSummaryForm both need the type; duplication caused drift risk | 16 |
 | D-355 | EntityType.ChatConversation = 23 for Sqids public ID encoding | Next value after Link=22, follows Go-compatible iota pattern | 17 |
 | D-356 | Chainable mock with thenable chain nodes for Drizzle query builder testing | Avoids the "thenable trap" where NestJS DI resolves objects with .then as Promises; only chain nodes are thenable, not the mock db itself | 17 |
+| D-373 | Frontend must NOT generate conversationId — backend creates Sqids IDs | Frontend-generated UUIDs crash decodePublicID(); backend creates conversations with valid Sqids-encoded IDs | 18 |
+| D-374 | onFinish appendMessage wrapped in try-catch — DB write failure logged, not swallowed | Stream already sent to client; failure is logged with conversationId so assistant message loss is observable | 18 |
+| D-375 | ChatService validates conversationId via decodePublicID + EntityType check | Invalid Sqids or wrong entity type returns DomainError instead of unhandled exception | 18 |
+| D-376 | toAiSdkTools throws on duplicate tool names instead of silent overwrite | Prevents subtle bugs when adding new tools; fail-fast at construction time | 18 |
 
 ## Blockers
 
@@ -101,6 +105,13 @@ last_activity_desc: Phase 18 execution started
 - Go backend seeds 331 default settings on first startup — NestJS must replicate this or frontend gets missing config keys
 - Settings update endpoint must accept flat key-value pairs (Go additionalProperties: string), not nested wrapper objects
 - Frontend may not send config keys that don't exist in DB — seed defaults first, then frontend can update them
+- Frontend must NEVER generate IDs that backend expects to decode (Sqids) — always let backend create and return IDs
+- streamText onFinish errors cannot propagate to client (stream already sent) — must log for observability
+- Any user-supplied ID passed to decodePublicID must be wrapped in try-catch → DomainError
+- NestJS ModuleRef must be mocked with class token (ModuleRef), not string token ('ModuleRef')
+- AI SDK 7 useChat: sendMessage({ text }) + status, not handleSubmit/handleInputChange/isLoading (removed)
+- AI SDK 7 UIMessage: only has `parts` array, no `content` property
+- @ai-sdk/react and ai use separate versioning — @ai-sdk/react@4 pairs with ai@7
 
 ## Metrics
 
@@ -149,6 +160,9 @@ last_activity_desc: Phase 18 execution started
 |------|----------|-------|-------|
 | Phase 17 P02 | 3 | 1 tasks | 3 files |
 | Phase 17 P03 | 13 | 1 tasks | 4 files |
+| Phase 18 P01 | 80 | 2 tasks | 6 files |
+| Phase 18 P02 | 60 | 2 tasks | 9 files |
+| Phase 18 P03 | 15 | 1 tasks | 3 files |
 
 ## Decisions
 
@@ -208,3 +222,7 @@ last_activity_desc: Phase 18 execution started
 - [Phase ?]: D-352: ChatMessagePart as discriminated union type in chat.schema.ts (TextPart | ToolCallPart | ToolResultPart) — type-only, not Zod schema
 - [Phase ?]: D-354: chat.schema.ts in ai/ not schemas/ — framework-agnostic asset co-located with AI module, re-exported from schemas/index.ts
 - [Phase 18]: D-372: Partial mock of 'ai' module using importOriginal — preserves tool() for ChatService constructor while mocking streamText/pipeUIMessageStreamToResponse
+- [Phase 18]: D-373: Frontend must NOT generate conversationId — backend creates Sqids IDs (UUID → decodePublicID crash)
+- [Phase 18]: D-374: onFinish appendMessage wrapped in try-catch — DB write failure logged, not swallowed
+- [Phase 18]: D-375: ChatService validates conversationId via decodePublicID + EntityType check before use
+- [Phase 18]: D-376: toAiSdkTools throws on duplicate tool names instead of silent overwrite
