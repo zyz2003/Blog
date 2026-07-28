@@ -274,14 +274,14 @@ Plans:
 
 **Critical:** These files must NOT import `ai` or `@langchain/*`. They are the migration-protected assets.
 
-**Plans:** 3 plans
+**Plans:** 2/3 plans executed
 
 Plans:
 
 **Wave 1** (parallel — no file conflicts)
 
-- [ ] 17-01-PLAN.md — ToolDef type + article-tools (search_articles + get_article) with framework-agnostic service delegation (AI-03)
-- [ ] 17-02-PLAN.md — Drizzle chat schema (chat_conversations + chat_messages + ChatMessagePart) + schema index registration (AI-04)
+- [x] 17-01-PLAN.md — ToolDef type + article-tools (search_articles + get_article) with framework-agnostic service delegation (AI-03)
+- [x] 17-02-PLAN.md — Drizzle chat schema (chat_conversations + chat_messages + ChatMessagePart) + schema index registration (AI-04)
 
 **Wave 2** (blocked on Wave 1 — depends on 17-02 schema + shares ai.module.ts with 17-01)
 

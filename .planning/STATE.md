@@ -2,20 +2,20 @@
 gsd_state_version: 1.0
 milestone: M5
 milestone_name: AI Features
-current_phase: 16
-current_plan: 03/03 complete (pending human verify)
+current_phase: 17
+current_phase_name: ai-tools-chat-history-storage
+current_plan: 1
 status: executing
-stopped_at: Phase 17 context gathered
-last_updated: "2026-07-27T14:02:01.088Z"
-last_activity: 2026-07-27
-last_activity_desc: "Plan 02: Frontend AI settings multi-profile upgrade"
+stopped_at: Completed 17-02-PLAN.md
+last_updated: "2026-07-28T01:13:50.330Z"
+last_activity: 2026-07-28
+last_activity_desc: Phase 17 execution started
 progress:
   total_phases: 8
   completed_phases: 3
-  total_plans: 24
-  completed_plans: 17
+  total_plans: 27
+  completed_plans: 19
   percent: 38
-current_phase_name: null
 ---
 
 # STATE: anheyu-app NestJS + SQLite Backend
@@ -25,10 +25,10 @@ current_phase_name: null
 | Field | Value |
 |-------|-------|
 | Milestone | M5 - AI Features |
-| Phase | 16 - AI Model Router & Summary Migration |
-| Current Plan | 03/03 complete (pending human verify) |
-| Status | Executing — All 3 plans done + quality fixes, awaiting human UAT |
-| Last Activity | 2026-07-27 — Plan 02: Frontend AI settings multi-profile upgrade |
+| Phase | 17 (ai-tools-chat-history-storage) — EXECUTING |
+| Current Plan | 1 |
+| Status | Executing Phase 17 |
+| Last Activity | 2026-07-28 — Phase 17 execution started |
 
 ## Phase Status
 
@@ -117,9 +117,9 @@ current_phase_name: null
 
 ## Session
 
-**Last session:** 2026-07-27T14:02:00.887Z
-**Stopped at:** Phase 17 context gathered
-**Resume file:** .planning/phases/17-ai-tools-chat-history-storage/17-CONTEXT.md
+**Last session:** 2026-07-28T01:13:50.315Z
+**Stopped at:** Completed 17-02-PLAN.md
+**Resume file:** None
 
 ## Performance Metrics
 
@@ -139,6 +139,11 @@ current_phase_name: null
 | Phase 15 P01 | 11m | 3 tasks | 4 files |
 | Phase 16 P01 | 16m | 2 tasks | 10 files |
 | Phase 16 P02 | 63m | 2 tasks | 6 files |
+**Per-Plan Metrics:**
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 17 P02 | 3 | 1 tasks | 3 files |
 
 ## Decisions
 
@@ -195,3 +200,5 @@ current_phase_name: null
 - [Phase ?]: D-314 extended: PostCategory.description uses null coalescing (?? '') for Go string zero-value compatibility
 - [Phase ?]: Comment export/import tests updated from stale 404 to 200 expectations matching implemented endpoints
 - [Phase ?]: Auth refresh-token tests use beforeAll admin re-seed for batch isolation (onConflictDoUpdate on username)
+- [Phase ?]: D-352: ChatMessagePart as discriminated union type in chat.schema.ts (TextPart | ToolCallPart | ToolResultPart) — type-only, not Zod schema
+- [Phase ?]: D-354: chat.schema.ts in ai/ not schemas/ — framework-agnostic asset co-located with AI module, re-exported from schemas/index.ts
