@@ -29,18 +29,16 @@ const mockDecodePublicID = vi.mocked(decodePublicID);
  * all chainable methods AND a `.then()` for awaitability. The chain node
  * resolves to a configurable value when awaited.
  *
- * To avoid the "thenable trap" with NestJS DI, the mock db itself does NOT
- * have a `.then()` method. Only chain nodes (returned by methods) are thenable.
+ * All calls to chain methods are captured in `mockDb._calls` for assertion.
  */
 function createMockDb() {
   // Queue of resolve values for sequential await calls
   const resolveQueue: any[] = [];
   let queueIndex = 0;
 
-  /**
-   * Create a chain node — chainable + thenable.
-   * When awaited, pops the next value from resolveQueue.
-   */
+  // Record all method calls with their arguments for assertion
+  const calls: { method: string; args: any[] }[] = [];
+
   function createChain(): any {
     const chain: any = {};
 
@@ -50,9 +48,12 @@ function createMockDb() {
       return Promise.resolve(val).then(resolve, reject);
     };
 
-    // Chainable methods — each returns a new chain node
+    // Chainable methods — each records the call and returns a new chain
     for (const method of ['insert', 'values', 'returning', 'update', 'set', 'delete', 'select', 'from', 'where', 'orderBy', 'limit']) {
-      chain[method] = vi.fn(() => createChain());
+      chain[method] = vi.fn((...args: any[]) => {
+        calls.push({ method, args });
+        return createChain();
+      });
     }
 
     return chain;
@@ -60,22 +61,35 @@ function createMockDb() {
 
   const db: any = {};
 
-  // Top-level methods — each returns a chain node
+  // Top-level methods — each records the call and returns a chain
   for (const method of ['insert', 'values', 'returning', 'update', 'set', 'delete', 'select', 'from', 'where', 'orderBy', 'limit']) {
-    db[method] = vi.fn(() => createChain());
+    db[method] = vi.fn((...args: any[]) => {
+      calls.push({ method, args });
+      return createChain();
+    });
   }
 
   // Test control: push a resolve value for the next await
   db._resolve = (val: any) => {
     resolveQueue.push(val);
-    queueIndex = 0; // Reset index when new values are pushed
+    queueIndex = 0;
     return db;
   };
 
-  // Reset between tests
-  db._reset = () => {
-    resolveQueue.length = 0;
-    queueIndex = 0;
+  // Access recorded calls
+  db._calls = calls;
+
+  // Helper: find the last call to a specific method
+  db._lastCall = (method: string) => {
+    for (let i = calls.length - 1; i >= 0; i--) {
+      if (calls[i].method === method) return calls[i];
+    }
+    return null;
+  };
+
+  // Helper: find all calls to a specific method
+  db._allCalls = (method: string) => {
+    return calls.filter((c: any) => c.method === method);
   };
 
   return db;
@@ -112,14 +126,21 @@ describe('ChatHistoryService', () => {
   // --- Test 2: createConversation inserts and returns publicId ---
 
   it('createConversation() inserts into chat_conversations with title and profileId, returns publicId', async () => {
-    // createConversation has 2 awaits:
-    //   1. insert().values().returning() → [{id: 7}]
-    //   2. update().set().where() → undefined (void)
     mockDb._resolve([{ id: 7 }])._resolve(undefined);
 
     const result = await service.createConversation('My Chat', 'profile-1');
 
+    // Verify insert was called (top-level)
     expect(mockDb.insert).toHaveBeenCalledTimes(1);
+    // Verify values was called with the right data
+    const valuesCall = mockDb._lastCall('values');
+    expect(valuesCall).not.toBeNull();
+    expect(valuesCall.args[0]).toEqual(
+      expect.objectContaining({
+        title: 'My Chat',
+        profileId: 'profile-1',
+      }),
+    );
     expect(result).toBe('conv-pub-123');
   });
 
@@ -141,15 +162,18 @@ describe('ChatHistoryService', () => {
 
     await service.createConversation();
 
-    // Verify the values call received title: null
-    // Since values is called on a chain node, we check the top-level insert was called
-    expect(mockDb.insert).toHaveBeenCalledTimes(1);
+    const valuesCall = mockDb._lastCall('values');
+    expect(valuesCall).not.toBeNull();
+    expect(valuesCall.args[0]).toEqual(
+      expect.objectContaining({
+        title: null,
+      }),
+    );
   });
 
   // --- Test 5: appendMessage inserts with all fields ---
 
   it('appendMessage() inserts into chat_messages with conversationId, role, content, parts, inputTokens, outputTokens', async () => {
-    // appendMessage has 1 await: insert().values() → void
     mockDb._resolve(undefined);
 
     const msg = {
@@ -163,6 +187,18 @@ describe('ChatHistoryService', () => {
     await service.appendMessage('conv-pub-123', msg);
 
     expect(mockDb.insert).toHaveBeenCalledTimes(1);
+    const valuesCall = mockDb._lastCall('values');
+    expect(valuesCall).not.toBeNull();
+    expect(valuesCall.args[0]).toEqual(
+      expect.objectContaining({
+        conversationId: 42,
+        role: 'user',
+        content: 'Hello',
+        parts: [{ type: 'text', text: 'Hello' }],
+        inputTokens: 10,
+        outputTokens: 0,
+      }),
+    );
   });
 
   // --- Test 6: appendMessage resolves conversationId from publicId via decodePublicID ---
@@ -177,6 +213,12 @@ describe('ChatHistoryService', () => {
     });
 
     expect(mockDecodePublicID).toHaveBeenCalledWith('some-pub-id');
+    const valuesCall = mockDb._lastCall('values');
+    expect(valuesCall.args[0]).toEqual(
+      expect.objectContaining({
+        conversationId: 77,
+      }),
+    );
   });
 
   // --- Test 7: getMessages returns StoredMessage[] ordered by createdAt asc ---
@@ -224,10 +266,6 @@ describe('ChatHistoryService', () => {
   // --- Test 10: truncateHistory keeps only last N messages ---
 
   it('truncateHistory(conversationId, keepLast=3) deletes oldest messages keeping only last 3', async () => {
-    // truncateHistory has 3 awaits:
-    //   1. select().from().where().orderBy().limit(3) → kept rows [{id:5},{id:4},{id:3}]
-    //   2. select().from().where() → all rows [{id:1},{id:2},{id:3},{id:4},{id:5}]
-    //   3. delete().where() → undefined
     mockDb
       ._resolve([{ id: 5 }, { id: 4 }, { id: 3 }])
       ._resolve([{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }])
@@ -241,7 +279,6 @@ describe('ChatHistoryService', () => {
   // --- Test 11: truncateHistory with keepLast=0 deletes all ---
 
   it('truncateHistory() with keepLast=0 deletes all messages in the conversation', async () => {
-    // keepLast=0 → limit(0) returns [] → delete all
     mockDb._resolve([])._resolve(undefined);
 
     await service.truncateHistory('conv-pub-123', 0);
@@ -252,10 +289,6 @@ describe('ChatHistoryService', () => {
   // --- Test 12: truncateHistory with keepLast >= count deletes nothing ---
 
   it('truncateHistory() with keepLast >= message count deletes nothing', async () => {
-    // 2 messages, keepLast=5 → all fit, no deletion
-    // Chain 1: limit → [{id:2},{id:1}] (keep all)
-    // Chain 2: where → [{id:2},{id:1}] (all rows)
-    // Since allRows.length (2) <= keepLast (5), no delete call
     mockDb
       ._resolve([{ id: 2 }, { id: 1 }])
       ._resolve([{ id: 2 }, { id: 1 }]);
