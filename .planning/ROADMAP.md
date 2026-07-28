@@ -305,7 +305,7 @@ Plans:
 
 **Key risks:** @Res() bypasses Nest enhancers; streamText doesn't throw (errors go into stream); CORS buffering.
 
-**Plans:** 3/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 
