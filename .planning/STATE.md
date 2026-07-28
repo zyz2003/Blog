@@ -4,18 +4,18 @@ milestone: M5
 milestone_name: AI Features
 current_phase: 18
 current_phase_name: Streaming Chat Endpoint
-current_plan: Not started
+current_plan: 3
 status: executing
-stopped_at: Phase 18 context gathered
-last_updated: "2026-07-28T07:34:06.083Z"
-last_activity: 2026-07-28
-last_activity_desc: Phase 18 planning complete
+stopped_at: Completed 18-03-PLAN.md
+last_updated: "2026-07-28T11:53:22Z"
+last_activity: "Last activity: 2026-07-28 — Plan 18-03 complete: 12 unit tests for tool-bridge, ChatService, AiChatController"
 progress:
   total_phases: 8
   completed_phases: 4
   total_plans: 30
-  completed_plans: 20
+  completed_plans: 24
   percent: 50
+last_activity_desc: Phase 18 execution started
 ---
 
 # STATE: anheyu-app NestJS + SQLite Backend
@@ -25,10 +25,10 @@ progress:
 | Field | Value |
 |-------|-------|
 | Milestone | M5 - AI Features |
-| Phase | 18 — Streaming Chat Endpoint |
-| Current Plan | Not started |
-| Status | Ready to execute |
-| Last Activity | 2026-07-28 — Phase 18 planning complete |
+| Phase | 18 (Streaming Chat Endpoint) — EXECUTING |
+| Current Plan | 1 |
+| Status | Executing Phase 18 |
+| Last Activity | Last activity: 2026-07-28 — Phase 18 execution resumed (wave continue) |
 
 ## Phase Status
 
@@ -50,7 +50,8 @@ progress:
 | 14 | Features Verification | Complete | 7/7 | 2026-07-22 |
 | 15 | Final Integration & Cutover | Complete | 3/3 | 2026-07-23 |
 | 16 | AI Model Router & Summary Migration | Executing | 3/3 (pending human verify) | 2026-07-27 |
-| 17 | AI Tools & Chat History Storage | Executing | 3/3 | 2026-07-28 |
+| 17 | AI Tools & Chat History Storage | Complete | 3/3 | 2026-07-28 |
+| 18 | Streaming Chat Endpoint | Complete | 3/3 | 2026-07-28 |
 
 ## Active Decisions
 
@@ -120,9 +121,9 @@ progress:
 
 ## Session
 
-**Last session:** 2026-07-28T06:34:38.629Z
-**Stopped at:** Phase 18 context gathered
-**Resume file:** .planning/phases/18-streaming-chat-endpoint/18-CONTEXT.md
+**Last session:** 2026-07-28T11:53:22Z
+**Stopped at:** Completed 18-03-PLAN.md
+**Resume file:** None
 
 ## Performance Metrics
 
@@ -206,3 +207,4 @@ progress:
 - [Phase ?]: Auth refresh-token tests use beforeAll admin re-seed for batch isolation (onConflictDoUpdate on username)
 - [Phase ?]: D-352: ChatMessagePart as discriminated union type in chat.schema.ts (TextPart | ToolCallPart | ToolResultPart) — type-only, not Zod schema
 - [Phase ?]: D-354: chat.schema.ts in ai/ not schemas/ — framework-agnostic asset co-located with AI module, re-exported from schemas/index.ts
+- [Phase 18]: D-372: Partial mock of 'ai' module using importOriginal — preserves tool() for ChatService constructor while mocking streamText/pipeUIMessageStreamToResponse

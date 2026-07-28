@@ -305,21 +305,21 @@ Plans:
 
 **Key risks:** @Res() bypasses Nest enhancers; streamText doesn't throw (errors go into stream); CORS buffering.
 
-**Plans:** 3 plans
+**Plans:** 3/3 plans executed
 
 Plans:
 
 **Wave 1** (Backend tracer — no dependencies)
 
-- [ ] 18-01-PLAN.md — Tracer: tool-bridge + ChatService + ai.port + ai-chat.controller + CORS + AiModule wiring (AI-05)
+- [x] 18-01-PLAN.md — Tracer: tool-bridge + ChatService + ai.port + ai-chat.controller + CORS + AiModule wiring (AI-05)
 
 **Wave 2** (Frontend chat widget — depends on 18-01)
 
-- [ ] 18-02-PLAN.md — Frontend: ChatWidget + ChatWindow (useChat) + MessageList + ToolResultCard + ChatInput (AI-05F)
+- [x] 18-02-PLAN.md — Frontend: ChatWidget + ChatWindow (useChat) + MessageList + ToolResultCard + ChatInput (AI-05F)
 
 **Wave 3** (Hardening — depends on 18-01 + 18-02)
 
-- [ ] 18-03-PLAN.md — Unit tests: tool-bridge.spec + chat.service.spec + ai-chat.controller.spec (AI-05, AI-05F)
+- [x] 18-03-PLAN.md — Unit tests: tool-bridge.spec + chat.service.spec + ai-chat.controller.spec (AI-05, AI-05F)
 
 ### Phase 19: Chat Hardening & Frontend Integration
 
