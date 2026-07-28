@@ -7,14 +7,16 @@ import { AiSummaryController } from './ai-summary.controller';
 import { ModelResolver } from './model/model-resolver.service';
 import { SummaryAdapter } from './adapters/summary.adapter';
 import { ArticleAiPort } from './ports/ai.port';
+import { ChatHistoryService } from './chat-history.service';
 
 @Module({
   imports: [DatabaseModule, SettingsModule, SearchModule, ArticleModule],
   controllers: [AiSummaryController],
   providers: [
     ModelResolver,
+    ChatHistoryService,
     { provide: 'ARTICLE_AI_PORT', useClass: SummaryAdapter },
   ],
-  exports: ['ARTICLE_AI_PORT'],
+  exports: ['ARTICLE_AI_PORT', ChatHistoryService],
 })
 export class AiModule {}
