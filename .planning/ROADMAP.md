@@ -338,7 +338,7 @@ Plans:
 - **前台前端**: 聊天组件打磨（建议问题、欢迎语、断线重连提示、错误状态）
 - Verify: long conversations don't blow token budget, disconnect doesn't corrupt state, unauthorized returns 401, end-to-end usable
 
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 
@@ -348,7 +348,7 @@ Plans:
 
 **Wave 2** (Frontend chat polish — depends on 19-01)
 
-- [ ] 19-02-PLAN.md — Frontend chat polish: welcome/suggestions + disconnect UI + new conversation + session switching + conversationId recovery + AiChatForm + settings descriptors (AI-07)
+- [x] 19-02-PLAN.md — Frontend chat polish: welcome/suggestions + disconnect UI + new conversation + session switching + conversationId recovery + AiChatForm + settings descriptors (AI-07)
 
 **Wave 3** (Admin + verification — depends on 19-01 + 19-02)
 
