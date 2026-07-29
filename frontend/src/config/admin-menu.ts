@@ -85,6 +85,13 @@ export const adminMenuConfig: AdminMenuGroup[] = [
         icon: "ri:image-line",
         roles: ["admin"],
       },
+      {
+        id: "ai-chat",
+        label: "AI 对话",
+        href: "/admin/ai-chat",
+        icon: "ri:chat-smile-ai-line",
+        roles: ["admin"],
+      },
     ],
   },
   {
