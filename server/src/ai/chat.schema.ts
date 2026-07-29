@@ -41,6 +41,7 @@ export const chatConversations = sqliteTable('chat_conversations', {
   publicId: text('public_id').unique(),
   title: text('title'),
   profileId: text('profile_id'),
+  userId: integer('user_id'),
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
 });

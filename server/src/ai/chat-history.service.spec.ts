@@ -49,7 +49,7 @@ function createMockDb() {
     };
 
     // Chainable methods — each records the call and returns a new chain
-    for (const method of ['insert', 'values', 'returning', 'update', 'set', 'delete', 'select', 'from', 'where', 'orderBy', 'limit']) {
+    for (const method of ['insert', 'values', 'returning', 'update', 'set', 'delete', 'select', 'from', 'where', 'orderBy', 'limit', 'offset']) {
       chain[method] = vi.fn((...args: any[]) => {
         calls.push({ method, args });
         return createChain();
@@ -62,7 +62,7 @@ function createMockDb() {
   const db: any = {};
 
   // Top-level methods — each records the call and returns a chain
-  for (const method of ['insert', 'values', 'returning', 'update', 'set', 'delete', 'select', 'from', 'where', 'orderBy', 'limit']) {
+  for (const method of ['insert', 'values', 'returning', 'update', 'set', 'delete', 'select', 'from', 'where', 'orderBy', 'limit', 'offset']) {
     db[method] = vi.fn((...args: any[]) => {
       calls.push({ method, args });
       return createChain();
@@ -171,7 +171,39 @@ describe('ChatHistoryService', () => {
     );
   });
 
-  // --- Test 5: appendMessage inserts with all fields ---
+  // --- Test 5: createConversation with userId stores it (D-391) ---
+
+  it('createConversation() with userId stores it in the database row', async () => {
+    mockDb._resolve([{ id: 5 }])._resolve(undefined);
+
+    await service.createConversation('Chat', 'profile-1', 42);
+
+    const valuesCall = mockDb._lastCall('values');
+    expect(valuesCall).not.toBeNull();
+    expect(valuesCall.args[0]).toEqual(
+      expect.objectContaining({
+        userId: 42,
+      }),
+    );
+  });
+
+  // --- Test 6: createConversation with userId=null stores null ---
+
+  it('createConversation() with userId=null stores null (anonymous user)', async () => {
+    mockDb._resolve([{ id: 6 }])._resolve(undefined);
+
+    await service.createConversation('Chat', 'profile-1', null);
+
+    const valuesCall = mockDb._lastCall('values');
+    expect(valuesCall).not.toBeNull();
+    expect(valuesCall.args[0]).toEqual(
+      expect.objectContaining({
+        userId: null,
+      }),
+    );
+  });
+
+  // --- Test 7: appendMessage inserts with all fields ---
 
   it('appendMessage() inserts into chat_messages with conversationId, role, content, parts, inputTokens, outputTokens', async () => {
     mockDb._resolve(undefined);
@@ -201,7 +233,7 @@ describe('ChatHistoryService', () => {
     );
   });
 
-  // --- Test 6: appendMessage resolves conversationId from publicId via decodePublicID ---
+  // --- Test 8: appendMessage resolves conversationId from publicId via decodePublicID ---
 
   it('appendMessage() resolves conversationId from publicId by decoding via decodePublicID', async () => {
     mockDecodePublicID.mockReturnValueOnce({ dbID: 77, entityType: 23 });
@@ -221,7 +253,7 @@ describe('ChatHistoryService', () => {
     );
   });
 
-  // --- Test 7: getMessages returns StoredMessage[] ordered by createdAt asc ---
+  // --- Test 9: getMessages returns StoredMessage[] ordered by createdAt asc ---
 
   it('getMessages() returns StoredMessage[] ordered by createdAt ascending', async () => {
     const date1 = new Date('2026-01-01T00:00:00Z');
@@ -240,7 +272,7 @@ describe('ChatHistoryService', () => {
     expect(messages[1].createdAt).toEqual(date2);
   });
 
-  // --- Test 8: getMessages maps parts from JSON column to ChatMessagePart[] ---
+  // --- Test 10: getMessages maps parts from JSON column to ChatMessagePart[] ---
 
   it('getMessages() maps parts from JSON column to ChatMessagePart[] type', async () => {
     const parts = [{ type: 'text', text: 'hello' }];
@@ -253,7 +285,7 @@ describe('ChatHistoryService', () => {
     expect(messages[0].parts).toEqual([{ type: 'text', text: 'hello' }]);
   });
 
-  // --- Test 9: getMessages returns empty array for nonexistent conversation ---
+  // --- Test 11: getMessages returns empty array for nonexistent conversation ---
 
   it('getMessages() returns empty array for nonexistent conversation', async () => {
     mockDb._resolve([]);
@@ -263,7 +295,7 @@ describe('ChatHistoryService', () => {
     expect(messages).toEqual([]);
   });
 
-  // --- Test 10: truncateHistory keeps only last N messages ---
+  // --- Test 12: truncateHistory keeps only last N messages ---
 
   it('truncateHistory(conversationId, keepLast=3) deletes oldest messages keeping only last 3', async () => {
     mockDb
@@ -276,7 +308,7 @@ describe('ChatHistoryService', () => {
     expect(mockDb.delete).toHaveBeenCalledTimes(1);
   });
 
-  // --- Test 11: truncateHistory with keepLast=0 deletes all ---
+  // --- Test 13: truncateHistory with keepLast=0 deletes all ---
 
   it('truncateHistory() with keepLast=0 deletes all messages in the conversation', async () => {
     mockDb._resolve([])._resolve(undefined);
@@ -286,7 +318,7 @@ describe('ChatHistoryService', () => {
     expect(mockDb.delete).toHaveBeenCalledTimes(1);
   });
 
-  // --- Test 12: truncateHistory with keepLast >= count deletes nothing ---
+  // --- Test 14: truncateHistory with keepLast >= count deletes nothing ---
 
   it('truncateHistory() with keepLast >= message count deletes nothing', async () => {
     mockDb
@@ -298,7 +330,7 @@ describe('ChatHistoryService', () => {
     expect(mockDb.delete).not.toHaveBeenCalled();
   });
 
-  // --- Test 13: zero AI library imports ---
+  // --- Test 15: zero AI library imports ---
 
   it('ChatHistoryService contains zero imports from "ai" or "@ai-sdk"', () => {
     const sourcePath = path.resolve(__dirname, 'chat-history.service.ts');
@@ -313,14 +345,14 @@ describe('ChatHistoryService', () => {
     expect(hasAiImport).toBe(false);
   });
 
-  // --- Test 14: listConversations returns conversations ordered by updatedAt desc ---
+  // --- Test 16: listConversations returns conversations ordered by updatedAt desc ---
 
   it('listConversations() returns conversations ordered by updatedAt descending with title and publicId', async () => {
     const date1 = new Date('2026-01-01T00:00:00Z');
     const date2 = new Date('2026-01-02T00:00:00Z');
     mockDb._resolve([
-      { publicId: 'conv-2', title: 'Second', profileId: 'p2', createdAt: date2, updatedAt: date2 },
-      { publicId: 'conv-1', title: 'First', profileId: 'p1', createdAt: date1, updatedAt: date1 },
+      { publicId: 'conv-2', title: 'Second', profileId: 'p2', userId: 5, createdAt: date2, updatedAt: date2 },
+      { publicId: 'conv-1', title: 'First', profileId: 'p1', userId: null, createdAt: date1, updatedAt: date1 },
     ]);
 
     const conversations = await service.listConversations();
@@ -328,7 +360,9 @@ describe('ChatHistoryService', () => {
     expect(conversations).toHaveLength(2);
     expect(conversations[0].publicId).toBe('conv-2');
     expect(conversations[0].title).toBe('Second');
+    expect(conversations[0].userId).toBe(5);
     expect(conversations[1].publicId).toBe('conv-1');
+    expect(conversations[1].userId).toBeNull();
   });
 
   // --- Additional coverage: getMessages handles null parts ---
@@ -341,5 +375,82 @@ describe('ChatHistoryService', () => {
     const messages = await service.getMessages('conv-pub-123');
 
     expect(messages[0].parts).toBeUndefined();
+  });
+
+  // --- Phase 19 tests: listConversationsPaged ---
+
+  it('listConversationsPaged() returns paginated results with total count', async () => {
+    const date1 = new Date('2026-01-01T00:00:00Z');
+    const date2 = new Date('2026-01-02T00:00:00Z');
+
+    // First resolve: paginated rows, Second resolve: count result
+    mockDb._resolve([
+      { publicId: 'conv-2', title: 'Second', profileId: 'p2', userId: null, createdAt: date2, updatedAt: date2 },
+    ])._resolve([{ total: 25 }]);
+
+    const result = await service.listConversationsPaged(1, 20);
+
+    expect(result.list).toHaveLength(1);
+    expect(result.list[0].publicId).toBe('conv-2');
+    expect(result.total).toBe(25);
+  });
+
+  it('listConversationsPaged() calculates offset correctly for page 2', async () => {
+    mockDb._resolve([])._resolve([{ total: 30 }]);
+
+    await service.listConversationsPaged(2, 10);
+
+    // Verify offset was called (the chain should include offset(10))
+    const offsetCalls = mockDb._allCalls('offset');
+    expect(offsetCalls.length).toBeGreaterThan(0);
+    expect(offsetCalls[0].args[0]).toBe(10);
+  });
+
+  it('listConversationsPaged() defaults to page=1, pageSize=20', async () => {
+    mockDb._resolve([])._resolve([{ total: 0 }]);
+
+    const result = await service.listConversationsPaged();
+
+    expect(result.total).toBe(0);
+    expect(result.list).toEqual([]);
+  });
+
+  // --- Phase 19 tests: getConversationMessages ---
+
+  it('getConversationMessages() delegates to getMessages()', async () => {
+    const date1 = new Date('2026-01-01T00:00:00Z');
+    mockDb._resolve([
+      { role: 'user', content: 'hello', parts: null, inputTokens: null, outputTokens: null, createdAt: date1 },
+    ]);
+
+    const messages = await service.getConversationMessages('conv-pub-123');
+
+    expect(messages).toHaveLength(1);
+    expect(messages[0].content).toBe('hello');
+  });
+
+  // --- Phase 19 tests: deleteConversation ---
+
+  it('deleteConversation() deletes messages first, then conversation row', async () => {
+    mockDb._resolve(undefined)._resolve(undefined);
+
+    await service.deleteConversation('conv-pub-123');
+
+    // Should call delete twice: once for messages, once for conversation
+    expect(mockDb.delete).toHaveBeenCalledTimes(2);
+
+    // Verify decodePublicID was called to get dbID
+    expect(mockDecodePublicID).toHaveBeenCalledWith('conv-pub-123');
+  });
+
+  it('deleteConversation() uses decoded dbID for both deletions', async () => {
+    mockDecodePublicID.mockReturnValueOnce({ dbID: 99, entityType: 23 });
+    mockDb._resolve(undefined)._resolve(undefined);
+
+    await service.deleteConversation('conv-del');
+
+    // Verify the where clause uses the decoded dbID
+    const whereCalls = mockDb._allCalls('where');
+    expect(whereCalls.length).toBeGreaterThanOrEqual(2);
   });
 });
