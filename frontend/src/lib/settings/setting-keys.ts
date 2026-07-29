@@ -525,3 +525,9 @@ export const KEY_AI_ASSISTANT_VECTOR_STORE = "ai_assistant.vector_store";
 export const KEY_AI_ASSISTANT_SYSTEM_PROMPT = "ai_assistant.system_prompt";
 export const KEY_AI_ASSISTANT_USER_PROMPT = "ai_assistant.user_prompt";
 export const KEY_AI_ASSISTANT_NO_CONTEXT_PROMPT = "ai_assistant.no_context_prompt";
+
+// ==================== AI 对话配置 ====================
+export const KEY_AI_CHAT_PROFILE_ID = "ai_chat_profile_id";
+export const KEY_AI_CHAT_WELCOME_MESSAGE = "ai_chat_welcome_message";
+export const KEY_AI_CHAT_SUGGESTED_QUESTIONS = "ai_chat_suggested_questions";
+export const KEY_AI_CHAT_SYSTEM_PROMPT = "ai_chat_system_prompt";

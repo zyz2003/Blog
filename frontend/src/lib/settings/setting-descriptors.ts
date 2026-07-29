@@ -146,6 +146,7 @@ const EMPTY_STRING_DEFAULT_KEYS = new Set<string>([
   K.KEY_AI_ASSISTANT_NO_CONTEXT_PROMPT,
   K.KEY_AI_ASSISTANT_CHAT_SUGGESTIONS,
   K.KEY_AI_ASSISTANT_SEARCH_SUGGESTIONS,
+  K.KEY_AI_CHAT_SYSTEM_PROMPT,
 ]);
 
 /**
@@ -844,6 +845,11 @@ const categoryDescriptors: Record<SettingCategoryId, SettingDescriptor[]> = {
     { backendKey: K.KEY_AI_SUMMARY_SYSTEM_PROMPT, type: "string" },
     { backendKey: K.KEY_AI_SUMMARY_GPT_NAME, type: "string" },
   ],
-  "ai-chat": [],
+  "ai-chat": [
+    { backendKey: K.KEY_AI_CHAT_PROFILE_ID, type: "string" },
+    { backendKey: K.KEY_AI_CHAT_WELCOME_MESSAGE, type: "string", defaultValue: "你好！我是博客 AI 助手，有什么可以帮你？" },
+    { backendKey: K.KEY_AI_CHAT_SUGGESTED_QUESTIONS, type: "json", defaultValue: '["这篇文章讲了什么？","推荐一些技术文章","博客最近更新了什么？"]' },
+    { backendKey: K.KEY_AI_CHAT_SYSTEM_PROMPT, type: "string", defaultValue: "你是博客站的 AI 助手，可以搜索和阅读博客文章来回答用户问题。请用中文回答。" },
+  ],
   "ai-writing": [],
 };
