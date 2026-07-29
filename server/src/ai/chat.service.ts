@@ -4,17 +4,23 @@
  * Per D-364: ToolContext built with moduleRef.resolve-based getService.
  * Per D-365: Tool call loop capped at 5 steps via stepCountIs(5).
  * Per D-371: User message persisted BEFORE stream; assistant message in onFinish.
+ * Per D-380/D-381: prepareStep compression for long conversations (>20 messages).
+ * Per D-382: onStepFinish token recording for per-step usage tracking.
+ * Per D-383: consumeStream ensures onFinish fires even on client disconnect.
+ * Per D-392: System prompt read from settings with hardcoded default fallback.
  */
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import {
   streamText,
+  generateText,
   convertToModelMessages,
   stepCountIs,
   toUIMessageStream,
   type UIMessage,
   type ToolSet,
   type StepResult,
+  type ModelMessage,
 } from 'ai';
 import { DRIZZLE } from '../database/database.module';
 import { SettingsService } from '../settings/settings.service';
@@ -27,8 +33,13 @@ import { decodePublicID, EntityType } from '../common/utils/sqids.util';
 import type { ToolContext } from './tools/tool-def';
 import type { ChatMessagePart } from './chat.schema';
 
-const SYSTEM_PROMPT =
+const DEFAULT_SYSTEM_PROMPT =
   '你是博客站的 AI 助手，可以搜索和阅读博客文章来回答用户问题。请用中文回答。';
+
+/** Per D-380: compress when messages exceed this threshold */
+const COMPRESSION_THRESHOLD = 20;
+/** Per D-381: keep this many recent messages after compression */
+const KEEP_RECENT = 10;
 
 @Injectable()
 export class ChatService {
@@ -58,19 +69,29 @@ export class ChatService {
    * 2. Resolve or create conversation
    * 3. Persist user message before stream
    * 4. Call streamText with tools, stepCountIs(5), toolChoice 'auto'
-   * 5. Persist assistant message in onFinish
-   * 6. Return UIMessageStream as ReadableStream<Uint8Array>
+   *    - prepareStep: compress long conversations (>20 messages)
+   *    - onStepFinish: accumulate token usage per step
+   * 5. Persist assistant message in onFinish with accumulated tokens
+   * 6. consumeStream() ensures onFinish fires even on client disconnect
+   * 7. Return UIMessageStream as ReadableStream<Uint8Array>
    */
   async chat(
     messages: UIMessage[],
     options?: {
       conversationId?: string;
       profileId?: string;
+      userId?: number | null;
       abortSignal?: AbortSignal;
     },
   ): Promise<ReadableStream<Uint8Array>> {
     // 1. Resolve model — re-throw DomainError for controller 4xx/5xx handling
     const model = this.modelResolver.resolve(options?.profileId);
+
+    // Per D-392: read system prompt from settings at call time (not constructor)
+    // so runtime config changes take effect without restart
+    const systemPrompt =
+      (this.settings.get('ai_chat_system_prompt') as string | undefined) ||
+      DEFAULT_SYSTEM_PROMPT;
 
     // 2. Resolve conversationId — wrap decodePublicID errors as DomainError
     let conversationId: string;
@@ -88,7 +109,7 @@ export class ChatService {
           : new DomainError('无效的会话 ID');
       }
     } else {
-      conversationId = await this.chatHistory.createConversation(undefined, options?.profileId);
+      conversationId = await this.chatHistory.createConversation(undefined, options?.profileId, options?.userId);
     }
 
     // 3. Persist last user message before stream (per D-371)
@@ -101,23 +122,80 @@ export class ChatService {
       });
     }
 
+    // Per D-382: accumulate token usage across steps via onStepFinish
+    let stepInputTokens = 0;
+    let stepOutputTokens = 0;
+
     // 4. Call streamText
     const result = streamText({
       model,
-      instructions: SYSTEM_PROMPT,
+      instructions: systemPrompt,
       messages: await convertToModelMessages(messages),
       tools: this.tools,
       stopWhen: stepCountIs(5),
       toolChoice: 'auto' as const,
       abortSignal: options?.abortSignal,
+      // Per D-380/D-381: compress long conversations in prepareStep
+      prepareStep: async ({ messages: stepMessages }) => {
+        if (stepMessages.length <= COMPRESSION_THRESHOLD) {
+          return undefined;
+        }
+
+        // Keep system message (first if role=system) + summary of old messages + recent messages
+        const systemMsg = stepMessages.find((m) => m.role === 'system');
+        const nonSystemMessages = stepMessages.filter((m) => m.role !== 'system');
+        const recentMessages = nonSystemMessages.slice(-KEEP_RECENT);
+        const oldMessages = nonSystemMessages.slice(0, -KEEP_RECENT);
+
+        if (oldMessages.length === 0) {
+          return undefined;
+        }
+
+        // Generate summary of old messages
+        const summaryText = oldMessages
+          .map((m) => `${m.role}: ${extractModelMessageText(m)}`)
+          .join('\n');
+
+        try {
+          const { text: summary } = await generateText({
+            model,
+            prompt: `请用中文简洁总结以下对话内容，保留关键信息：\n\n${summaryText}`,
+          });
+
+          const summaryMessage: ModelMessage = {
+            role: 'system',
+            content: `之前的对话摘要：${summary}`,
+          };
+
+          const compressedMessages: ModelMessage[] = [];
+          if (systemMsg) {
+            compressedMessages.push(systemMsg);
+          }
+          compressedMessages.push(summaryMessage);
+          compressedMessages.push(...recentMessages);
+
+          return { messages: compressedMessages };
+        } catch (err) {
+          this.logger.warn(
+            `Failed to generate conversation summary, using messages as-is: ${err instanceof Error ? err.message : String(err)}`,
+          );
+          return undefined;
+        }
+      },
       onError: ({ error }) => {
         this.logger.error(
           `streamText error: ${error instanceof Error ? error.message : String(error)}`,
           error instanceof Error ? error.stack : undefined,
         );
       },
-      onFinish: async ({ text, steps, usage }) => {
+      // Per D-382: accumulate token usage per step
+      onStepFinish: ({ usage }) => {
+        stepInputTokens += usage.inputTokens ?? 0;
+        stepOutputTokens += usage.outputTokens ?? 0;
+      },
+      onFinish: async ({ text, steps }) => {
         // 5. Persist assistant message in onFinish (per D-371)
+        // Per D-382: use accumulated token counts from onStepFinish
         // Note: errors here are logged but not propagated — the stream
         // has already been sent to the client. A missed persist means
         // the assistant message won't appear in conversation history.
@@ -127,8 +205,8 @@ export class ChatService {
             role: 'assistant',
             content: text ?? '',
             parts: parts.length > 0 ? parts : undefined,
-            inputTokens: usage.inputTokens ?? undefined,
-            outputTokens: usage.outputTokens ?? undefined,
+            inputTokens: stepInputTokens || undefined,
+            outputTokens: stepOutputTokens || undefined,
           });
         } catch (err) {
           this.logger.error(
@@ -138,6 +216,10 @@ export class ChatService {
         }
       },
     });
+
+    // Per D-383: consumeStream ensures onFinish fires even on client disconnect
+    // Called without await — fire-and-forget background consumption
+    result.consumeStream();
 
     // 6. Return UIMessageStream
     return toUIMessageStream({ stream: result.stream }) as unknown as ReadableStream<Uint8Array>;
@@ -153,6 +235,23 @@ function extractUserText(message: UIMessage): string {
     .filter((p): p is Extract<typeof p, { type: 'text' }> => p.type === 'text')
     .map((p) => p.text)
     .join('\n');
+}
+
+/**
+ * Extract text content from a ModelMessage for summary generation.
+ * ModelMessage content can be a string or an array of content parts.
+ */
+function extractModelMessageText(message: ModelMessage): string {
+  if (typeof message.content === 'string') {
+    return message.content;
+  }
+  if (Array.isArray(message.content)) {
+    return message.content
+      .filter((part): part is Extract<typeof part, { type: 'text' }> => part.type === 'text')
+      .map((part) => part.text)
+      .join('\n');
+  }
+  return '';
 }
 
 /**

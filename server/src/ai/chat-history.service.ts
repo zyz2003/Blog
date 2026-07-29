@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { eq, desc, asc, sql } from 'drizzle-orm';
+import { eq, desc, asc, sql, count } from 'drizzle-orm';
 import { DRIZZLE } from '../database/database.module';
 import {
   generatePublicID,
@@ -28,6 +28,7 @@ export interface StoredConversation {
   publicId: string;
   title: string | null;
   profileId: string | null;
+  userId: number | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -48,13 +49,15 @@ export class ChatHistoryService {
   /**
    * Create a new conversation row and return its Sqids-encoded publicId.
    * The publicId is generated from the inserted DB id + EntityType.ChatConversation.
+   * Per D-391: userId is nullable — anonymous=null, logged-in=DB ID.
    */
-  async createConversation(title?: string, profileId?: string): Promise<string> {
+  async createConversation(title?: string, profileId?: string, userId?: number | null): Promise<string> {
     const [row] = await this.db
       .insert(chatConversations)
       .values({
         title: title ?? null,
         profileId: profileId ?? null,
+        userId: userId ?? null,
       })
       .returning({ id: chatConversations.id });
 
@@ -173,7 +176,7 @@ export class ChatHistoryService {
 
   /**
    * List all conversations, ordered by updatedAt descending.
-   * Returns publicId, title, profileId, createdAt, updatedAt for each conversation.
+   * Returns publicId, title, profileId, userId, createdAt, updatedAt for each conversation.
    */
   async listConversations(): Promise<StoredConversation[]> {
     const rows = await this.db
@@ -185,8 +188,72 @@ export class ChatHistoryService {
       publicId: row.publicId,
       title: row.title,
       profileId: row.profileId,
+      userId: row.userId ?? null,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     }));
+  }
+
+  /**
+   * List conversations with pagination, ordered by updatedAt descending.
+   * Returns paginated list with total count for pagination metadata.
+   */
+  async listConversationsPaged(
+    page: number = 1,
+    pageSize: number = 20,
+  ): Promise<{ list: StoredConversation[]; total: number }> {
+    const offset = (page - 1) * pageSize;
+
+    const [rows, countResult] = await Promise.all([
+      this.db
+        .select()
+        .from(chatConversations)
+        .orderBy(desc(chatConversations.updatedAt))
+        .limit(pageSize)
+        .offset(offset),
+      this.db
+        .select({ total: count() })
+        .from(chatConversations),
+    ]);
+
+    const total = countResult[0]?.total ?? 0;
+
+    return {
+      list: rows.map((row: any) => ({
+        publicId: row.publicId,
+        title: row.title,
+        profileId: row.profileId,
+        userId: row.userId ?? null,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+      })),
+      total,
+    };
+  }
+
+  /**
+   * Get messages for a conversation by publicId.
+   * Alias for getMessages() — used by the controller for the messages endpoint.
+   */
+  async getConversationMessages(publicId: string): Promise<StoredMessage[]> {
+    return this.getMessages(publicId);
+  }
+
+  /**
+   * Delete a conversation and all its messages by publicId.
+   * Order: messages first (FK constraint), then conversation row.
+   */
+  async deleteConversation(publicId: string): Promise<void> {
+    const { dbID } = decodePublicID(publicId);
+
+    // Delete messages first (FK constraint)
+    await this.db
+      .delete(chatMessages)
+      .where(eq(chatMessages.conversationId, dbID));
+
+    // Then delete the conversation row
+    await this.db
+      .delete(chatConversations)
+      .where(eq(chatConversations.id, dbID));
   }
 }
