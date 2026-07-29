@@ -72,7 +72,7 @@ export const settingsFormRegistry: Record<SettingCategoryId, LazyForm> = {
     import("@/components/admin/settings/AiSummaryForm").then(m => ({ default: m.AiSummaryForm }))
   ) as LazyForm,
   "ai-chat": lazy(() =>
-    import("@/components/admin/settings/AiPlaceholderForm").then(m => ({ default: m.AiPlaceholderForm }))
+    import("@/components/admin/settings/AiChatForm").then(m => ({ default: m.AiChatForm }))
   ) as LazyForm,
   "ai-writing": lazy(() =>
     import("@/components/admin/settings/AiPlaceholderForm").then(m => ({ default: m.AiPlaceholderForm }))
