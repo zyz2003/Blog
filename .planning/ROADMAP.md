@@ -338,7 +338,7 @@ Plans:
 - **前台前端**: 聊天组件打磨（建议问题、欢迎语、断线重连提示、错误状态）
 - Verify: long conversations don't blow token budget, disconnect doesn't corrupt state, unauthorized returns 401, end-to-end usable
 
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans executed
 
 Plans:
 
@@ -352,7 +352,7 @@ Plans:
 
 **Wave 3** (Admin + verification — depends on 19-01 + 19-02)
 
-- [ ] 19-03-PLAN.md — Admin conversation management page + Phase 16 Wave 3 verification + end-to-end acceptance (AI-07)
+- [x] 19-03-PLAN.md — Admin conversation management page + Phase 16 Wave 3 verification + end-to-end acceptance (AI-07)
 
 ---
 
