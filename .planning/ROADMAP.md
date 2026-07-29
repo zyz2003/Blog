@@ -325,6 +325,8 @@ Plans:
 
 **Goal:** Production-harden the chat and wire up the admin config UI + final frontend polish.
 
+**Requirements:** AI-06, AI-07
+
 **Key deliverables:**
 
 - Context compression (prepareStep truncates when messages.length > threshold)
@@ -335,6 +337,22 @@ Plans:
 - **后台前端**: 对话历史查看页（管理员可查看用户对话）
 - **前台前端**: 聊天组件打磨（建议问题、欢迎语、断线重连提示、错误状态）
 - Verify: long conversations don't blow token budget, disconnect doesn't corrupt state, unauthorized returns 401, end-to-end usable
+
+**Plans:** 3 plans
+
+Plans:
+
+**Wave 1** (Backend hardening — no frontend dependency)
+
+- [ ] 19-01-PLAN.md — Backend hardening: context compression + token recording + consumeStream + system prompt from settings + userId field + conversation CRUD endpoints + Drizzle migration (AI-06)
+
+**Wave 2** (Frontend chat polish — depends on 19-01)
+
+- [ ] 19-02-PLAN.md — Frontend chat polish: welcome/suggestions + disconnect UI + new conversation + session switching + conversationId recovery + AiChatForm + settings descriptors (AI-07)
+
+**Wave 3** (Admin + verification — depends on 19-01 + 19-02)
+
+- [ ] 19-03-PLAN.md — Admin conversation management page + Phase 16 Wave 3 verification + end-to-end acceptance (AI-07)
 
 ---
 
