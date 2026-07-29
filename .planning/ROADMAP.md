@@ -338,13 +338,13 @@ Plans:
 - **前台前端**: 聊天组件打磨（建议问题、欢迎语、断线重连提示、错误状态）
 - Verify: long conversations don't blow token budget, disconnect doesn't corrupt state, unauthorized returns 401, end-to-end usable
 
-**Plans:** 3 plans
+**Plans:** 1/3 plans executed
 
 Plans:
 
 **Wave 1** (Backend hardening — no frontend dependency)
 
-- [ ] 19-01-PLAN.md — Backend hardening: context compression + token recording + consumeStream + system prompt from settings + userId field + conversation CRUD endpoints + Drizzle migration (AI-06)
+- [x] 19-01-PLAN.md — Backend hardening: context compression + token recording + consumeStream + system prompt from settings + userId field + conversation CRUD endpoints + Drizzle migration (AI-06)
 
 **Wave 2** (Frontend chat polish — depends on 19-01)
 
