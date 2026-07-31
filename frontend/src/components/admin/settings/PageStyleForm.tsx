@@ -18,6 +18,9 @@ import {
   KEY_PAGE_ONE_IMAGE_CONFIG,
   KEY_HITOKOTO_API,
   KEY_TYPING_SPEED,
+  KEY_TYPING_DELETE_SPEED,
+  KEY_TYPING_HOLD_TIME,
+  KEY_TYPING_GAP_TIME,
 } from "@/lib/settings/setting-keys";
 
 interface PageStyleFormProps {
@@ -71,13 +74,35 @@ export function PageStyleForm({ values, onChange, loading }: PageStyleFormProps)
           description="一言（Hitokoto）API 地址"
         />
 
-        <FormInput
-          label="打字速度"
-          placeholder="例如：100"
-          value={values[KEY_TYPING_SPEED]}
-          onValueChange={v => onChange(KEY_TYPING_SPEED, v)}
-          description="一言打字机效果的速度（毫秒）"
-        />
+        <div>
+          <p className="text-xs text-muted-foreground mb-2">打字机节奏（毫秒，留空使用默认值）</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <FormInput
+              label="打字速度"
+              placeholder="100"
+              value={values[KEY_TYPING_SPEED]}
+              onValueChange={v => onChange(KEY_TYPING_SPEED, v)}
+            />
+            <FormInput
+              label="删除速度"
+              placeholder="50"
+              value={values[KEY_TYPING_DELETE_SPEED]}
+              onValueChange={v => onChange(KEY_TYPING_DELETE_SPEED, v)}
+            />
+            <FormInput
+              label="打完停留"
+              placeholder="1500"
+              value={values[KEY_TYPING_HOLD_TIME]}
+              onValueChange={v => onChange(KEY_TYPING_HOLD_TIME, v)}
+            />
+            <FormInput
+              label="删完停留"
+              placeholder="500"
+              value={values[KEY_TYPING_GAP_TIME]}
+              onValueChange={v => onChange(KEY_TYPING_GAP_TIME, v)}
+            />
+          </div>
+        </div>
       </SettingsSection>
 
       {/* 自定义代码注入 */}

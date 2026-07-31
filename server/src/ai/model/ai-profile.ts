@@ -13,6 +13,8 @@ export interface AiProfile {
   enabled: boolean;
   api_key: string;
   purposes: string[];
+  /** 关闭思考模式（对支持的模型注入 thinking:disabled，如智谱） */
+  disable_thinking?: boolean;
 }
 
 /**
@@ -43,6 +45,7 @@ function normalizeProfile(raw: Record<string, unknown>): AiProfile {
     enabled: raw.enabled !== false,
     api_key: String(raw.api_key ?? ''),
     purposes: normalizePurposes(raw.purposes),
+    disable_thinking: raw.disable_thinking === true,
   };
 }
 

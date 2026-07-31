@@ -547,6 +547,9 @@ const categoryDescriptors: Record<SettingCategoryId, SettingDescriptor[]> = {
     { backendKey: K.KEY_PAGE_ONE_IMAGE_CONFIG, type: "json" },
     { backendKey: K.KEY_HITOKOTO_API, type: "string" },
     { backendKey: K.KEY_TYPING_SPEED, type: "number", defaultValue: "100" },
+    { backendKey: K.KEY_TYPING_DELETE_SPEED, type: "number", defaultValue: "50" },
+    { backendKey: K.KEY_TYPING_HOLD_TIME, type: "number", defaultValue: "1500" },
+    { backendKey: K.KEY_TYPING_GAP_TIME, type: "number", defaultValue: "500" },
   ],
   "content-post": [
     { backendKey: K.KEY_IP_API, type: "string" },

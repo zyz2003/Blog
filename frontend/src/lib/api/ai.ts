@@ -100,6 +100,32 @@ export const conversationApi = {
 };
 
 // ===================================
+//      AI 模型连接测试 API
+// ===================================
+
+export interface TestConnectionResult {
+  success: boolean;
+  latencyMs: number;
+  message: string;
+  hasReasoning?: boolean;
+}
+
+export async function testConnection(params: {
+  profileId: string;
+  apiUrl: string;
+  model: string;
+}): Promise<TestConnectionResult> {
+  const response = await apiClient.post<TestConnectionResult>(
+    "/api/ai/test-connection",
+    { profile_id: params.profileId, api_url: params.apiUrl, model: params.model }
+  );
+  if (response.data) {
+    return response.data;
+  }
+  throw new Error(response.message || "测试连接失败");
+}
+
+// ===================================
 //      AI 对话设置 API (public)
 // ===================================
 

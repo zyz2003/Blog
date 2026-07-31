@@ -7,24 +7,56 @@
  */
 "use client";
 
+import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SettingsSectionProps {
-  /** 区域标题 */
-  title: string;
+  /** 区域标题（支持 ReactNode 以容纳徽章等富内容） */
+  title: React.ReactNode;
   /** 区域描述 */
   description?: string;
+  /** 副标题（折叠时也显示，用于摘要信息） */
+  subtitle?: React.ReactNode;
   /** 子内容 */
   children: React.ReactNode;
   /** 额外 className */
   className?: string;
+  /** 是否可折叠（默认 false，保持原行为） */
+  collapsible?: boolean;
+  /** 折叠状态（受控模式） */
+  collapsed?: boolean;
+  /** 折叠状态变更回调（受控模式） */
+  onCollapsedChange?: (collapsed: boolean) => void;
+  /** 默认是否折叠（非受控模式） */
+  defaultCollapsed?: boolean;
 }
 
 /**
  * 设置表单区域分组组件
  * 用于将相关的设置项分组显示，采用简洁的视觉分隔
  */
-export function SettingsSection({ title, description, children, className }: SettingsSectionProps) {
+export function SettingsSection({
+  title,
+  description,
+  subtitle,
+  children,
+  className,
+  collapsible = false,
+  collapsed,
+  onCollapsedChange,
+  defaultCollapsed = false,
+}: SettingsSectionProps) {
+  const [internalCollapsed, setInternalCollapsed] = useState(defaultCollapsed);
+  const isControlled = collapsed !== undefined;
+  const isCollapsed = collapsible ? (isControlled ? collapsed! : internalCollapsed) : false;
+
+  const toggleCollapsed = () => {
+    const next = !isCollapsed;
+    if (onCollapsedChange) onCollapsedChange(next);
+    if (!isControlled) setInternalCollapsed(next);
+  };
+
   return (
     <section
       className={cn(
@@ -32,11 +64,33 @@ export function SettingsSection({ title, description, children, className }: Set
         className
       )}
     >
-      <div className="pb-3 mb-4 border-b border-border/40">
-        <h3 className="text-[14px] font-semibold text-foreground/85 tracking-tight">{title}</h3>
-        {description && <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{description}</p>}
+      <div
+        className={cn(
+          "border-b border-border/40",
+          collapsible ? "flex items-center justify-between gap-3 cursor-pointer select-none pb-3 mb-4" : "pb-3 mb-4",
+          isCollapsed && "mb-0 pb-0 border-b-0",
+        )}
+        onClick={collapsible ? toggleCollapsed : undefined}
+      >
+        <div className="min-w-0">
+          <h3 className="text-[14px] font-semibold text-foreground/85 tracking-tight flex items-center gap-1.5 flex-wrap">{title}</h3>
+          {subtitle && (
+            <p className="text-xs text-muted-foreground mt-1 leading-relaxed truncate">{subtitle}</p>
+          )}
+          {description && !isCollapsed && (
+            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{description}</p>
+          )}
+        </div>
+        {collapsible && (
+          <ChevronDown
+            className={cn(
+              "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
+              isCollapsed && "rotate-180",
+            )}
+          />
+        )}
       </div>
-      <div className="space-y-5">{children}</div>
+      {!isCollapsed && <div className="space-y-5">{children}</div>}
     </section>
   );
 }

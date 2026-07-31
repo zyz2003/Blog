@@ -77,7 +77,7 @@ export class SummaryAdapter implements ArticleAiPort {
           },
         ],
         temperature: 0.3,
-        maxOutputTokens: 500, // AI SDK 7: maxOutputTokens (NOT maxTokens)
+        maxOutputTokens: 4000, // 调大：开思考模式后 reasoning 占用部分 token，需留足摘要输出空间
         timeout: { totalMs: 30000 },
       });
 

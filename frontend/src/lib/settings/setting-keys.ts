@@ -119,6 +119,9 @@ export const KEY_CUSTOM_POST_BOTTOM_HTML = "CUSTOM_POST_BOTTOM_HTML";
 export const KEY_PAGE_ONE_IMAGE_CONFIG = "page.one_image.config";
 export const KEY_HITOKOTO_API = "page.one_image.hitokoto_api";
 export const KEY_TYPING_SPEED = "page.one_image.typing_speed";
+export const KEY_TYPING_DELETE_SPEED = "page.one_image.typing_delete_speed";
+export const KEY_TYPING_HOLD_TIME = "page.one_image.typing_hold_time";
+export const KEY_TYPING_GAP_TIME = "page.one_image.typing_gap_time";
 
 // ==================== 文章配置 ====================
 export const KEY_POST_DEFAULT_COVER = "post.default.cover";

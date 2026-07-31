@@ -27,6 +27,7 @@ import type { Response } from 'express';
 import { pipeUIMessageStreamToResponse, type UIMessage, type UIMessageChunk } from 'ai';
 import { ChatService } from './chat.service';
 import { ChatHistoryService } from './chat-history.service';
+import { SettingsService } from '../settings/settings.service';
 import { DomainError } from './domain-error';
 
 @Controller('ai')
@@ -36,6 +37,7 @@ export class AiChatController {
   constructor(
     private readonly chatService: ChatService,
     private readonly chatHistory: ChatHistoryService,
+    private readonly settings: SettingsService,
   ) {}
 
   /**
@@ -103,6 +105,99 @@ export class AiChatController {
    * Admin-only: requires JWT + AdminGuard.
    * Returns { code: 200, data: { list, total, page, page_size }, message: 'ok' }
    */
+  /**
+   * POST /api/ai/test-connection - Test AI model connection.
+   * Admin-only. Receives { api_url, api_key, model }, sends a minimal test
+   * request to the provider, returns { success, latencyMs, message }.
+   */
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @Post('test-connection')
+  async testConnection(
+    @Body()
+    body: { profile_id?: string; api_url?: string; model?: string },
+  ) {
+    const { profile_id, api_url, model } = body;
+    if (!api_url || !model || !profile_id) {
+      return { code: 400, data: null, message: '缺少 profile_id / api_url / model' };
+    }
+
+    // 前端 api_key 被脱敏，用 profile_id 从数据库取真实 key
+    let api_key: string | undefined;
+    const profilesRaw = this.settings.get('ai_profiles');
+    if (profilesRaw) {
+      try {
+        const profiles = JSON.parse(profilesRaw);
+        const profile = profiles.find((p: any) => p.id === profile_id);
+        if (profile) api_key = profile.api_key;
+      } catch {
+        /* ignore */
+      }
+    }
+    if (!api_key) {
+      return {
+        code: 200,
+        data: { success: false, latencyMs: 0, message: '未找到模型配置或未配置 API Key，请先保存' },
+        message: 'ok',
+      };
+    }
+
+    const start = Date.now();
+    try {
+      const res = await fetch(`${api_url}/chat/completions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${api_key}` },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: 'user', content: '1' }],
+          max_tokens: 2000,
+          stream: true,
+        }),
+        signal: AbortSignal.timeout(15000),
+      });
+      const latencyMs = Date.now() - start;
+
+      if (res.ok) {
+        // 流式检测 reasoning（和非流式行为不同，魔搭 Qwen3 流式有 reasoning 但非流式没有）
+        let hasReasoning = false;
+        try {
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+          let checked = 0;
+          while (checked < 80) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const chunk = decoder.decode(value, { stream: true });
+            if (chunk.includes('reasoning_content') || chunk.includes('"reasoning"')) {
+              hasReasoning = true;
+              break;
+            }
+            checked++;
+          }
+          reader.cancel();
+        } catch {
+          /* ignore */
+        }
+        return {
+          code: 200,
+          data: { success: true, latencyMs, message: '连接成功', hasReasoning },
+          message: 'ok',
+        };
+      }
+
+      const text = await res.text();
+      let msg = `HTTP ${res.status}`;
+      try { const j = JSON.parse(text); msg = j.error?.message || j.message || msg; } catch { /* keep default */ }
+      return { code: 200, data: { success: false, latencyMs, message: msg }, message: 'ok' };
+    } catch (err) {
+      const latencyMs = Date.now() - start;
+      return {
+        code: 200,
+        data: { success: false, latencyMs, message: err instanceof Error ? err.message : '连接失败' },
+        message: 'ok',
+      };
+    }
+  }
+
   @UseGuards(JwtAuthGuard, AdminGuard)
   @Get('conversations')
   async listConversations(

@@ -16,7 +16,7 @@ export function WelcomeMessage({
 }: WelcomeMessageProps) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-4 px-4">
-      <p className="text-sm text-neutral-600 dark:text-neutral-400 text-center">
+      <p className="text-sm text-muted-foreground text-center">
         {welcomeMessage}
       </p>
       {suggestions.length > 0 && (
@@ -25,7 +25,7 @@ export function WelcomeMessage({
             <button
               key={i}
               onClick={() => onSuggestionClick(suggestion)}
-              className="rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs text-neutral-700 transition-colors hover:bg-neutral-100 hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:hover:border-neutral-600"
+              className="rounded-full border border-border bg-muted px-3 py-1.5 text-xs text-foreground transition-colors hover:bg-muted/80"
             >
               {suggestion}
             </button>

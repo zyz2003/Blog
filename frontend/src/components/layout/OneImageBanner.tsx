@@ -114,6 +114,18 @@ export function OneImageBanner() {
     return Number(siteConfig?.page?.one_image?.typing_speed) || 100;
   }, [siteConfig]);
 
+  const typingDeleteSpeed = useMemo(() => {
+    return Number(siteConfig?.page?.one_image?.typing_delete_speed) || 50;
+  }, [siteConfig]);
+
+  const typingHoldTime = useMemo(() => {
+    return Number(siteConfig?.page?.one_image?.typing_hold_time) || 1500;
+  }, [siteConfig]);
+
+  const typingGapTime = useMemo(() => {
+    return Number(siteConfig?.page?.one_image?.typing_gap_time) || 500;
+  }, [siteConfig]);
+
   const clearTypingTimer = useCallback(() => {
     if (typingTimerRef.current) {
       clearTimeout(typingTimerRef.current);
@@ -122,24 +134,64 @@ export function OneImageBanner() {
   }, []);
 
   const typeWriter = useCallback(
-    (text: string) => {
+    (text: string, getNextText: (() => Promise<string>) | null) => {
       clearTypingTimer();
       typingIdRef.current += 1;
       const currentId = typingIdRef.current;
       setDisplaySubtitle("");
 
+      let currentText = text;
       let index = 0;
-      const type = () => {
+      let phase: "typing" | "hold" | "deleting" | "gap" = "typing";
+      const deleteSpeed = Math.max(30, typingDeleteSpeed);
+
+      const tick = async () => {
         if (typingIdRef.current !== currentId) return;
-        if (index <= text.length) {
-          setDisplaySubtitle(text.slice(0, index));
-          index += 1;
-          typingTimerRef.current = setTimeout(type, typingSpeed);
+
+        if (phase === "typing") {
+          if (index <= currentText.length) {
+            setDisplaySubtitle(currentText.slice(0, index));
+            index += 1;
+            typingTimerRef.current = setTimeout(tick, typingSpeed);
+          } else {
+            phase = "hold";
+            typingTimerRef.current = setTimeout(tick, typingHoldTime);
+          }
+          return;
         }
+
+        if (phase === "hold") {
+          index = currentText.length;
+          phase = "deleting";
+          typingTimerRef.current = setTimeout(tick, deleteSpeed);
+          return;
+        }
+
+        if (phase === "deleting") {
+          if (index >= 0) {
+            setDisplaySubtitle(currentText.slice(0, index));
+            index -= 1;
+            typingTimerRef.current = setTimeout(tick, deleteSpeed);
+          } else {
+            phase = "gap";
+            typingTimerRef.current = setTimeout(tick, typingGapTime);
+          }
+          return;
+        }
+
+        // gap：删完，准备下一轮
+        if (getNextText) {
+          const next = await getNextText();
+          if (typingIdRef.current !== currentId) return;
+          if (next) currentText = next;
+        }
+        index = 0;
+        phase = "typing";
+        typingTimerRef.current = setTimeout(tick, typingSpeed);
       };
-      type();
+      tick();
     },
-    [clearTypingTimer, typingSpeed]
+    [clearTypingTimer, typingSpeed, typingDeleteSpeed, typingHoldTime, typingGapTime]
   );
 
   const fetchHitokoto = useCallback(async () => {
@@ -183,7 +235,13 @@ export function OneImageBanner() {
     }
 
     if (currentConfig.typingEffect) {
-      typeWriter(text);
+      const getNextText = currentConfig.hitokoto
+        ? async () => {
+            const next = await fetchHitokoto();
+            return next || "";
+          }
+        : null;
+      typeWriter(text, getNextText);
     } else {
       setDisplaySubtitle(text);
     }

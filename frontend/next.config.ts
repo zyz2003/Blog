@@ -47,11 +47,6 @@ const nextConfig: NextConfig = {
     return {
       // beforeFiles: 在检查 public 目录之前执行（API 等必须代理的路径）
       beforeFiles: [
-        // API 代理
-        {
-          source: "/api/:path*",
-          destination: `${backendUrl}/api/:path*`,
-        },
         // 文件直链代理（后端路由在 /api/f/ 下，需带 /api 前缀）
         {
           source: "/f/:path*",
@@ -67,6 +62,11 @@ const nextConfig: NextConfig = {
       // sitemap.xml / robots.txt 由 Next.js 元数据约定处理（src/app/sitemap.ts、robots.ts）
       // RSS Feed 由 Route Handler 处理（src/app/rss.xml/route.ts 等），运行时读取后端地址
       afterFiles: [
+        // API 代理（/api/ai/chat 由 Route Handler 流式处理，其余走 rewrite 代理）
+        {
+          source: "/api/:path*",
+          destination: `${backendUrl}/api/:path*`,
+        },
         // 静态文件代理（后端上传的图片等，优先使用 public 目录中的默认文件）
         {
           source: "/static/:path*",

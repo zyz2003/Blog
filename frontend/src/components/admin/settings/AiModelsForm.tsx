@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { FormInput } from "@/components/ui/form-input";
 import { FormSelect, FormSelectItem } from "@/components/ui/form-select";
 import { FormSwitch } from "@/components/ui/form-switch";
+import { Badge } from "@/components/ui/badge";
 import { SettingsSection, SettingsFieldGroup } from "./SettingsSection";
 import { Spinner } from "@/components/ui/spinner";
 import {
@@ -11,11 +12,15 @@ import {
   KEY_AI_DEFAULT_PROFILE_ID,
 } from "@/lib/settings/setting-keys";
 import type { AiProfile } from "@/lib/settings/ai-profile";
+import { testConnection } from "@/lib/api/ai";
 
-/** 服务商预设映射 */
-const PROVIDER_PRESETS: Record<string, { api_url: string; model: string }> = {
-  openai: { api_url: "https://api.openai.com/v1", model: "gpt-4o-mini" },
-  deepseek: { api_url: "https://api.deepseek.com/v1", model: "deepseek-chat" },
+/** 服务商预设映射（含 API 地址 + 预设模型列表） */
+const PROVIDER_PRESETS: Record<string, { api_url: string; models: string[] }> = {
+  openai: { api_url: "https://api.openai.com/v1", models: ["gpt-4o-mini", "gpt-4o", "gpt-4.1", "gpt-4.1-mini"] },
+  deepseek: { api_url: "https://api.deepseek.com/v1", models: ["deepseek-chat", "deepseek-reasoner"] },
+  zhipu: { api_url: "https://open.bigmodel.cn/api/paas/v4", models: ["glm-4.7-flash", "glm-4.7", "glm-4-flash"] },
+  modelscope: { api_url: "https://api-inference.modelscope.cn/v1", models: ["Qwen/Qwen3-235B-A22B-Instruct-2507", "Qwen/Qwen3-Coder-30B-A3B-Instruct", "deepseek-ai/DeepSeek-V4-Pro", "deepseek-ai/DeepSeek-V4-Flash", "Qwen/Qwen3-235B-A22B-Thinking-2507"] },
+  openrouter: { api_url: "https://openrouter.ai/api/v1", models: ["nvidia/nemotron-3-super-120b-a12b:free", "google/gemma-4-31b-it:free", "openai/gpt-oss-20b:free"] },
 };
 
 interface AiModelsFormProps {
@@ -44,6 +49,27 @@ export function AiModelsForm({ values, onChange, loading }: AiModelsFormProps) {
   }, [values[KEY_AI_PROFILES]]);
 
   const defaultProfileId = values[KEY_AI_DEFAULT_PROFILE_ID] || "";
+
+  // 卡片折叠状态：默认折叠；用户手动展开后记住
+  const [collapsedProfiles, setCollapsedProfiles] = useState<Record<string, boolean>>({});
+  const isProfileCollapsed = (p: AiProfile) =>
+    p.id in collapsedProfiles ? collapsedProfiles[p.id] : true;
+
+  // 连接测试状态
+  const [testStatus, setTestStatus] = useState<Record<string, { status: "idle" | "testing" | "success" | "fail"; message?: string; latencyMs?: number; hasReasoning?: boolean }>>({});
+  const handleTest = useCallback(async (profile: AiProfile) => {
+    setTestStatus(prev => ({ ...prev, [profile.id]: { status: "testing" } }));
+    try {
+      const result = await testConnection({
+        profileId: profile.id,
+        apiUrl: profile.api_url,
+        model: profile.model,
+      });
+      setTestStatus(prev => ({ ...prev, [profile.id]: { status: result.success ? "success" : "fail", message: result.message, latencyMs: result.latencyMs, hasReasoning: result.hasReasoning } }));
+    } catch (err) {
+      setTestStatus(prev => ({ ...prev, [profile.id]: { status: "fail", message: err instanceof Error ? err.message : "测试失败" } }));
+    }
+  }, []);
 
   const updateProfiles = useCallback(
     (updated: AiProfile[]) => {
@@ -112,8 +138,9 @@ export function AiModelsForm({ values, onChange, loading }: AiModelsFormProps) {
         if (!profile.api_url.trim() || Object.values(PROVIDER_PRESETS).some(p => p.api_url === profile.api_url)) {
           patch.api_url = preset.api_url;
         }
-        if (!profile.model.trim() || Object.values(PROVIDER_PRESETS).some(p => p.model === profile.model)) {
-          patch.model = preset.model;
+        const allPresetModels = Object.values(PROVIDER_PRESETS).flatMap(p => p.models);
+        if (!profile.model.trim() || allPresetModels.includes(profile.model)) {
+          patch.model = preset.models[0];
         }
       }
       updateProfile(id, patch);
@@ -153,14 +180,34 @@ export function AiModelsForm({ values, onChange, loading }: AiModelsFormProps) {
 
       {profiles.map(profile => {
         const isDefault = profile.id === defaultProfileId;
-        const hasApiKey = !!(profile.api_key ?? "").trim();
+        const hasApiKey = profile.has_api_key ?? !!(profile.api_key ?? "").trim();
+        const presetModels = PROVIDER_PRESETS[profile.provider]?.models || [];
+        const isCustomModel = !presetModels.includes(profile.model);
 
         return (
           <SettingsSection
             key={profile.id}
-            title={profile.name || "未命名模型"}
-            description={isDefault ? "当前默认模型" : undefined}
+            title={
+              <>
+                <span className="truncate">{profile.name || "未命名模型"}</span>
+                {isDefault && <Badge variant="default" size="sm">默认</Badge>}
+                {!profile.enabled && <Badge variant="outline" size="sm">已禁用</Badge>}
+                {profile.purposes.summary && <Badge variant="secondary" size="sm">摘要</Badge>}
+                {profile.purposes.chat && <Badge variant="secondary" size="sm">对话</Badge>}
+                {profile.purposes.writing && <Badge variant="secondary" size="sm">写作</Badge>}
+                {hasApiKey
+                  ? <Badge variant="success" size="sm">Key 已配置</Badge>
+                  : <Badge variant="destructive" size="sm">未配置 Key</Badge>}
+                {testStatus[profile.id]?.hasReasoning && <Badge variant="secondary" size="sm">思考</Badge>}
+              </>
+            }
+            subtitle={`${profile.provider} · ${profile.model || "未设置模型"} · ${profile.api_url || "未设置地址"}`}
             className={isDefault ? "ring-1 ring-primary/30" : undefined}
+            collapsible
+            collapsed={isProfileCollapsed(profile)}
+            onCollapsedChange={(collapsed) =>
+              setCollapsedProfiles(prev => ({ ...prev, [profile.id]: collapsed }))
+            }
           >
             {/* 基本信息 */}
             <SettingsFieldGroup cols={2}>
@@ -180,6 +227,9 @@ export function AiModelsForm({ values, onChange, loading }: AiModelsFormProps) {
               >
                 <FormSelectItem key="openai">OpenAI</FormSelectItem>
                 <FormSelectItem key="deepseek">DeepSeek</FormSelectItem>
+                <FormSelectItem key="zhipu">智谱</FormSelectItem>
+                <FormSelectItem key="modelscope">魔搭社区</FormSelectItem>
+                <FormSelectItem key="openrouter">OpenRouter</FormSelectItem>
                 <FormSelectItem key="custom">自定义</FormSelectItem>
               </FormSelect>
             </SettingsFieldGroup>
@@ -193,13 +243,35 @@ export function AiModelsForm({ values, onChange, loading }: AiModelsFormProps) {
                 onValueChange={v => updateProfile(profile.id, { api_url: v })}
                 description="OpenAI 兼容接口地址，以 /v1 结尾"
               />
-              <FormInput
-                label="模型名称"
-                placeholder="gpt-4o-mini"
-                value={profile.model}
-                onValueChange={v => updateProfile(profile.id, { model: v })}
-                description="如 gpt-4o-mini / deepseek-chat / gpt-4o 等"
-              />
+              {presetModels.length > 0 ? (
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium text-foreground/80">模型名称</label>
+                  <FormSelect
+                    value={isCustomModel ? "__custom__" : profile.model}
+                    onValueChange={v => v === "__custom__" ? updateProfile(profile.id, { model: "" }) : updateProfile(profile.id, { model: v })}
+                    description="选择预设模型或自定义输入"
+                  >
+                    {[...presetModels, "__custom__"].map(m => (
+                      <FormSelectItem key={m}>{m === "__custom__" ? "✚ 自定义模型..." : m}</FormSelectItem>
+                    ))}
+                  </FormSelect>
+                  {isCustomModel && (
+                    <FormInput
+                      placeholder="输入模型 ID"
+                      value={profile.model}
+                      onValueChange={v => updateProfile(profile.id, { model: v })}
+                    />
+                  )}
+                </div>
+              ) : (
+                <FormInput
+                  label="模型名称"
+                  placeholder="gpt-4o-mini"
+                  value={profile.model}
+                  onValueChange={v => updateProfile(profile.id, { model: v })}
+                  description="输入模型 ID"
+                />
+              )}
             </SettingsFieldGroup>
 
             <FormInput
@@ -224,6 +296,21 @@ export function AiModelsForm({ values, onChange, loading }: AiModelsFormProps) {
                 onCheckedChange={v => updateProfile(profile.id, { enabled: v })}
               />
             </div>
+
+            {testStatus[profile.id]?.hasReasoning && (
+              <div className="flex items-center justify-between gap-4 py-1">
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-medium text-foreground/80">关闭思考模式</span>
+                  <p className="text-xs leading-relaxed text-muted-foreground mt-0.5">
+                    勾选后不返回思考过程（对支持的模型生效，如智谱）
+                  </p>
+                </div>
+                <FormSwitch
+                  checked={!!profile.disable_thinking}
+                  onCheckedChange={v => updateProfile(profile.id, { disable_thinking: v })}
+                />
+              </div>
+            )}
 
             {profile.enabled && (
               <div className="space-y-2">
@@ -263,6 +350,25 @@ export function AiModelsForm({ values, onChange, loading }: AiModelsFormProps) {
               )}
               {isDefault && (
                 <span className="text-xs text-primary font-medium">默认模型</span>
+              )}
+              <button
+                type="button"
+                onClick={() => handleTest(profile)}
+                disabled={!hasApiKey || testStatus[profile.id]?.status === "testing"}
+                className="text-xs text-primary hover:text-primary/80 font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {testStatus[profile.id]?.status === "testing" ? "测试中..." : "测试连接"}
+              </button>
+              {testStatus[profile.id]?.status === "success" && (
+                <>
+                  <span className="text-xs text-green">✓ {testStatus[profile.id].latencyMs}ms</span>
+                  {testStatus[profile.id].hasReasoning && <Badge variant="secondary" size="sm">思考模型</Badge>}
+                </>
+              )}
+              {testStatus[profile.id]?.status === "fail" && (
+                <span className="text-xs text-destructive truncate max-w-[200px]" title={testStatus[profile.id].message}>
+                  ✗ {testStatus[profile.id].message}
+                </span>
               )}
               <div className="flex-1" />
               <button

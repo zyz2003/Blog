@@ -263,11 +263,11 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
   const showWelcome = messages.length === 0 && !isLoading;
 
   return (
-    <div className="fixed bottom-24 right-6 z-50 flex h-[580px] w-[380px] flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xl dark:border-neutral-700 dark:bg-neutral-900 max-[640px]:bottom-0 max-[640px]:right-0 max-[640px]:h-full max-[640px]:w-full max-[640px]:rounded-none">
+    <div className="fixed bottom-24 right-6 z-50 flex h-[580px] w-[380px] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl max-[640px]:bottom-0 max-[640px]:right-0 max-[640px]:h-full max-[640px]:w-full max-[640px]:rounded-none">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-neutral-200 px-4 py-3 dark:border-neutral-700">
+      <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <div className="flex items-center gap-1 min-w-0">
-          <h2 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200 truncate">
+          <h2 className="text-sm font-semibold text-foreground truncate">
             {currentTitle}
           </h2>
           <SessionSwitcher
@@ -281,14 +281,14 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
         <div className="flex items-center gap-1">
           <button
             onClick={handleNewConversation}
-            className="rounded-md p-1 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-300"
+            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             aria-label="新对话"
           >
             <Plus className="h-4 w-4" />
           </button>
           <button
             onClick={onClose}
-            className="rounded-md p-1 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-300"
+            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             aria-label="关闭"
           >
             <X className="h-4 w-4" />

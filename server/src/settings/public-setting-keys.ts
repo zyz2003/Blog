@@ -104,6 +104,9 @@ export const PUBLIC_SETTING_KEYS = new Set([
   'page.one_image.config',
   'page.one_image.hitokoto_api',
   'page.one_image.typing_speed',
+  'page.one_image.typing_delete_speed',
+  'page.one_image.typing_hold_time',
+  'page.one_image.typing_gap_time',
 
   // ─── Header ───
   'header.menu',

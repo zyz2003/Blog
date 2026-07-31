@@ -23,12 +23,12 @@ export function ToolResultCard({ output, toolName }: ToolResultCardProps) {
             href={article.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="block rounded-lg border border-neutral-200 p-2 transition-colors hover:bg-neutral-50 dark:border-neutral-600 dark:hover:bg-neutral-700"
+            className="block rounded-lg border border-border p-2 transition-colors hover:bg-muted"
           >
-            <div className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
+            <div className="text-sm font-medium text-foreground">
               {article.title}
             </div>
-            <div className="mt-1 text-xs text-neutral-500 line-clamp-2 dark:text-neutral-400">
+            <div className="mt-1 text-xs text-muted-foreground line-clamp-2">
               {article.snippet}
             </div>
           </a>
@@ -46,13 +46,13 @@ export function ToolResultCard({ output, toolName }: ToolResultCardProps) {
         href={data.url || "#"}
         target="_blank"
         rel="noopener noreferrer"
-        className="block rounded-lg border border-neutral-200 p-2 transition-colors hover:bg-neutral-50 dark:border-neutral-600 dark:hover:bg-neutral-700"
+        className="block rounded-lg border border-border p-2 transition-colors hover:bg-muted"
       >
-        <div className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
+        <div className="text-sm font-medium text-foreground">
           {data.title || "文章详情"}
         </div>
         {data.content && (
-          <div className="mt-1 text-xs text-neutral-500 line-clamp-3 dark:text-neutral-400">
+          <div className="mt-1 text-xs text-muted-foreground line-clamp-3">
             {data.content.slice(0, 150)}...
           </div>
         )}
@@ -62,7 +62,7 @@ export function ToolResultCard({ output, toolName }: ToolResultCardProps) {
 
   // Fallback for unknown tool results
   return (
-    <div className="rounded-lg border border-neutral-200 p-2 text-xs text-neutral-500 dark:border-neutral-600 dark:text-neutral-400">
+    <div className="rounded-lg border border-border p-2 text-xs text-muted-foreground">
       工具结果
     </div>
   );

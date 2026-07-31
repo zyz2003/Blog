@@ -111,6 +111,9 @@ export interface SiteConfigData {
       };
       hitokoto_api?: string;
       typing_speed?: number;
+      typing_delete_speed?: number;
+      typing_hold_time?: number;
+      typing_gap_time?: number;
     };
     oneImageConfig?: {
       home?: PageOneImageItem;

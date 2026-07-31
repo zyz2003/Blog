@@ -34,7 +34,7 @@ export function ArticleLeadSummary({ article }: { article: Article }) {
   const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startedRef = useRef(false);
 
-  // 打字机逐字输出
+  // 打字机效果：逐字打出 -> 停留 -> 倒序收回 -> 重新打出，循环
   const typeWriter = useCallback(
     (text: string) => {
       if (typingTimerRef.current) {
@@ -42,19 +42,44 @@ export function ArticleLeadSummary({ article }: { article: Article }) {
         typingTimerRef.current = null;
       }
       let index = 0;
+      let phase: "typing" | "pausing" | "deleting" | "waiting" = "typing";
       setIsTyping(true);
       setDisplayText("");
 
-      const type = () => {
-        if (index <= text.length) {
-          setDisplayText(text.slice(0, index));
-          index += 1;
-          typingTimerRef.current = setTimeout(type, 30);
+      const tick = () => {
+        if (phase === "typing") {
+          if (index <= text.length) {
+            setDisplayText(text.slice(0, index));
+            index += 1;
+            typingTimerRef.current = setTimeout(tick, 50);
+          } else {
+            // 打完停留 3 秒
+            phase = "pausing";
+            setIsTyping(false);
+            typingTimerRef.current = setTimeout(tick, 3000);
+          }
+        } else if (phase === "pausing") {
+          phase = "deleting";
+          setIsTyping(true);
+          tick();
+        } else if (phase === "deleting") {
+          if (index >= 0) {
+            setDisplayText(text.slice(0, index));
+            index -= 1;
+            typingTimerRef.current = setTimeout(tick, 30);
+          } else {
+            // 删完停留 500ms 后重新打字
+            phase = "waiting";
+            typingTimerRef.current = setTimeout(tick, 500);
+          }
         } else {
-          setIsTyping(false);
+          phase = "typing";
+          index = 0;
+          setDisplayText("");
+          tick();
         }
       };
-      type();
+      tick();
     },
     []
   );

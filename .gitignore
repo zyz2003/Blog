@@ -25,3 +25,7 @@ anheyu-app/
 _go-backend-archive/
 server/data/uploads/
 server/test-db.sqlite
+.claude/*
+!.claude/CLAUDE.md
+changelogs/
+*.db.bak*
