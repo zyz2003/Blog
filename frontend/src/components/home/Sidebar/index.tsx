@@ -41,14 +41,11 @@ export function Sidebar() {
     };
   }, [siteConfig]);
 
-  // 天气时钟配置
+  // 天气时钟配置（key 不下发前端，由后端 /api/public/weather/now 代理）
   const clockConfig = useMemo(() => {
     const w = siteConfig?.sidebar?.weather;
-    if (!w?.enable || !w.qweather_key) return null;
+    if (!w?.enable) return null;
     return {
-      qweatherKey: w.qweather_key,
-      qweatherAPIHost: w.qweather_api_host || "devapi.qweather.com",
-      ipAPIKey: w.ip_api_key || "",
       loading: w.loading || "",
       defaultRectangle: w.default_rectangle === true || (w.default_rectangle as unknown) === "true",
       rectangle: w.rectangle || "112.6534116,27.96920845",

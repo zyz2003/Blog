@@ -1,19 +1,4 @@
-/* CardClock - 天气时钟组件样式 */
-/* 参考 anheyu-app CardClock.vue */
-
-/* 字体声明（@font-face 在 CSS Modules 中始终是全局的） */
-@font-face {
-  font-family: UnidreamLED;
-  src: url(https://cdn.cbd.int/anzhiyu-blog@1.1.6/fonts/UnidreamLED.ttf);
-  font-display: swap;
-}
-
-@font-face {
-  font-family: ZhuZiAYuanJWD;
-  src: url(https://npm.elemecdn.com/anzhiyu-blog@1.1.6/fonts/ZhuZiAWan.woff2);
-  font-display: swap;
-  font-weight: lighter;
-}
+/* CardClock - 天气时钟组件样式（丰满版） */
 
 @font-face {
   font-family: "qweather-icons";
@@ -24,136 +9,243 @@
   font-display: swap;
 }
 
-/* 卡片容器 */
+:root {
+  --clock-mono: ui-monospace, "SF Mono", "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono", monospace;
+  --clock-body: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", system-ui, -apple-system, sans-serif;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ─── 卡片容器 ─── */
 .cardClock {
   position: relative;
   overflow: hidden;
-  background: var(--anzhiyu-card-bg);
+  border-radius: 16px;
+  padding: 16px;
+
+  background:
+    radial-gradient(ellipse at 10% 20%, var(--anzhiyu-main-op) 0%, transparent 50%),
+    radial-gradient(ellipse at 90% 80%, var(--anzhiyu-yellow-op) 0%, transparent 40%),
+    var(--anzhiyu-card-bg);
   border: var(--style-border);
-  border-radius: 12px;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
-/* 加载状态 */
+.cardClock:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px -4px var(--anzhiyu-main-op);
+  border: var(--style-border-hover);
+}
+
+/* ─── 加载 ─── */
 .loadingContainer {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 153px;
-  padding: 20px;
+  min-height: 200px;
 }
 
 .loadingImg {
-  max-height: 120px;
-  max-width: 100%;
+  max-height: 72px;
 }
 
-/* 时钟背景 */
-.cardBackground {
-  height: 120px;
-  margin: 15px;
-  border-radius: 8px;
-  z-index: 2;
+.loadingText {
+  font-family: var(--clock-body);
+  font-size: 13px;
+  color: var(--anzhiyu-secondtext);
 }
 
-:global(html.dark) .cardBackground,
-:global([data-theme="dark"]) .cardBackground {
-  background-color: #212121;
-}
-
-/* 时钟内容 */
-.clockContent {
-  width: 100%;
-  height: 100%;
-}
-
-.clockInner {
-  padding: 10px;
+/* ─── 主体 ─── */
+.cardBody {
+  position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
+  align-items: center;
+  gap: 6px;
+  z-index: 1;
 }
 
-/* 时钟行 */
-.clockRow {
-  font-family: UnidreamLED;
-  font-weight: 400;
-  color: #000;
+/* ─── 背景水印 ─── */
+.weatherWatermark {
+  position: absolute;
+  top: 50%;
+  right: -10px;
+  transform: translateY(-50%);
+  font-family: "qweather-icons" !important;
+  font-size: 120px;
+  line-height: 1;
+  opacity: 0.06;
+  pointer-events: none;
+  z-index: 0;
+}
+
+:global(html.dark) .weatherWatermark,
+:global([data-theme="dark"]) .weatherWatermark {
+  opacity: 0.04;
+}
+
+/* ─── 日期 — 放大显眼 ─── */
+.dateRow {
+  font-family: var(--clock-body);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--anzhiyu-main);
+  letter-spacing: 0.06em;
+}
+
+/* ─── 城市名 ─── */
+.cityRow {
+  font-family: var(--clock-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--anzhiyu-secondtext);
+  letter-spacing: 0.04em;
+}
+
+/* ─── 时间 ─── */
+.timeRow {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+}
+
+.timeMain {
+  font-family: var(--clock-mono);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--anzhiyu-fontcolor);
+  font-variant-numeric: tabular-nums;
+}
+
+.timeSec {
+  font-family: var(--clock-mono);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--anzhiyu-main);
+  font-variant-numeric: tabular-nums;
+  animation: pulse-soft 1s ease-in-out infinite;
+}
+
+.periodTag {
+  font-family: var(--clock-mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--anzhiyu-white);
+  letter-spacing: 0.1em;
+  margin-left: 6px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--anzhiyu-main);
+}
+
+/* ─── 分隔线 ─── */
+.dividerLine {
+  width: 50px;
+  height: 2px;
+  border-radius: 1px;
+  margin: 4px 0;
+}
+
+/* ─── 风向 + 天气 一行 ─── */
+.weatherWindRow {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--clock-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--anzhiyu-fontcolor);
+}
+
+.weatherWindRow .windIcon {
+  font-family: "qweather-icons" !important;
+  font-size: 13px;
+  line-height: 1;
+  display: inline-block;
+}
+
+.dot {
+  opacity: 0.4;
+  color: var(--anzhiyu-secondtext);
+}
+
+.weatherText {
+  color: var(--anzhiyu-main);
+  font-weight: 600;
+}
+
+/* ─── 温度 + 体感 ─── */
+.tempRow {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.tempBig {
+  font-family: var(--clock-mono);
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--anzhiyu-fontcolor);
+}
+
+.tempUnit {
+  font-family: var(--clock-mono);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--anzhiyu-secondtext);
+}
+
+.feelsLike {
+  font-family: var(--clock-body);
+  font-size: 12px;
+  color: var(--anzhiyu-secondtext);
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--anzhiyu-card-bg-grey);
+}
+
+/* ─── 四格详情 ─── */
+.detailGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 16px;
+  width: 100%;
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--anzhiyu-card-border);
+}
+
+.detailItem {
   display: flex;
   justify-content: space-between;
-  flex-wrap: nowrap;
-  white-space: nowrap;
+  align-items: center;
+  font-family: var(--clock-body);
+  font-size: 11px;
 }
 
-:global(html.dark) .clockRow,
-:global([data-theme="dark"]) .clockRow {
-  color: #fff;
+.detailLabel {
+  color: var(--anzhiyu-secondtext);
 }
 
-/* 日期 */
-.clockDate {
-  text-align: left;
+.detailValue {
+  font-family: var(--clock-mono);
+  font-weight: 600;
+  color: var(--anzhiyu-fontcolor);
 }
 
-/* 天气信息 */
-.weather {
-  font-family: "ZhuZiAYuanJWD";
-  text-align: center;
-}
-
-.weatherIcon {
-  display: inline-block;
-  width: 20px;
-  font-family: "qweather-icons" !important;
-  font-style: normal;
-  font-weight: normal;
-  line-height: 1;
-  vertical-align: -0.125em;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-.temp {
-  font-family: UnidreamLED !important;
-}
-
-/* 时间 */
-.clockTime {
-  flex: 1;
-  font-family: UnidreamLED;
-  font-size: 38px;
-  text-align: center;
-  line-height: 1.5;
-}
-
-/* 风向 */
-.windDir {
-  font-family: "ZhuZiAYuanJWD";
-}
-
-.windIcon {
-  display: inline-block;
-  font-family: "qweather-icons" !important;
-  font-style: normal;
-  font-weight: normal;
-  line-height: 1;
-  vertical-align: -0.125em;
-}
-
-/* 城市 */
-.location {
-  font-family: "ZhuZiAYuanJWD";
-  text-align: center;
-}
-
-/* AM/PM */
-.period {
-  text-align: right;
-}
-
-/* 响应式 */
+/* ─── 响应式 ─── */
 @media (max-width: 992px) {
   .cardClock {
     display: none;

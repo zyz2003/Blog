@@ -451,6 +451,12 @@ export interface SiteConfigData {
   // 站点配置
   site?: {
     url?: string;
+    font?: string;
+    font_lxgw_css_url?: string;
+    font_source_han_css_url?: string;
+    font_custom_name?: string;
+    font_custom_css_url?: string;
+    font_custom_list?: Array<{ name: string; cssUrl: string }>;
   };
 
   // 任意其他配置

@@ -337,15 +337,15 @@ export function SidebarForm({ values, onChange, loading }: SidebarFormProps) {
                 <>
                   用于获取访问者地理位置，从{""}
                   <a
-                    href="https://api.nsuuu.com/"
+                    href="https://lbs.qq.com/"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary hover:underline"
                   >
-                    NSUUU API
+                    腾讯位置服务
                   </a>
                   {""}
-                  获取
+                  获取（个人开发者免费 6000 次/天，需开启 WebServiceAPI）
                 </>
               }
             />

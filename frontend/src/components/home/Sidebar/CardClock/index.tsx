@@ -11,9 +11,6 @@ import styles from "./CardClock.module.css";
 // ─── 类型定义 ─────────────────────────────────────────────────
 
 interface WeatherConfig {
-  qweatherKey: string;
-  qweatherAPIHost: string;
-  ipAPIKey: string;
   loading: string;
   defaultRectangle: boolean;
   rectangle: string;
@@ -23,8 +20,16 @@ interface WeatherNow {
   icon: string;
   text: string;
   temp: string;
+  feelsLike: string;
   windDir: string;
   wind360: string;
+  windScale: string;
+  windSpeed: string;
+  humidity: string;
+  precip: string;
+  pressure: string;
+  vis: string;
+  cloud: string;
 }
 
 interface CardClockProps {
@@ -225,91 +230,55 @@ export const CardClock = memo(function CardClock({ config }: CardClockProps) {
     setCurrentPeriod(getPeriod(now));
   }, []);
 
-  // 根据经纬度获取城市名称
-  const fetchCityName = useCallback(
-    async (location: string): Promise<string> => {
-      try {
-        const res = await fetch(
-          `https://geoapi.qweather.com/v2/city/lookup?location=${location}&key=${config.qweatherKey}`
-        );
-        const data = await res.json();
-        if (data.code === "200" && data.location?.length > 0) {
-          return data.location[0].name || "未知";
+  // 获取天气信息（经后端代理，不暴露 qweather key）
+  // 后端 /api/public/weather/now 合并返回城市名 + 实时天气
+  const fetchWeather = useCallback(async (location: string) => {
+    try {
+      const res = await fetch(`/api/public/weather/now?location=${encodeURIComponent(location)}`);
+      const result = await res.json();
+      if (result.code === 200 && result.data) {
+        setCityName(result.data.city || "未知");
+        if (result.data.weather) {
+          setWeatherNow(result.data.weather);
+          setWeatherColor(WEATHER_COLOR_MAP[result.data.weather.icon] || "#000");
         }
-        return "未知";
-      } catch {
-        return "未知";
+      } else {
+        setCityName("未知");
       }
-    },
-    [config.qweatherKey]
-  );
-
-  // 获取天气信息
-  const fetchWeather = useCallback(
-    async (location: string) => {
-      try {
-        const res = await fetch(
-          `https://${config.qweatherAPIHost}/v7/weather/now?location=${location}&key=${config.qweatherKey}`
-        );
-        const data = await res.json();
-        if (data.code === "200" && data.now) {
-          setWeatherNow(data.now);
-          setWeatherColor(WEATHER_COLOR_MAP[data.now.icon] || "#000");
-        }
-      } catch {
-        // 静默失败
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [config.qweatherAPIHost, config.qweatherKey]
-  );
+    } catch {
+      setCityName("未知");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   // 获取 IP 定位并加载天气
   const initWeather = useCallback(async () => {
     if (config.defaultRectangle) {
       // 使用固定坐标
-      const location = config.rectangle;
-      const city = await fetchCityName(location);
-      setCityName(city);
-      await fetchWeather(location);
+      await fetchWeather(config.rectangle);
     } else {
-      // 通过后端 API 获取 IP 定位
+      // 通过后端 API 获取 IP 定位（仅取经纬度，城市由 weather/now 返回）
       try {
         const res = await fetch("/api/public/weather/ip-location");
         const result = await res.json();
 
         let location = config.rectangle;
-        let city = "未知";
-
         if (result.code === 200 && result.data) {
-          // 优先 city，空时用 province/country（如局域网、境外）再兜底「未知」
-          city =
-            result.data.city ||
-            result.data.province ||
-            result.data.country ||
-            "未知";
           if (result.data.longitude && result.data.latitude) {
             location = `${result.data.longitude},${result.data.latitude}`;
-          } else if (result.default_rectangle) {
+          } else if (result.data.default_rectangle) {
             // 局域网或无经纬度时后端会带 default_rectangle，优先用其请求天气
-            location = result.default_rectangle;
+            location = result.data.default_rectangle;
           }
-        } else {
-          city = await fetchCityName(location);
         }
-
-        setCityName(city);
         await fetchWeather(location);
       } catch {
         // IP 定位失败，使用默认坐标
-        const location = config.rectangle;
-        const city = await fetchCityName(location);
-        setCityName(city);
-        await fetchWeather(location);
+        await fetchWeather(config.rectangle);
       }
     }
-  }, [config.defaultRectangle, config.rectangle, fetchCityName, fetchWeather]);
+  }, [config.defaultRectangle, config.rectangle, fetchWeather]);
 
   // 初始化
   useEffect(() => {
@@ -330,46 +299,83 @@ export const CardClock = memo(function CardClock({ config }: CardClockProps) {
             // eslint-disable-next-line @next/next/no-img-element
             <img src={config.loading} alt="Loading" className={styles.loadingImg} />
           ) : (
-            <span className={styles.location}>加载中...</span>
+            <span className={styles.loadingText}>加载中...</span>
           )}
         </div>
       ) : (
-        <div className={styles.cardBackground}>
-          <div className={styles.clockContent}>
-            <div className={styles.clockInner}>
-              {/* 第一行：日期 + 天气 */}
-              <div className={styles.clockRow}>
-                <span className={styles.clockDate}>{currentDate}</span>
-                {weatherNow && (
-                  <span className={styles.weather}>
-                    <span className={styles.weatherIcon} style={{ color: weatherColor }}>
-                      {WEATHER_ICON_UNICODE[String(weatherNow.icon).trim()] || ""}
-                    </span>{" "}
-                    {weatherNow.text} <span className={styles.temp}>{weatherNow.temp}</span> ℃
-                  </span>
-                )}
-              </div>
+        <div className={styles.cardBody}>
+          {/* 背景水印 */}
+          {weatherNow && (
+            <span className={styles.weatherWatermark} style={{ color: weatherColor }}>
+              {WEATHER_ICON_UNICODE[String(weatherNow.icon).trim()] || ""}
+            </span>
+          )}
 
-              {/* 第二行：时间 */}
-              <div className={styles.clockRow}>
-                <span className={styles.clockTime}>{currentTime}</span>
-              </div>
+          {/* 日期 — 放大显眼 */}
+          <div className={styles.dateRow}>{currentDate}</div>
 
-              {/* 第三行：风向 + 城市 + AM/PM */}
-              <div className={styles.clockRow}>
-                {weatherNow && (
-                  <span className={styles.windDir}>
-                    <span className={styles.windIcon} style={{ transform: `rotate(${weatherNow.wind360}deg)` }}>
-                      {WIND_ICON_UNICODE}
-                    </span>{" "}
-                    {weatherNow.windDir}
-                  </span>
-                )}
-                <span className={styles.location}>{cityName}</span>
-                <span className={styles.period}>{currentPeriod}</span>
+          {/* 城市名 */}
+          <div className={styles.cityRow}>{cityName}</div>
+
+          {/* 时间 */}
+          <div className={styles.timeRow}>
+            <span className={styles.timeMain}>{currentTime.slice(0, 5)}</span>
+            <span className={styles.timeSec}>{currentTime.slice(5)}</span>
+            <span className={styles.periodTag}>{currentPeriod}</span>
+          </div>
+
+          {/* 分隔线 */}
+          <div
+            className={styles.dividerLine}
+            style={{ background: `linear-gradient(90deg, ${weatherColor}, ${weatherColor}66)` }}
+          />
+
+          {/* 风向 + 天气 一行 */}
+          {weatherNow && (
+            <div className={styles.weatherWindRow}>
+              <span className={styles.windIcon} style={{ transform: `rotate(${weatherNow.wind360}deg)` }}>
+                {WIND_ICON_UNICODE}
+              </span>
+              <span>{weatherNow.windDir}</span>
+              <span className={styles.dot}>·</span>
+              <span className={styles.weatherText}>{weatherNow.text}</span>
+              <span className={styles.dot}>·</span>
+              <span>{weatherNow.windScale}级</span>
+            </div>
+          )}
+
+          {/* 温度 + 体感 */}
+          <div className={styles.tempRow}>
+            {weatherNow && (
+              <>
+                <span className={styles.tempBig}>{weatherNow.temp}</span>
+                <span className={styles.tempUnit}>℃</span>
+                <span className={styles.feelsLike}>体感 {weatherNow.feelsLike}℃</span>
+              </>
+            )}
+          </div>
+
+          {/* 更多气象数据 */}
+          {weatherNow && (
+            <div className={styles.detailGrid}>
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>湿度</span>
+                <span className={styles.detailValue}>{weatherNow.humidity}%</span>
+              </div>
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>气压</span>
+                <span className={styles.detailValue}>{weatherNow.pressure}hPa</span>
+              </div>
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>能见度</span>
+                <span className={styles.detailValue}>{weatherNow.vis}km</span>
+              </div>
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>云量</span>
+                <span className={styles.detailValue}>{weatherNow.cloud}%</span>
               </div>
             </div>
-          </div>
+          )}
         </div>
       )}
     </div>

@@ -221,6 +221,13 @@ export const PUBLIC_SETTING_KEYS = new Set([
   'sidebar.wechat.blurBackground',
   'sidebar.wechat.link',
 
+  // ─── Sidebar weather clock (non-sensitive display config only; qweather_key/api_host/ip_api_key stay private, proxied by backend) ───
+  'sidebar.weather.enable',
+  'sidebar.weather.enable_page',
+  'sidebar.weather.default_rectangle',
+  'sidebar.weather.rectangle',
+  'sidebar.weather.loading',
+
   // ─── About page ───
   'about.page.enable',
   'about.page.name',
@@ -324,6 +331,14 @@ export const PUBLIC_SETTING_KEYS = new Set([
 
   // ─── Auth/registration ───
   'ENABLE_REGISTRATION',
+
+  // ─── Font config ───
+  'site.font',
+  'site.font_lxgw_css_url',
+  'site.font_source_han_css_url',
+  'site.font_custom_name',
+  'site.font_custom_css_url',
+  'site.font_custom_list',
 
   // ─── AI summary display (frontend reads these to render) ───
   'ai_summary_gpt_name',

@@ -444,29 +444,9 @@ export class CommentService {
       this.logger.warn(`GeoIPService lookup failed for IP: ${ip}`);
     }
 
-    // Fallback: direct HTTP call to NSUUU API
-    try {
-      const url = `https://api.nsuuu.com/api/ip-location?ip=${encodeURIComponent(ip)}`;
-      const headers: any = {};
-      if (referer) {
-        headers.Referer = referer;
-      }
-
-      const response = await fetch(url, { headers });
-      if (!response.ok) return '未知';
-
-      const data = (await response.json()) as any;
-      if (data.code === 200 && data.data) {
-        const { province, city } = data.data;
-        if (province && city) {
-          return province === city ? province : `${province}${city}`;
-        }
-        if (province) return province;
-      }
-      return '未知';
-    } catch {
-      return '未知';
-    }
+    // GeoIPService(腾讯位置服务)失败或无结果时直接返回「未知」
+    // (原 NSUUU fallback 已移除:api.nsuuu.com 已失效,GeoIPService 已覆盖私有 IP 场景)
+    return '未知';
   }
 
   // ============================================================

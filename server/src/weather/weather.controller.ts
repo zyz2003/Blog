@@ -1,13 +1,14 @@
-import { Controller, Get, Req } from '@nestjs/common';
+import { Controller, Get, Req, Query } from '@nestjs/common';
 import { Public } from '../common/decorators/public.decorator';
 import { GeoIPService } from './geoip.service';
+import { WeatherService } from './weather.service';
 import { SettingsService } from '../settings/settings.service';
 
 /**
- * WeatherController — public weather/IP-location endpoint.
+ * WeatherController - public weather/IP-location endpoints.
  *
- * Per Go router.go line 276: GET /api/public/weather/ip-location
- * Returns flat IP location data matching Go IPLocationResponse structure.
+ * GET /api/public/weather/ip-location - 访问者 IP 定位（经纬度+城市）。
+ * GET /api/public/weather/now        - 和风天气代理（qweather_key 不下发前端）。
  */
 @Public()
 @Controller('public/weather')
@@ -15,6 +16,7 @@ export class WeatherController {
   constructor(
     private readonly geoipService: GeoIPService,
     private readonly settingsService: SettingsService,
+    private readonly weatherService: WeatherService,
   ) {}
 
   /**
@@ -22,7 +24,8 @@ export class WeatherController {
    * Extracts IP from request, looks up geolocation via GeoIPService.
    * Falls back to default coordinates from settings for private IPs or lookup failures.
    * Per D-144: Default coordinates from sidebar.weather.rectangle setting.
-   * Per Go handler.go GetIPLocation: returns flat IPLocationResponse + default_rectangle for LAN.
+   *
+   * 返回 { code:200, data:{...}, default_rectangle? }，兼容前端期望与原 Go 格式。
    */
   @Get('ip-location')
   async getIPLocation(@Req() req: any) {
@@ -44,12 +47,12 @@ export class WeatherController {
         isp: location.isp || '',
         latitude: location.latitude ? String(location.latitude) : '',
         longitude: location.longitude ? String(location.longitude) : '',
-        address: [location.country, location.province, location.city].filter(Boolean).join('') || '',
+        address:
+          [location.country, location.province, location.city].filter(Boolean).join('') || '',
       };
     }
 
     // Fallback: default coordinates from settings per D-144
-    // Match Go: returns default_rectangle alongside location for LAN/private IPs
     const defaults = this.geoipService.getDefaultCoordinates();
     const rectangle = this.settingsService.get('sidebar.weather.rectangle') || '';
     const result: any = {
@@ -66,5 +69,16 @@ export class WeatherController {
       result.default_rectangle = rectangle;
     }
     return result;
+  }
+
+  /**
+   * GET /api/public/weather/now?location=经度,纬度
+   * 和风天气代理：用私有 qweather_key 请求和风，合并返回城市名 + 实时天气。
+   * key 不下发前端，访客侧零 key 暴露。
+   * 返回 { code:200, data:{ city, weather } }，weather 可能为 null（未配置/失败）。
+   */
+  @Get('now')
+  async getWeather(@Query('location') location: string) {
+    return this.weatherService.getWeather(location || '');
   }
 }

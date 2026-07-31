@@ -398,7 +398,7 @@ describe('CommentService', () => {
       expect(result.ip_location).toBeDefined();
     });
 
-    it('Test 9: lookupIPLocation should delegate to GeoIPService, fall back to direct HTTP call on failure', async () => {
+    it('Test 9: lookupIPLocation should delegate to GeoIPService, return 未知 on failure', async () => {
       // Test GeoIPService delegation
       mockGeoIPService.lookup.mockResolvedValueOnce({
         province: '北京',
@@ -412,21 +412,10 @@ describe('CommentService', () => {
       expect(mockGeoIPService.lookup).toHaveBeenCalledWith('8.8.8.8', 'http://example.com');
       expect(location).toBe('北京'); // province === city, return province only
 
-      // Test fallback when GeoIPService returns null
+      // GeoIPService returns null -> return 未知 (NSUUU fallback removed, api.nsuuu.com 已失效)
       mockGeoIPService.lookup.mockResolvedValueOnce(null);
-      const mockFetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({
-          code: 200,
-          data: { province: '广东', city: '深圳' },
-        }),
-      });
-      vi.stubGlobal('fetch', mockFetch);
-
       const location2 = await service.lookupIPLocation('8.8.4.4', 'http://example.com');
-      expect(location2).toBe('广东深圳');
-
-      vi.restoreAllMocks();
+      expect(location2).toBe('未知');
     });
 
     it('Test 10: renderHTMLURLs should replace anzhiyu://file/ URIs with signed download URLs', async () => {

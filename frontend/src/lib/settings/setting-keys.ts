@@ -123,6 +123,14 @@ export const KEY_TYPING_DELETE_SPEED = "page.one_image.typing_delete_speed";
 export const KEY_TYPING_HOLD_TIME = "page.one_image.typing_hold_time";
 export const KEY_TYPING_GAP_TIME = "page.one_image.typing_gap_time";
 
+// ==================== 字体配置 ====================
+export const KEY_SITE_FONT = "site.font";
+export const KEY_SITE_FONT_LXGW_CSS_URL = "site.font_lxgw_css_url";
+export const KEY_SITE_FONT_SOURCE_HAN_CSS_URL = "site.font_source_han_css_url";
+export const KEY_SITE_FONT_CUSTOM_NAME = "site.font_custom_name";
+export const KEY_SITE_FONT_CUSTOM_CSS_URL = "site.font_custom_css_url";
+export const KEY_SITE_FONT_CUSTOM_LIST = "site.font_custom_list";
+
 // ==================== 文章配置 ====================
 export const KEY_POST_DEFAULT_COVER = "post.default.cover";
 export const KEY_POST_EXPIRATION_TIME = "post.expiration_time";

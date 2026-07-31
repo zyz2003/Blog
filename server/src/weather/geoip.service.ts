@@ -1,90 +1,99 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { SettingsService } from '../settings/settings.service';
 
 /**
- * GeoIPService — IP geolocation lookup via NSUUU API with in-memory caching.
+ * GeoIPService - IP 地理位置查询,基于腾讯位置服务 IP 定位。
  *
- * Per D-143: Makes HTTP GET to https://api.nsuuu.com/api/ip-location?ip={ip}
- * Per D-144: Falls back to settings sidebar.weather.rectangle for private/LAN IPs
- * Caches successful lookups with 5-minute TTL.
- * Exported from WeatherModule for CommentModule consumption.
+ * 接口:https://apis.map.qq.com/ws/location/v1/ip
+ * 认证:sidebar.weather.ip_api_key(腾讯位置服务个人开发者 key,免费 6000 次/天)
+ * 响应:result.location.lat/lng + result.ad_info.nation/province/city/district
+ *
+ * 私有/回环 IP(本地开发 ::1、127.0.0.1、192.168.* 等)不传 ip 参数,
+ * 由腾讯用「请求端公网 IP」(即服务器公网 IP)定位--本地开发也能定位到
+ * 开发者的公网 IP 归属地,而非直接 fallback 到默认坐标。
+ *
+ * 成功结果缓存 5 分钟。Exported from WeatherModule for CommentModule consumption.
  */
 @Injectable()
 export class GeoIPService {
   private readonly logger = new Logger(GeoIPService.name);
 
-  /** Cache: IP -> { location, expiresAt } */
+  /** Cache: cacheKey -> { location, expiresAt } */
   private cache = new Map<string, { location: any; expiresAt: number }>();
 
   /** Cache TTL: 5 minutes */
   private readonly CACHE_TTL_MS = 5 * 60 * 1000;
 
+  /** 腾讯位置服务 IP 定位接口 */
+  private readonly QQ_IP_API = 'https://apis.map.qq.com/ws/location/v1/ip';
+
   constructor(private readonly settingsService: SettingsService) {}
 
   /**
-   * Lookup IP geolocation via NSUUU API.
-   * Returns structured location object or null on failure.
-   * Private/LAN IPs skip the HTTP call and return null immediately.
-   *
-   * Per D-143: HTTP GET to https://api.nsuuu.com/api/ip-location?ip={ip}
+   * 通过腾讯 IP 定位查询地理位置。
+   * 返回结构化位置对象或 null(未配置 key / 查询失败)。
+   * 私有/回环 IP 不传 ip 参数,改用请求端公网 IP 定位(本地开发定位到开发者公网 IP)。
    */
   async lookup(ip: string, referer?: string): Promise<any | null> {
-    if (!ip) return null;
-
-    // Private/LAN IPs skip lookup
-    if (this.isPrivateIP(ip)) {
+    const key = this.settingsService.get('sidebar.weather.ip_api_key');
+    if (!key) {
+      this.logger.warn('sidebar.weather.ip_api_key 未配置,IP 定位不可用');
       return null;
     }
 
-    // Check cache
-    const cached = this.cache.get(ip);
+    // 私有/回环 IP:不传 ip,让腾讯用请求端公网 IP(本地开发定位到开发者公网 IP)
+    const isPrivate = this.isPrivateIP(ip);
+    const cacheKey = isPrivate ? '__private__' : ip;
+
+    // 命中缓存
+    const cached = this.cache.get(cacheKey);
     if (cached && cached.expiresAt > Date.now()) {
       return cached.location;
     }
 
-    // Make HTTP call to NSUUU API
     try {
-      const url = `https://api.nsuuu.com/api/ip-location?ip=${encodeURIComponent(ip)}`;
-      const headers: Record<string, string> = {};
-      if (referer) {
-        headers['Referer'] = referer;
-      }
+      const url = isPrivate
+        ? `${this.QQ_IP_API}?key=${encodeURIComponent(key)}`
+        : `${this.QQ_IP_API}?key=${encodeURIComponent(key)}&ip=${encodeURIComponent(ip)}`;
 
-      const response = await fetch(url, { headers, signal: AbortSignal.timeout(5000) });
+      const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
       if (!response.ok) {
-        this.logger.warn(`NSUUU API returned ${response.status} for IP: ${ip}`);
+        this.logger.warn(`腾讯 IP 定位返回 ${response.status}`);
         return null;
       }
 
       const data = (await response.json()) as any;
-      if (data.code === 200 && data.data) {
-        const location = {
-          latitude: data.data.latitude ?? null,
-          longitude: data.data.longitude ?? null,
-          city: data.data.city ?? null,
-          province: data.data.province ?? null,
-          country: data.data.country ?? null,
-        };
-
-        // Cache the result
-        this.cache.set(ip, {
-          location,
-          expiresAt: Date.now() + this.CACHE_TTL_MS,
-        });
-
-        return location;
+      if (data.status !== 0 || !data.result) {
+        this.logger.warn(`腾讯 IP 定位失败: status=${data.status} ${data.message || ''}`);
+        return null;
       }
 
-      return null;
+      const loc = data.result.location || {};
+      const ad = data.result.ad_info || {};
+      const location = {
+        latitude: loc.lat ?? null,
+        longitude: loc.lng ?? null,
+        city: ad.city || ad.district || '',
+        province: ad.province || '',
+        country: ad.nation || '',
+        isp: data.result.isp || '',
+      };
+
+      this.cache.set(cacheKey, {
+        location,
+        expiresAt: Date.now() + this.CACHE_TTL_MS,
+      });
+
+      return location;
     } catch (error) {
-      this.logger.warn(`GeoIP lookup failed for IP ${ip}: ${error}`);
+      this.logger.warn(`腾讯 IP 定位异常: ${error}`);
       return null;
     }
   }
 
   /**
    * Check if IP is in private/LAN ranges.
-   * Private ranges: 10.*, 172.16-31.*, 192.168.*, 127.*
+   * Private ranges: 10.*, 172.16-31.*, 192.168.*, 127.*, ::1
    */
   isPrivateIP(ip: string): boolean {
     if (!ip) return true;
@@ -92,11 +101,11 @@ export class GeoIPService {
     // Handle IPv4-mapped IPv6 addresses (::ffff:10.0.0.1)
     const normalized = ip.replace(/^::ffff:/, '');
 
-    // Loopback
-    if (normalized === '127.0.0.1' || normalized === 'localhost') return true;
+    // Loopback (IPv4 + IPv6)
+    if (normalized === '127.0.0.1' || normalized === 'localhost' || normalized === '::1') return true;
 
     const parts = normalized.split('.');
-    if (parts.length !== 4) return true; // Non-IPv4 treated as private
+    if (parts.length !== 4) return true; // Non-IPv4(含 IPv6 回环)视为私有
 
     const first = parseInt(parts[0], 10);
     const second = parseInt(parts[1], 10);

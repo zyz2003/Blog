@@ -550,6 +550,12 @@ const categoryDescriptors: Record<SettingCategoryId, SettingDescriptor[]> = {
     { backendKey: K.KEY_TYPING_DELETE_SPEED, type: "number", defaultValue: "50" },
     { backendKey: K.KEY_TYPING_HOLD_TIME, type: "number", defaultValue: "1500" },
     { backendKey: K.KEY_TYPING_GAP_TIME, type: "number", defaultValue: "500" },
+    { backendKey: K.KEY_SITE_FONT, type: "string", defaultValue: "system" },
+    { backendKey: K.KEY_SITE_FONT_LXGW_CSS_URL, type: "string" },
+    { backendKey: K.KEY_SITE_FONT_SOURCE_HAN_CSS_URL, type: "string" },
+    { backendKey: K.KEY_SITE_FONT_CUSTOM_NAME, type: "string" },
+    { backendKey: K.KEY_SITE_FONT_CUSTOM_CSS_URL, type: "string" },
+    { backendKey: K.KEY_SITE_FONT_CUSTOM_LIST, type: "json", defaultValue: "[]" },
   ],
   "content-post": [
     { backendKey: K.KEY_IP_API, type: "string" },

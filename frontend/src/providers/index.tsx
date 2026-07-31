@@ -21,6 +21,7 @@ import { DefaultThemeSync } from "./DefaultThemeSync";
 import { SiteThemeColorsSync } from "./SiteThemeColorsSync";
 import { ReducedMotionSync } from "./ReducedMotionSync";
 import { VisitStatisticsTracker } from "./visit-statistics-tracker";
+import { FontLoader } from "@/components/layout/FontLoader";
 
 interface ProvidersProps {
   children: ReactNode;
@@ -127,6 +128,7 @@ export function Providers({ children }: ProvidersProps) {
               <DefaultThemeSync />
               <SiteThemeColorsSync />
               <ReducedMotionSync />
+              <FontLoader />
               <GlobalLoading />
               <VisitStatisticsTracker />
               {children}
