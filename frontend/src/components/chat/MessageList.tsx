@@ -177,7 +177,7 @@ function AssistantMessage({
   isLastAssistant: boolean;
   isLoading: boolean;
 }) {
-  if (!parts || parts.length === 0) return null;
+  if (!parts || parts.length === 0) return <TypingDots />;
 
   const reasoningParts = parts.filter(p => p.type === "reasoning") as any[];
   const toolParts = parts.filter(

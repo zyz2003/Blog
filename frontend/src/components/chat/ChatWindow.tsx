@@ -323,11 +323,11 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
       </div>
 
       {/* Messages area */}
-      <div className="relative flex-1">
+      <div className="relative min-h-0 flex-1">
         <div
           ref={scrollRef}
           onScroll={handleScroll}
-          className="h-full overflow-y-auto px-4 py-3"
+          className="absolute inset-0 overflow-y-auto px-4 py-3"
         >
           {showWelcome ? (
             <WelcomeMessage
