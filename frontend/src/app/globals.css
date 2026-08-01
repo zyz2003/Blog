@@ -1831,7 +1831,7 @@ html.with-fancybox body.hide-scrollbar {
   width: 6px;
   height: 6px;
   border-radius: 9999px;
-  background: var(--muted-foreground);
+  background: var(--primary);
   animation: chat-bounce-dot 1.2s infinite ease-in-out;
 }
 .chat-thinking-shimmer {

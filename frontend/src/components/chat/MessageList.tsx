@@ -47,6 +47,18 @@ function toolErrorLabel(toolName: string): string {
   return done ? `${done}失败` : "调用失败";
 }
 
+/** 助手消息是否有可见内容（reasoning / 工具 / 非空文本）- 用于区分等待态与正常气泡 */
+function assistantHasVisibleContent(parts?: UIMessage["parts"]): boolean {
+  if (!parts || parts.length === 0) return false;
+  return parts.some(p => {
+    const t = (p as any).type;
+    if (t === "text") return !!(p as any).text?.trim();
+    if (t === "reasoning") return true;
+    if (typeof t === "string" && t.startsWith("tool-")) return true;
+    return false;
+  });
+}
+
 /** 三点弹跳指示器：Queued / 等待首个 token 时显示 */
 function TypingDots() {
   return (
@@ -59,12 +71,20 @@ function TypingDots() {
 }
 
 /** 助手渐变头像：Sparkles 图标 + primary 渐变圆 */
-function AssistantAvatar({ size = "md" }: { size?: "sm" | "md" }) {
+function AssistantAvatar({
+  size = "md",
+  pulsing = false,
+}: {
+  size?: "sm" | "md";
+  pulsing?: boolean;
+}) {
   const dim = size === "sm" ? "h-6 w-6" : "h-8 w-8";
   const icon = size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4";
   return (
     <div
-      className={`chat-avatar ${dim} flex shrink-0 items-center justify-center rounded-full ring-1 ring-primary/20`}
+      className={`chat-avatar ${dim} flex shrink-0 items-center justify-center rounded-full ring-1 ring-primary/20 ${
+        pulsing ? "chat-pulse-ring" : ""
+      }`}
     >
       <Sparkles className={icon} />
     </div>
@@ -119,24 +139,33 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
         const isLastAssistant = message.id === lastAssistantId;
 
         if (message.role === "assistant") {
-          const plainText =
-            message.parts
-              ?.filter(p => p.type === "text")
-              .map(p => (p as { type: "text"; text: string }).text)
-              .join("\n") ?? "";
+          const hasContent = assistantHasVisibleContent(message.parts);
+          const isWaiting = !hasContent && isLoading;
+          const plainText = hasContent
+            ? (message.parts
+                ?.filter(p => p.type === "text")
+                .map(p => (p as { type: "text"; text: string }).text)
+                .join("\n") ?? "")
+            : "";
           return (
             <div key={message.id} className="chat-msg-enter group flex gap-2.5">
-              <AssistantAvatar />
-              <div className="min-w-0 flex-1">
-                <div className="rounded-2xl rounded-tl-md bg-muted/60 px-3.5 py-2.5 text-sm">
-                  <AssistantMessage
-                    parts={message.parts}
-                    isLastAssistant={isLastAssistant}
-                    isLoading={isLoading}
-                  />
+              <AssistantAvatar pulsing={isWaiting} />
+              {hasContent ? (
+                <div className="min-w-0 flex-1">
+                  <div className="rounded-2xl rounded-tl-md bg-muted/60 px-3.5 py-2.5 text-sm">
+                    <AssistantMessage
+                      parts={message.parts}
+                      isLastAssistant={isLastAssistant}
+                      isLoading={isLoading}
+                    />
+                  </div>
+                  <CopyButton text={plainText} />
                 </div>
-                <CopyButton text={plainText} />
-              </div>
+              ) : isWaiting ? (
+                <div className="flex items-center">
+                  <TypingDots />
+                </div>
+              ) : null}
             </div>
           );
         }
@@ -157,8 +186,8 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
       })}
       {isLoading && !messages.some(m => m.role === "assistant") && (
         <div className="chat-msg-enter flex gap-2.5">
-          <AssistantAvatar />
-          <div className="rounded-2xl rounded-tl-md bg-muted/60">
+          <AssistantAvatar pulsing />
+          <div className="flex items-center">
             <TypingDots />
           </div>
         </div>
@@ -177,7 +206,7 @@ function AssistantMessage({
   isLastAssistant: boolean;
   isLoading: boolean;
 }) {
-  if (!parts || parts.length === 0) return <TypingDots />;
+  if (!parts || parts.length === 0) return null;
 
   const reasoningParts = parts.filter(p => p.type === "reasoning") as any[];
   const toolParts = parts.filter(
