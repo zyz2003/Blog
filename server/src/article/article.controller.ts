@@ -7,6 +7,7 @@ import {
   Body,
   Param,
   Query,
+  Req,
   HttpCode,
   HttpException,
   HttpStatus,
@@ -30,6 +31,7 @@ import { eq, isNull, and } from 'drizzle-orm';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { DirectLinkService } from '../direct-link/direct-link.service';
+import { extractPrimaryColorFromBuffer, fetchImageBuffer } from './color-extract.util';
 
 @Controller('articles')
 export class ArticleController {
@@ -176,8 +178,14 @@ export class ArticleController {
 
   @HttpCode(HttpStatus.OK)
   @Post('primary-color')
-  async getPrimaryColor(@Body() body: { image_url?: string }) {
-    return { primary_color: '#b4bfe2' };
+  async getPrimaryColor(@Body() body: { image_url?: string }, @Req() req: any) {
+    const imageUrl = body?.image_url?.trim();
+    if (!imageUrl) return { primary_color: null };
+    const origin = `${req.protocol}://${req.get('host')}`;
+    const buffer = await fetchImageBuffer(imageUrl, origin);
+    if (!buffer) return { primary_color: null };
+    const color = await extractPrimaryColorFromBuffer(buffer);
+    return { primary_color: color };
   }
 
   @HttpCode(HttpStatus.OK)

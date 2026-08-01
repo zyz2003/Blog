@@ -66,6 +66,7 @@
   color: var(--anzhiyu-white);
   text-align: left;
   cursor: pointer;
+  -webkit-user-select: none;
   user-select: none;
   background: var(--anzhiyu-white-op);
   border-radius: 12px;
@@ -91,6 +92,7 @@
   width: 118px;
   height: 118px;
   margin: 45px auto;
+  -webkit-user-select: none;
   user-select: none;
   transition: cubic-bezier(0.69, 0.39, 0, 1.21) 0.3s;
   transform-origin: bottom;

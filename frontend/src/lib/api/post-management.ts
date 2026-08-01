@@ -164,6 +164,22 @@ export const postManagementApi = {
   },
 
   /**
+   * 从封面图提取主色
+   * POST /api/articles/primary-color
+   * @returns #RRGGBB 或 null（提取失败/无图）
+   */
+  async extractPrimaryColor(imageUrl: string): Promise<string | null> {
+    const response = await apiClient.post<{ primary_color: string | null }>(
+      "/api/articles/primary-color",
+      { image_url: imageUrl }
+    );
+    if (response.code === 200) {
+      return response.data?.primary_color ?? null;
+    }
+    return null;
+  },
+
+  /**
    * 导出文章（返回 ZIP Blob）
    * POST /api/articles/export
    */

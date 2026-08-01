@@ -22,7 +22,7 @@ export const articles = sqliteTable(
     wordCount: integer('word_count').notNull().default(0),
     readingTime: integer('reading_time').notNull().default(0),
     ipLocation: text('ip_location'),
-    primaryColor: text('primary_color').default('#b4bfe2'),
+    primaryColor: text('primary_color'),
     isPrimaryColorManual: integer('is_primary_color_manual', {
       mode: 'boolean',
     })

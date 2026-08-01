@@ -141,6 +141,7 @@
   text-align: center;
   text-decoration: none;
   cursor: pointer;
+  -webkit-user-select: none;
   user-select: none;
   background: var(--anzhiyu-secondbg);
   border: var(--style-border-always);

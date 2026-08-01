@@ -2,10 +2,12 @@
  * 天气时钟组件
  * 参考 anheyu-app CardClock.vue 实现
  * 显示实时时钟、日期、天气信息
+ *
+ * 视觉：玻璃拟态 + 沉浸渐变（昼夜 phase + 天气色高光），时间居中为视觉主角。
  */
 "use client";
 
-import { useState, useEffect, useRef, useCallback, memo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
 import styles from "./CardClock.module.css";
 
 // ─── 类型定义 ─────────────────────────────────────────────────
@@ -210,6 +212,30 @@ function getPeriod(date: Date) {
   return date.getHours() >= 12 ? " P M" : " A M";
 }
 
+// ─── 昼夜 phase 与沉浸渐变 ─────────────────────────────────────
+
+type Phase = "dawn" | "day" | "dusk" | "night";
+
+const PHASE_TINTS: Record<Phase, string> = {
+  dawn: "linear-gradient(135deg, rgba(255,200,160,0.35) 0%, rgba(255,170,200,0.28) 50%, rgba(200,210,235,0.22) 100%)",
+  day: "linear-gradient(135deg, rgba(150,200,255,0.32) 0%, rgba(180,215,255,0.26) 50%, rgba(210,235,255,0.20) 100%)",
+  dusk: "linear-gradient(135deg, rgba(255,180,140,0.32) 0%, rgba(255,150,180,0.28) 50%, rgba(200,210,235,0.22) 100%)",
+  night: "linear-gradient(135deg, rgba(135,160,215,0.28) 0%, rgba(125,150,205,0.24) 50%, rgba(150,170,215,0.20) 100%)",
+};
+
+function getPhase(date: Date): Phase {
+  const h = date.getHours();
+  if (h >= 5 && h < 8) return "dawn";
+  if (h >= 8 && h < 17) return "day";
+  if (h >= 17 && h < 19) return "dusk";
+  return "night";
+}
+
+/** 沉浸背景 = 天气色径向高光 + 昼夜 phase 柔和色罩，叠加在卡片底色之上（浅/深站点模式自适配） */
+function buildBackground(phase: Phase, weatherColor: string): string {
+  return `radial-gradient(circle at 72% 12%, ${weatherColor}40 0%, transparent 55%), ${PHASE_TINTS[phase]}, var(--anzhiyu-card-bg)`;
+}
+
 // ─── 组件 ────────────────────────────────────────────────────
 
 export const CardClock = memo(function CardClock({ config }: CardClockProps) {
@@ -220,6 +246,7 @@ export const CardClock = memo(function CardClock({ config }: CardClockProps) {
   const [weatherNow, setWeatherNow] = useState<WeatherNow | null>(null);
   const [weatherColor, setWeatherColor] = useState("#000");
   const [cityName, setCityName] = useState("定位中...");
+  const [phase, setPhase] = useState<Phase>(() => getPhase(new Date()));
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // 更新时间
@@ -228,6 +255,7 @@ export const CardClock = memo(function CardClock({ config }: CardClockProps) {
     setCurrentTime(formatTime(now));
     setCurrentDate(formatDate(now));
     setCurrentPeriod(getPeriod(now));
+    setPhase(getPhase(now));
   }, []);
 
   // 获取天气信息（经后端代理，不暴露 qweather key）
@@ -291,8 +319,10 @@ export const CardClock = memo(function CardClock({ config }: CardClockProps) {
     };
   }, [updateTime, initWeather]);
 
+  const gradient = useMemo(() => buildBackground(phase, weatherColor), [phase, weatherColor]);
+
   return (
-    <div className={styles.cardClock}>
+    <div className={styles.cardClock} style={{ background: gradient }}>
       {isLoading ? (
         <div className={styles.loadingContainer}>
           {config.loading ? (
@@ -304,58 +334,56 @@ export const CardClock = memo(function CardClock({ config }: CardClockProps) {
         </div>
       ) : (
         <div className={styles.cardBody}>
-          {/* 背景水印 */}
+          {/* 背景天气水印 - 居中超大 */}
           {weatherNow && (
-            <span className={styles.weatherWatermark} style={{ color: weatherColor }}>
+            <span className={styles.weatherWatermark} style={{ color: weatherColor }} aria-hidden>
               {WEATHER_ICON_UNICODE[String(weatherNow.icon).trim()] || ""}
             </span>
           )}
 
-          {/* 日期 — 放大显眼 */}
-          <div className={styles.dateRow}>{currentDate}</div>
+          {/* 顶部：城市 + 日期 */}
+          <div className={styles.topBar}>
+            <span className={styles.chip}>{cityName}</span>
+            <span className={styles.chip}>{currentDate}</span>
+          </div>
 
-          {/* 城市名 */}
-          <div className={styles.cityRow}>{cityName}</div>
-
-          {/* 时间 */}
-          <div className={styles.timeRow}>
+          {/* 时间 hero 居中 */}
+          <div className={styles.timeHero}>
             <span className={styles.timeMain}>{currentTime.slice(0, 5)}</span>
             <span className={styles.timeSec}>{currentTime.slice(5)}</span>
             <span className={styles.periodTag}>{currentPeriod}</span>
           </div>
 
-          {/* 分隔线 */}
-          <div
-            className={styles.dividerLine}
-            style={{ background: `linear-gradient(90deg, ${weatherColor}, ${weatherColor}66)` }}
-          />
-
-          {/* 风向 + 天气 一行 */}
+          {/* 天气：图标 + 温度/天气 + 风力/体感 */}
           {weatherNow && (
-            <div className={styles.weatherWindRow}>
-              <span className={styles.windIcon} style={{ transform: `rotate(${weatherNow.wind360}deg)` }}>
-                {WIND_ICON_UNICODE}
+            <div className={styles.weatherPanel}>
+              <span className={styles.weatherIcon} style={{ color: weatherColor }} aria-hidden>
+                {WEATHER_ICON_UNICODE[String(weatherNow.icon).trim()] || ""}
               </span>
-              <span>{weatherNow.windDir}</span>
-              <span className={styles.dot}>·</span>
-              <span className={styles.weatherText}>{weatherNow.text}</span>
-              <span className={styles.dot}>·</span>
-              <span>{weatherNow.windScale}级</span>
+              <div className={styles.weatherMain}>
+                <div className={styles.tempLine}>
+                  <span className={styles.tempBig}>{weatherNow.temp}</span>
+                  <span className={styles.tempUnit}>°C</span>
+                </div>
+                <span className={styles.weatherText}>{weatherNow.text}</span>
+              </div>
+              <div className={styles.weatherMeta}>
+                <span className={styles.metaItem}>
+                  <span
+                    className={styles.windIcon}
+                    style={{ transform: `rotate(${weatherNow.wind360}deg)` }}
+                    aria-hidden
+                  >
+                    {WIND_ICON_UNICODE}
+                  </span>
+                  {weatherNow.windDir} {weatherNow.windScale}级
+                </span>
+                <span className={styles.metaItem}>体感 {weatherNow.feelsLike}°</span>
+              </div>
             </div>
           )}
 
-          {/* 温度 + 体感 */}
-          <div className={styles.tempRow}>
-            {weatherNow && (
-              <>
-                <span className={styles.tempBig}>{weatherNow.temp}</span>
-                <span className={styles.tempUnit}>℃</span>
-                <span className={styles.feelsLike}>体感 {weatherNow.feelsLike}℃</span>
-              </>
-            )}
-          </div>
-
-          {/* 更多气象数据 */}
+          {/* 2×2 气象网格 */}
           {weatherNow && (
             <div className={styles.detailGrid}>
               <div className={styles.detailItem}>
@@ -367,7 +395,7 @@ export const CardClock = memo(function CardClock({ config }: CardClockProps) {
                 <span className={styles.detailValue}>{weatherNow.pressure}hPa</span>
               </div>
               <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>能见度</span>
+                <span className={styles.detailLabel}>能见</span>
                 <span className={styles.detailValue}>{weatherNow.vis}km</span>
               </div>
               <div className={styles.detailItem}>

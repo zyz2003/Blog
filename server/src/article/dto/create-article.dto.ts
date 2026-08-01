@@ -71,7 +71,7 @@ export class CreateArticleDto {
 
   @IsOptional()
   @IsString()
-  primary_color?: string = '#b4bfe2';
+  primary_color?: string;
 
   @IsOptional()
   @IsBoolean()

@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import { json, urlencoded } from 'express';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
@@ -7,7 +8,10 @@ import { initSqidsEncoderWithSeed } from './common/utils/sqids.util';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
-  const app = await NestFactory.create(AppModule);
+  // bodyParser: false 关闭内置 100KB 限制的解析器，改用下方自定义大限制（文章 content_html 可达数百 KB）
+  const app = await NestFactory.create(AppModule, { bodyParser: false });
+  app.use(json({ limit: '10mb' }));
+  app.use(urlencoded({ limit: '10mb', extended: true }));
 
   // Global prefix matching Go backend router -- all routes are /api/*
   // Exclude RSS/Sitemap/robots.txt routes which are served at root (no /api/ prefix)

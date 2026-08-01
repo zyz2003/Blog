@@ -800,6 +800,7 @@ function SettingsContent({
   const [isUploadingTopImg, setIsUploadingTopImg] = useState(false);
   const coverImgInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [isExtractingColor, setIsExtractingColor] = useState(false);
   const [fillSummaryDialogOpen, setFillSummaryDialogOpen] = useState(false);
   const [pendingSummaryClip, setPendingSummaryClip] = useState<string | null>(null);
   const [isGeneratingAiSummary, setIsGeneratingAiSummary] = useState(false);
@@ -930,6 +931,29 @@ function SettingsContent({
     [onUpdateField]
   );
 
+  // 从封面图提取主色
+  const handleExtractColor = useCallback(async () => {
+    if (!meta.cover_url) {
+      addToast({ title: "请先设置封面图", color: "warning" });
+      return;
+    }
+    setIsExtractingColor(true);
+    try {
+      const color = await postManagementApi.extractPrimaryColor(meta.cover_url);
+      if (color) {
+        onUpdateField("primary_color", color);
+        onUpdateField("is_primary_color_manual", true);
+        addToast({ title: `已提取主色 ${color}`, color: "success" });
+      } else {
+        addToast({ title: "提取失败，请手动设置", color: "warning" });
+      }
+    } catch {
+      addToast({ title: "提取失败", color: "danger" });
+    } finally {
+      setIsExtractingColor(false);
+    }
+  }, [meta.cover_url, onUpdateField]);
+
   return (
     <>
       <div className="sb-body">
@@ -1041,6 +1065,54 @@ function SettingsContent({
               }}
             />
           </div>
+        </div>
+
+        {/* 文章主色 */}
+        <div className="sb-field">
+          <span className="sb-label">文章主色</span>
+          <div className="flex items-center gap-2 mt-1.5">
+            <label className="flex items-center gap-1.5 text-xs cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={!meta.primary_color}
+                onChange={e => {
+                  if (e.target.checked) {
+                    onUpdateField("primary_color", "");
+                    onUpdateField("is_primary_color_manual", false);
+                  } else {
+                    onUpdateField("primary_color", "#163bf2");
+                    onUpdateField("is_primary_color_manual", true);
+                  }
+                }}
+              />
+              跟随主题
+            </label>
+            {meta.primary_color ? (
+              <>
+                <FormColorPicker
+                  value={meta.primary_color}
+                  onChange={hex => {
+                    onUpdateField("primary_color", hex);
+                    onUpdateField("is_primary_color_manual", true);
+                  }}
+                />
+                <button
+                  type="button"
+                  className="sb-upload-btn"
+                  onClick={handleExtractColor}
+                  disabled={isExtractingColor || !meta.cover_url}
+                  title={meta.cover_url ? "从封面图提取主色" : "请先设置封面图"}
+                >
+                  {isExtractingColor ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                </button>
+              </>
+            ) : (
+              <span className="text-xs text-muted-foreground">用全站主题色</span>
+            )}
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1.5 leading-snug px-0.5">
+            作用于文章头部遮罩、标签、强调文字等配色。勾选「跟随主题」= 用全站主题色；取消勾选后，可用取色器自选颜色，或点 ✨ 从封面图自动提取主色。
+          </p>
         </div>
 
         {/* 顶部大图 */}

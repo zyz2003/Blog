@@ -16,6 +16,7 @@ import { useArticleMeta } from "./use-article-meta";
 import { useAutoSave } from "./use-auto-save";
 import { useArticleForEdit, useCreateArticle, useUpdateArticle } from "@/hooks/queries/use-post-management";
 import { processHtmlForSave } from "@/lib/content-processor";
+import { revalidateArticle } from "@/lib/actions/revalidate-article";
 import { turndownArticleMarkdown } from "@/lib/editor-tabs-export";
 import { registerCustomRules } from "@/lib/turndown-rules";
 import { registerMarkedExtensions, fixTaskListHtml } from "@/lib/marked-extensions";
@@ -274,6 +275,8 @@ export function ArticleEditorPage({ articleId }: ArticleEditorPageProps) {
           onSuccess: () => {
             markAsSaved();
             addToast({ title: "文章已更新", color: "success" });
+            // 刷新前台文章详情页 ISR 缓存，避免改完（含主色）要等 60s 才生效
+            revalidateArticle([metaData.abbrlink, articleId]).catch(() => {});
           },
           onError: error => {
             addToast({ title: "更新失败", description: error.message, color: "danger" });
@@ -292,6 +295,7 @@ export function ArticleEditorPage({ articleId }: ArticleEditorPageProps) {
         {
           onSuccess: () => {
             addToast({ title: "文章已发布", color: "success" });
+            revalidateArticle([]).catch(() => {});
             router.push("/admin/post-management");
           },
           onError: error => {

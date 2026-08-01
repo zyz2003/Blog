@@ -206,7 +206,7 @@ export class ArticleService {
       wordCount,
       readingTime,
       ipLocation: dto.ip_location ?? null,
-      primaryColor: dto.primary_color ?? '#b4bfe2',
+      primaryColor: dto.primary_color?.trim() || null,
       isPrimaryColorManual: dto.is_primary_color_manual ?? false,
       showOnHome: dto.show_on_home ?? true,
       homeSort: dto.home_sort ?? 0,
@@ -338,7 +338,7 @@ export class ArticleService {
     }
     if (dto.cover_url !== undefined) data.coverUrl = dto.cover_url;
     if (dto.ip_location !== undefined) data.ipLocation = dto.ip_location;
-    if (dto.primary_color !== undefined) data.primaryColor = dto.primary_color;
+    if (dto.primary_color !== undefined) data.primaryColor = dto.primary_color?.trim() || null;
     if (dto.is_primary_color_manual !== undefined) data.isPrimaryColorManual = dto.is_primary_color_manual;
     if (dto.show_on_home !== undefined) data.showOnHome = dto.show_on_home;
     if (dto.home_sort !== undefined) data.homeSort = dto.home_sort;

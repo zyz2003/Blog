@@ -161,7 +161,7 @@ export function useArticleMeta(
       show_on_home: meta.show_on_home,
       home_sort: meta.home_sort,
       pin_sort: meta.pin_sort,
-      primary_color: meta.primary_color || undefined,
+      primary_color: meta.primary_color,
       is_primary_color_manual: meta.is_primary_color_manual,
       copyright: meta.copyright,
       is_reprint: meta.is_reprint,
