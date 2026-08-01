@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls, type UIMessage } from "ai";
-import { X, Plus } from "lucide-react";
+import { X, Plus, ChevronDown, Sparkles } from "lucide-react";
 import { MessageList } from "./MessageList";
 import { ChatInput } from "./ChatInput";
 import { WelcomeMessage } from "./WelcomeMessage";
@@ -55,6 +55,7 @@ interface ChatWindowProps {
 export function ChatWindow({ onClose }: ChatWindowProps) {
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [atBottom, setAtBottom] = useState(true);
 
   // Conversation ID persistence
   const [conversationId, setConversationId] = useState<string | null>(() => {
@@ -86,7 +87,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
 
   // useChat instance — key changes when conversationId is cleared to force remount
   const chatKey = conversationId ?? "new";
-  const { messages, sendMessage, status, error, setMessages } = useChat({
+  const { messages, sendMessage, status, error, setMessages, stop } = useChat({
     id: chatKey,
     transport: new DefaultChatTransport({
       api: "/api/ai/chat",
@@ -164,12 +165,25 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
     }
   }, [pendingConversationResolve, messages.length, conversationId]);
 
-  // Auto-scroll to bottom on new messages
+  // Auto-scroll to bottom on new messages (only if user is already at bottom)
   useEffect(() => {
-    if (scrollRef.current) {
+    if (scrollRef.current && atBottom) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, atBottom]);
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 80);
+  }, []);
+
+  const scrollToBottom = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+    setAtBottom(true);
+  }, []);
 
   // Persist conversationId to localStorage
   useEffect(() => {
@@ -274,8 +288,11 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
   return (
     <div className="fixed bottom-24 right-6 z-50 flex h-[580px] w-[380px] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl max-[640px]:bottom-0 max-[640px]:right-0 max-[640px]:h-full max-[640px]:w-full max-[640px]:rounded-none">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <div className="flex items-center gap-1 min-w-0">
+      <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="chat-avatar flex h-6 w-6 shrink-0 items-center justify-center rounded-full ring-1 ring-primary/20">
+            <Sparkles className="h-3.5 w-3.5" />
+          </div>
           <h2 className="text-sm font-semibold text-foreground truncate">
             {currentTitle}
           </h2>
@@ -306,15 +323,31 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
       </div>
 
       {/* Messages area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3">
-        {showWelcome ? (
-          <WelcomeMessage
-            welcomeMessage={chatSettings.welcomeMessage}
-            suggestions={chatSettings.suggestedQuestions}
-            onSuggestionClick={handleSuggestionClick}
-          />
-        ) : (
-          <MessageList messages={messages} isLoading={isLoading} />
+      <div className="relative flex-1">
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="h-full overflow-y-auto px-4 py-3"
+        >
+          {showWelcome ? (
+            <WelcomeMessage
+              welcomeMessage={chatSettings.welcomeMessage}
+              suggestions={chatSettings.suggestedQuestions}
+              onSuggestionClick={handleSuggestionClick}
+            />
+          ) : (
+            <MessageList messages={messages} isLoading={isLoading} />
+          )}
+        </div>
+        {!showWelcome && !atBottom && (
+          <button
+            type="button"
+            onClick={scrollToBottom}
+            className="absolute bottom-3 left-1/2 flex h-8 w-8 -translate-x-1/2 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-md transition-colors hover:text-foreground"
+            aria-label="回到底部"
+          >
+            <ChevronDown className="h-4 w-4" />
+          </button>
         )}
       </div>
 
@@ -327,6 +360,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
         onInputChange={setInput}
         onSubmit={handleSubmit}
         isLoading={isLoading}
+        onStop={stop}
       />
     </div>
   );

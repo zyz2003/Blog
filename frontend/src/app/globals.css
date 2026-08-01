@@ -1712,13 +1712,21 @@ html.with-fancybox body.hide-scrollbar {
 .chat-md ol { margin: 0.4em 0; padding-left: 1.4em; }
 .chat-md li { margin: 0.15em 0; }
 .chat-md li::marker { color: var(--muted-foreground); }
-.chat-md a { color: var(--primary); text-decoration: underline; text-underline-offset: 2px; }
+.chat-md a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: opacity 0.15s;
+}
+.chat-md a:hover { opacity: 0.75; }
 .chat-md strong { font-weight: 600; }
 .chat-md blockquote {
   margin: 0.5em 0;
-  padding: 0.2em 0.8em;
-  border-left: 3px solid var(--border);
+  padding: 0.3em 0.8em;
+  border-left: 3px solid var(--primary);
+  background: var(--primary-op-light);
   color: var(--muted-foreground);
+  border-radius: 0 0.35rem 0.35rem 0;
 }
 .chat-md code {
   font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
@@ -1731,10 +1739,12 @@ html.with-fancybox body.hide-scrollbar {
   color: var(--foreground);
 }
 .chat-md pre {
+  position: relative;
   margin: 0.5em 0;
-  padding: 0.75rem 0.9rem;
+  padding: 2.1rem 0.9rem 0.75rem;
   border-radius: 0.5rem;
   background: #1e1e2e;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   overflow-x: auto;
 }
 .chat-md pre code {
@@ -1744,10 +1754,40 @@ html.with-fancybox body.hide-scrollbar {
   font-size: 0.82em;
   line-height: 1.5;
 }
+.chat-md .chat-code-lang {
+  position: absolute;
+  top: 0.35rem;
+  left: 0.75rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #9aa0c0;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  pointer-events: none;
+}
+.chat-md .chat-code-copy {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.3rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.35rem;
+  font-size: 0.68rem;
+  color: #c7cbe8;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s, color 0.15s;
+}
+.chat-md pre:hover .chat-code-copy { opacity: 1; }
+.chat-md .chat-code-copy:hover { background: rgba(255, 255, 255, 0.18); }
+.chat-md .chat-code-copy.chat-copied { color: #57bd6a; opacity: 1; }
 .chat-md table {
   border-collapse: collapse;
   margin: 0.5em 0;
   font-size: 0.85em;
+  border-radius: 0.35rem;
+  overflow: hidden;
 }
 .chat-md th,
 .chat-md td {
@@ -1755,8 +1795,63 @@ html.with-fancybox body.hide-scrollbar {
   padding: 0.3em 0.55em;
   text-align: left;
 }
+.chat-md th { background: var(--muted); font-weight: 600; }
+.chat-md tr:nth-child(even) td { background: var(--muted); }
 .chat-md hr {
   border: none;
   border-top: 1px solid var(--border);
   margin: 0.6em 0;
+}
+
+/* ===================== Chat UI 动效与工具类 ===================== */
+@keyframes chat-fade-in-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes chat-bounce-dot {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.35; }
+  40% { transform: translateY(-4px); opacity: 1; }
+}
+@keyframes chat-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes chat-pulse-ring {
+  0% { box-shadow: 0 0 0 0 var(--primary-op); }
+  70% { box-shadow: 0 0 0 7px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+@keyframes chat-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.chat-msg-enter { animation: chat-fade-in-up 0.28s ease-out both; }
+.chat-typing-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--muted-foreground);
+  animation: chat-bounce-dot 1.2s infinite ease-in-out;
+}
+.chat-thinking-shimmer {
+  background: linear-gradient(90deg, transparent, var(--primary-op), transparent);
+  background-size: 200% 100%;
+  animation: chat-shimmer 2s infinite linear;
+}
+.chat-cursor { animation: chat-blink 1s step-end infinite; }
+.chat-avatar {
+  background: linear-gradient(135deg, var(--primary) 0%, color-mix(in srgb, var(--primary) 50%, var(--purple)) 100%);
+  color: var(--primary-foreground);
+}
+.chat-pulse-ring { animation: chat-pulse-ring 2s infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-msg-enter,
+  .chat-typing-dot,
+  .chat-thinking-shimmer,
+  .chat-cursor,
+  .chat-pulse-ring {
+    animation: none !important;
+  }
 }

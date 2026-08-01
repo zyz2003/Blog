@@ -1,5 +1,7 @@
 "use client";
 
+import { Sparkles, Calendar, Clock } from "lucide-react";
+
 interface ToolResultCardProps {
   output: unknown;
   toolName: string;
@@ -13,52 +15,81 @@ function formatDate(s: string): string {
   return `${parseInt(m[2], 10)}月${parseInt(m[3], 10)}日`;
 }
 
+interface ArticleItem {
+  title: string;
+  url: string;
+  snippet?: string;
+  cover_url?: string;
+  reading_time?: number;
+  created_at?: string;
+}
+
+/**
+ * 单篇文章卡片。
+ * featured=true：AI 推荐主卡片（带"AI 推荐"渐变徽标 + 封面渐变叠层 + hover 上浮）。
+ * featured=false：候选列表卡片（紧凑）。
+ */
+function ArticleCard({ a, featured = false }: { a: ArticleItem; featured?: boolean }) {
+  return (
+    <a
+      href={a.url || "#"}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`group/card relative flex gap-2.5 rounded-lg border border-border bg-card p-2 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary hover:shadow-primary ${
+        featured ? "mt-1" : ""
+      }`}
+    >
+      {featured && (
+        <span className="absolute -top-2 left-2 z-10 inline-flex items-center gap-0.5 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground shadow-sm">
+          <Sparkles className="h-2.5 w-2.5" />
+          AI 推荐
+        </span>
+      )}
+      {a.cover_url ? (
+        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md">
+          <img
+            src={a.cover_url}
+            alt=""
+            loading="lazy"
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
+        </div>
+      ) : null}
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-sm font-medium text-foreground">
+          {a.title || "文章详情"}
+        </div>
+        {a.snippet && (
+          <div className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
+            {a.snippet}
+          </div>
+        )}
+        <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground/80">
+          {a.created_at && (
+            <span className="flex items-center gap-0.5">
+              <Calendar className="h-2.5 w-2.5" />
+              {formatDate(a.created_at)}
+            </span>
+          )}
+          {a.reading_time ? (
+            <span className="flex items-center gap-0.5">
+              <Clock className="h-2.5 w-2.5" />
+              {a.reading_time} 分钟
+            </span>
+          ) : null}
+        </div>
+      </div>
+    </a>
+  );
+}
+
 /** 文章列表卡片（search / get_recent_articles / get_articles_by_category 共用） */
-function ArticleListCards({
-  articles,
-}: {
-  articles: Array<{
-    title: string;
-    url: string;
-    snippet?: string;
-    cover_url?: string;
-    reading_time?: number;
-    created_at?: string;
-  }>;
-}) {
+function ArticleListCards({ articles }: { articles: ArticleItem[] }) {
   return (
     <div className="space-y-2">
       {articles.map((a, i) => (
-        <a
-          key={i}
-          href={a.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex gap-2.5 rounded-lg border border-border p-2 transition-colors hover:bg-muted"
-        >
-          {a.cover_url ? (
-            <img
-              src={a.cover_url}
-              alt=""
-              loading="lazy"
-              className="h-12 w-12 shrink-0 rounded-md object-cover"
-            />
-          ) : null}
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-sm font-medium text-foreground">
-              {a.title}
-            </div>
-            {a.snippet && (
-              <div className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
-                {a.snippet}
-              </div>
-            )}
-            <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground/80">
-              {a.created_at && <span>{formatDate(a.created_at)}</span>}
-              {a.reading_time ? <span>· ⏱ {a.reading_time} 分钟</span> : null}
-            </div>
-          </div>
-        </a>
+        <ArticleCard key={i} a={a} />
       ))}
     </div>
   );
@@ -89,7 +120,7 @@ function TermChips({
 
 /**
  * 渲染工具结果为文章链接卡片 / 胶囊列表。
- * 按 output 结构分支：articles 数组 -> 文章卡片；content -> 单文章；
+ * 按 output 结构分支：articles 数组 -> 文章卡片；get_article -> AI 推荐主卡片；
  * categories/tags -> 胶囊列表。
  */
 export function ToolResultCard({ output, toolName }: ToolResultCardProps) {
@@ -107,39 +138,21 @@ export function ToolResultCard({ output, toolName }: ToolResultCardProps) {
     return <ArticleListCards articles={data.articles} />;
   }
 
-  // 单篇文章（get_article）- 卡片样式（封面 + 标题 + 摘要 + meta）
+  // 单篇文章（get_article）- AI 推荐主卡片
   if (toolName === "get_article") {
     if (!data) return null;
     return (
-      <a
-        href={data.url || "#"}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex gap-2.5 rounded-lg border border-border p-2 transition-colors hover:bg-muted"
-      >
-        {data.cover_url ? (
-          <img
-            src={data.cover_url}
-            alt=""
-            loading="lazy"
-            className="h-12 w-12 shrink-0 rounded-md object-cover"
-          />
-        ) : null}
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-medium text-foreground">
-            {data.title || "文章详情"}
-          </div>
-          {data.content && (
-            <div className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
-              {data.content}
-            </div>
-          )}
-          <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground/80">
-            {data.created_at && <span>{formatDate(data.created_at)}</span>}
-            {data.reading_time ? <span>· ⏱ {data.reading_time} 分钟</span> : null}
-          </div>
-        </div>
-      </a>
+      <ArticleCard
+        a={{
+          title: data.title,
+          url: data.url,
+          snippet: data.content,
+          cover_url: data.cover_url,
+          reading_time: data.reading_time,
+          created_at: data.created_at,
+        }}
+        featured
+      />
     );
   }
 

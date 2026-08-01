@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useMemo } from "react";
+import { memo, useMemo, useEffect, useRef } from "react";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 
@@ -23,6 +23,47 @@ function renderMarkdown(text: string): string {
 
 function MarkdownTextImpl({ text }: { text: string }) {
   const html = useMemo(() => renderMarkdown(text), [text]);
+  const ref = useRef<HTMLSpanElement>(null);
+
+  // 代码块后处理：注入语言标签 + 复制按钮（零依赖，DOM 操作）
+  // 从 marked 默认输出的 <code class="language-XXX"> 提取语言，避免自定义 renderer 的版本差异
+  useEffect(() => {
+    const root = ref.current;
+    if (!root) return;
+    const pres = root.querySelectorAll<HTMLPreElement>("pre");
+    pres.forEach(pre => {
+      if (pre.querySelector(".chat-code-copy")) return; // 已注入（流式重用同一节点）
+      const code = pre.querySelector("code");
+      const langMatch = code?.className.match(/language-([\w-]+)/);
+      const lang = langMatch?.[1];
+      if (lang) {
+        const span = document.createElement("span");
+        span.className = "chat-code-lang";
+        span.textContent = lang;
+        pre.appendChild(span);
+      }
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "chat-code-copy";
+      btn.textContent = "复制";
+      btn.setAttribute("aria-label", "复制代码");
+      btn.addEventListener("click", async () => {
+        const codeEl = pre.querySelector("code");
+        try {
+          await navigator.clipboard.writeText(codeEl?.textContent ?? "");
+          btn.textContent = "已复制";
+          btn.classList.add("chat-copied");
+          setTimeout(() => {
+            btn.textContent = "复制";
+            btn.classList.remove("chat-copied");
+          }, 1600);
+        } catch {
+          /* clipboard unavailable */
+        }
+      });
+      pre.appendChild(btn);
+    });
+  }, [html]);
 
   if (!html) {
     // SSR 或空文本：纯文本兜底，保留换行
@@ -31,6 +72,7 @@ function MarkdownTextImpl({ text }: { text: string }) {
 
   return (
     <span
+      ref={ref}
       className="chat-md"
       dangerouslySetInnerHTML={{ __html: html }}
     />
