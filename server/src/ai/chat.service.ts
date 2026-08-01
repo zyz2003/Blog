@@ -29,12 +29,14 @@ import { ChatHistoryService } from './chat-history.service';
 import { DomainError } from './domain-error';
 import { toAiSdkTools } from './tools/tool-bridge';
 import { articleTools } from './tools/article-tools';
+import { ArticleService } from '../article/article.service';
+import { htmlToPlainText } from './adapters/html-to-text';
 import { decodePublicID, EntityType } from '../common/utils/sqids.util';
-import type { ToolContext } from './tools/tool-def';
+import type { ToolContext, ServiceIdentifier } from './tools/tool-def';
 import type { ChatMessagePart } from './chat.schema';
 
 const DEFAULT_SYSTEM_PROMPT =
-  '你是博客站的 AI 助手，可以搜索和阅读博客文章来回答用户问题。请用中文回答。';
+  '你是博客站的 AI 助手，可以搜索和阅读博客文章来回答用户问题。请用中文回答。推荐文章时精选最相关的 2-3 篇，避免取过多候选；对最终推荐的文章调用 get_article 获取详情，回答侧重推荐理由，不要在回答里重复列出文章链接（卡片已展示）。用户指定分类或语言（如 Java、Python）时，优先用 get_articles_by_category 查找，分类名可用 list_categories 确认。';
 
 /** Per D-380: compress when messages exceed this threshold */
 const COMPRESSION_THRESHOLD = 20;
@@ -57,7 +59,8 @@ export class ChatService {
     this.toolCtx = {
       db: this.db,
       settings: this.settings,
-      getService: <T>(token: string) => this.moduleRef.get<T>(token, { strict: false }),
+      getService: <T>(token: ServiceIdentifier) =>
+        this.moduleRef.get<T>(token as any, { strict: false }),
     };
     this.tools = toAiSdkTools(articleTools, this.toolCtx);
   }
@@ -82,10 +85,33 @@ export class ChatService {
       profileId?: string;
       userId?: number | null;
       abortSignal?: AbortSignal;
+      contextArticleSlug?: string;
     },
   ): Promise<ReadableStream<Uint8Array>> {
     // 1. Resolve model — re-throw DomainError for controller 4xx/5xx handling
     const model = this.modelResolver.resolve(options?.profileId);
+
+    // 上下文感知：文章页内对话时，把当前文章摘要注入 system prompt
+    let contextInstructions = '';
+    if (options?.contextArticleSlug) {
+      try {
+        const articleService = this.moduleRef.get<ArticleService>(ArticleService, {
+          strict: false,
+        });
+        const article = (await articleService.getPublic(
+          options.contextArticleSlug,
+        )) as any;
+        const summary =
+          (article.summaries as string) ||
+          htmlToPlainText(article.content_html || '').slice(0, 300);
+        const slug = article.abbrlink || article.id;
+        contextInstructions = `\n\n用户当前正在阅读文章：《${article.title}》（链接：/posts/${slug}）。摘要：${summary}。若用户问"这篇文章"相关问题，请基于此上下文回答，必要时调用 get_article 获取完整正文。`;
+      } catch (err) {
+        this.logger.warn(
+          `Failed to load context article ${options.contextArticleSlug}: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
+    }
 
     // Per D-392: read system prompt from settings at call time (not constructor)
     // so runtime config changes take effect without restart
@@ -129,7 +155,7 @@ export class ChatService {
     // 4. Call streamText
     const result = streamText({
       model,
-      instructions: systemPrompt,
+      instructions: systemPrompt + contextInstructions,
       messages: await convertToModelMessages(messages),
       tools: this.tools,
       stopWhen: stepCountIs(5),

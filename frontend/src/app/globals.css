@@ -1687,3 +1687,76 @@ html.with-fancybox body.hide-scrollbar {
     display: none !important;
   }
 }
+
+/* ===================== AI 聊天 Markdown 渲染 ===================== */
+/* 作用域 .chat-md：聊天气泡内的 markdown 元素排版，自适应亮/暗主题 */
+.chat-md {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  word-break: break-word;
+}
+.chat-md > *:first-child { margin-top: 0; }
+.chat-md > *:last-child { margin-bottom: 0; }
+.chat-md p { margin: 0.4em 0; }
+.chat-md h1,
+.chat-md h2,
+.chat-md h3 {
+  font-weight: 600;
+  margin: 0.6em 0 0.3em;
+  line-height: 1.3;
+}
+.chat-md h1 { font-size: 1.15em; }
+.chat-md h2 { font-size: 1.08em; }
+.chat-md h3 { font-size: 1em; }
+.chat-md ul,
+.chat-md ol { margin: 0.4em 0; padding-left: 1.4em; }
+.chat-md li { margin: 0.15em 0; }
+.chat-md li::marker { color: var(--muted-foreground); }
+.chat-md a { color: var(--primary); text-decoration: underline; text-underline-offset: 2px; }
+.chat-md strong { font-weight: 600; }
+.chat-md blockquote {
+  margin: 0.5em 0;
+  padding: 0.2em 0.8em;
+  border-left: 3px solid var(--border);
+  color: var(--muted-foreground);
+}
+.chat-md code {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.85em;
+}
+.chat-md :not(pre) > code {
+  padding: 0.15em 0.4em;
+  border-radius: 0.35rem;
+  background: var(--muted);
+  color: var(--foreground);
+}
+.chat-md pre {
+  margin: 0.5em 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.5rem;
+  background: #1e1e2e;
+  overflow-x: auto;
+}
+.chat-md pre code {
+  color: #e6e6e6;
+  background: transparent;
+  padding: 0;
+  font-size: 0.82em;
+  line-height: 1.5;
+}
+.chat-md table {
+  border-collapse: collapse;
+  margin: 0.5em 0;
+  font-size: 0.85em;
+}
+.chat-md th,
+.chat-md td {
+  border: 1px solid var(--border);
+  padding: 0.3em 0.55em;
+  text-align: left;
+}
+.chat-md hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 0.6em 0;
+}

@@ -57,6 +57,7 @@ export class AiChatController {
       messages?: UIMessage[];
       conversationId?: string;
       profileId?: string;
+      contextArticleSlug?: string;
     },
     @Res() res: Response,
   ): Promise<void> {
@@ -72,6 +73,7 @@ export class AiChatController {
       const stream = await this.chatService.chat(body.messages, {
         conversationId: body.conversationId,
         profileId: body.profileId,
+        contextArticleSlug: body.contextArticleSlug,
       });
 
       // Pipe the UIMessageStream to the HTTP response

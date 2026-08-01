@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { usePathname } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls, type UIMessage } from "ai";
 import { X, Plus } from "lucide-react";
@@ -60,6 +61,14 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
     if (typeof window === "undefined") return null;
     return localStorage.getItem(CONVERSATION_ID_KEY);
   });
+
+  // 上下文感知：文章页内对话时，把当前文章 slug 带给后端注入 system prompt
+  const pathname = usePathname();
+  const contextArticleSlug = useMemo(() => {
+    if (!pathname) return null;
+    const m = pathname.match(/^\/posts\/([^/]+)/);
+    return m ? m[1] : null;
+  }, [pathname]);
 
   // Initial messages loaded from backend history
   const [initialMessages, setInitialMessages] = useState<UIMessage[]>([]);
@@ -188,7 +197,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
       e.preventDefault();
       const trimmed = input.trim();
       if (!trimmed || isLoading) return;
-      sendMessage({ text: trimmed });
+      sendMessage({ text: trimmed }, { body: contextArticleSlug ? { contextArticleSlug } : undefined });
       setInput("");
       // If no conversationId, mark that we need to resolve it after the message is sent
       if (!conversationId) {
@@ -201,7 +210,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
   const handleSuggestionClick = useCallback(
     (text: string) => {
       if (isLoading) return;
-      sendMessage({ text });
+      sendMessage({ text }, { body: contextArticleSlug ? { contextArticleSlug } : undefined });
       if (!conversationId) {
         setPendingConversationResolve(true);
       }
@@ -218,7 +227,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
         .map(p => (p as { type: "text"; text: string }).text)
         .join("\n") ?? "";
       if (text) {
-        sendMessage({ text });
+        sendMessage({ text }, { body: contextArticleSlug ? { contextArticleSlug } : undefined });
       }
     }
   }, [messages, sendMessage]);

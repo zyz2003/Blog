@@ -75,7 +75,7 @@ describe('article-tools', () => {
     expect(result.success).toBe(false);
   });
 
-  it('searchArticlesTool.execute calls SearchService.search and returns { articles: [{title, snippet, url}] }', async () => {
+  it('searchArticlesTool.execute calls SearchService.search and returns articles with full fields', async () => {
     const mockSearch = vi.fn().mockResolvedValue({
       pagination: { total: 1, page: 1, size: 5, totalPages: 1 },
       hits: [
@@ -85,6 +85,9 @@ describe('article-tools', () => {
           url: '/posts/test-1',
           id: 'abc',
           abbrlink: 'test-1',
+          cover_url: '/img/test.png',
+          reading_time: 5,
+          publish_date: '2026-07-31',
         },
       ],
     });
@@ -100,14 +103,24 @@ describe('article-tools', () => {
       ctx,
     );
 
-    expect(ctx.getService).toHaveBeenCalledWith('SearchService');
+    // getService 必须传服务类（构造函数）作 token，不能传字符串
+    expect(ctx.getService).toHaveBeenCalledWith(expect.any(Function));
     expect(mockSearch).toHaveBeenCalledWith('test', 1, 5);
     expect(result).toEqual({
-      articles: [{ title: 'Test Article', snippet: 'A snippet', url: '/posts/test-1' }],
+      articles: [
+        {
+          title: 'Test Article',
+          snippet: 'A snippet',
+          url: '/posts/test-1',
+          cover_url: '/img/test.png',
+          reading_time: 5,
+          created_at: '2026-07-31',
+        },
+      ],
     });
   });
 
-  it('searchArticlesTool.execute maps hits to { title, snippet, url } shape, dropping other fields', async () => {
+  it('searchArticlesTool.execute maps hits to full article shape, dropping other fields', async () => {
     const mockSearch = vi.fn().mockResolvedValue({
       pagination: { total: 1, page: 1, size: 5, totalPages: 1 },
       hits: [
@@ -135,7 +148,14 @@ describe('article-tools', () => {
     );
 
     const article = (result as any).articles[0];
-    expect(Object.keys(article).sort()).toEqual(['snippet', 'title', 'url']);
+    expect(Object.keys(article).sort()).toEqual([
+      'cover_url',
+      'created_at',
+      'reading_time',
+      'snippet',
+      'title',
+      'url',
+    ]);
   });
 
   // --- getArticleTool ---
@@ -165,7 +185,7 @@ describe('article-tools', () => {
 
     const result = await getArticleTool.execute({ id: 'my-article' }, ctx);
 
-    expect(ctx.getService).toHaveBeenCalledWith('ArticleService');
+    expect(ctx.getService).toHaveBeenCalledWith(expect.any(Function));
     expect(mockGetPublic).toHaveBeenCalledWith('my-article');
     expect(result).toHaveProperty('title', 'My Article');
     expect(result).toHaveProperty('content');
@@ -251,10 +271,10 @@ describe('article-tools', () => {
 
   // --- articleTools array ---
 
-  it('articleTools array contains exactly [searchArticlesTool, getArticleTool]', () => {
-    expect(articleTools).toHaveLength(2);
-    expect(articleTools[0]).toBe(searchArticlesTool);
-    expect(articleTools[1]).toBe(getArticleTool);
+  it('articleTools array contains all tools', () => {
+    expect(articleTools).toHaveLength(6);
+    expect(articleTools).toContain(searchArticlesTool);
+    expect(articleTools).toContain(getArticleTool);
   });
 
   // --- Framework independence ---
