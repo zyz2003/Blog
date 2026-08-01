@@ -1,8 +1,10 @@
 "use client";
 
+import { useCallback, useMemo, useState } from "react";
 import { FormInput } from "@/components/ui/form-input";
 import { FormSwitch } from "@/components/ui/form-switch";
 import { FormCodeEditor } from "@/components/ui/form-code-editor";
+import { FormSelect, FormSelectItem } from "@/components/ui/form-select";
 import { OneImageConfigEditor } from "./editors/OneImageConfigEditor";
 import { SettingsSection } from "./SettingsSection";
 import { Spinner } from "@/components/ui/spinner";
@@ -21,7 +23,28 @@ import {
   KEY_TYPING_DELETE_SPEED,
   KEY_TYPING_HOLD_TIME,
   KEY_TYPING_GAP_TIME,
+  KEY_SITE_FONT,
+  KEY_SITE_FONT_CUSTOM_LIST,
 } from "@/lib/settings/setting-keys";
+
+interface CustomFontItem {
+  name: string;
+  cssUrl: string;
+}
+
+function parseCustomFontList(raw: string | undefined): CustomFontItem[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (item: unknown): item is CustomFontItem =>
+        typeof item === "object" && item !== null && typeof (item as CustomFontItem).name === "string" && typeof (item as CustomFontItem).cssUrl === "string",
+    );
+  } catch {
+    return [];
+  }
+}
 
 interface PageStyleFormProps {
   values: Record<string, string>;
@@ -105,6 +128,9 @@ export function PageStyleForm({ values, onChange, loading }: PageStyleFormProps)
         </div>
       </SettingsSection>
 
+      {/* 字体配置 */}
+      <FontConfigSection values={values} onChange={onChange} />
+
       {/* 自定义代码注入 */}
       <SettingsSection title="自定义代码注入">
         <FormCodeEditor
@@ -156,5 +182,137 @@ export function PageStyleForm({ values, onChange, loading }: PageStyleFormProps)
         />
       </SettingsSection>
     </div>
+  );
+}
+
+/** 自定义字体 key 前缀，用于区分自定义字体选项 */
+const CUSTOM_FONT_KEY_PREFIX = "custom:";
+
+/** 系统字体选项 */
+const SYSTEM_FONT_OPTIONS = [
+  { key: "system", label: "系统默认" },
+  { key: "pingfang-sc", label: "PingFang SC（系统默认）" },
+  { key: "microsoft-yahei", label: "Microsoft YaHei（系统默认）" },
+  { key: "harmonyos-sans", label: "HarmonyOS Sans（系统默认）" },
+  { key: "noto-sans-sc", label: "Noto Sans SC（系统默认）" },
+  { key: "simhei", label: "SimHei（系统默认）" },
+  { key: "simsun", label: "SimSun（系统默认）" },
+  { key: "kaiti", label: "KaiTi（系统默认）" },
+  { key: "stheiti", label: "STHeiti（系统默认）" },
+  { key: "stsong", label: "STSong（系统默认）" },
+];
+
+function FontConfigSection({ values, onChange }: PageStyleFormProps) {
+  const customFontList = useMemo(
+    () => parseCustomFontList(values[KEY_SITE_FONT_CUSTOM_LIST]),
+    [values[KEY_SITE_FONT_CUSTOM_LIST]],
+  );
+
+  // 新增自定义字体的临时输入
+  const [newName, setNewName] = useState("");
+  const [newCssUrl, setNewCssUrl] = useState("");
+
+  const currentFontKey = values[KEY_SITE_FONT] || "system";
+
+  const handleAddCustomFont = useCallback(() => {
+    const name = newName.trim();
+    const cssUrl = newCssUrl.trim();
+    if (!name || !cssUrl) return;
+    const updated = [...customFontList, { name, cssUrl }];
+    onChange(KEY_SITE_FONT_CUSTOM_LIST, JSON.stringify(updated));
+    setNewName("");
+    setNewCssUrl("");
+  }, [newName, newCssUrl, customFontList, onChange]);
+
+  const handleRemoveCustomFont = useCallback(
+    (index: number) => {
+      const updated = customFontList.filter((_, i) => i !== index);
+      onChange(KEY_SITE_FONT_CUSTOM_LIST, JSON.stringify(updated));
+      // 如果删除的是当前选中的字体，回退到系统默认
+      const removedKey = `${CUSTOM_FONT_KEY_PREFIX}${index}`;
+      if (currentFontKey === removedKey) {
+        onChange(KEY_SITE_FONT, "system");
+      }
+    },
+    [customFontList, currentFontKey, onChange],
+  );
+
+  return (
+    <SettingsSection title="字体配置">
+      <FormSelect
+        label="全站字体"
+        description="系统默认字体无需加载额外资源（性能最优），选择后会优先使用该字体并回退到系统字体栈"
+        value={currentFontKey}
+        onValueChange={v => onChange(KEY_SITE_FONT, v)}
+      >
+        {[
+          ...SYSTEM_FONT_OPTIONS.map(opt => ({ key: opt.key, label: opt.label })),
+          ...customFontList.map((font, index) => ({ key: `${CUSTOM_FONT_KEY_PREFIX}${index}`, label: font.name })),
+        ].map(opt => (
+          <FormSelectItem key={opt.key}>{opt.label}</FormSelectItem>
+        ))}
+      </FormSelect>
+
+      {/* 自定义字体列表管理 */}
+      <div className="space-y-3">
+        <p className="text-xs text-muted-foreground">
+          管理自定义字体（需 CDN 切片 CSS 地址，添加后可在上方下拉中选择）
+        </p>
+
+        {customFontList.length > 0 && (
+          <div className="space-y-2">
+            {customFontList.map((font, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2 text-sm"
+              >
+                <div className="flex-1 min-w-0">
+                  <span className="font-medium">{font.name}</span>
+                  <span className="text-muted-foreground ml-2 truncate inline-block max-w-[300px] align-bottom">
+                    {font.cssUrl}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="shrink-0 text-muted-foreground hover:text-destructive transition-colors"
+                  onClick={() => handleRemoveCustomFont(index)}
+                  title="删除此字体"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* 添加新自定义字体 */}
+        <div className="flex items-end gap-2">
+          <div className="flex-1 min-w-0">
+            <FormInput
+              label="字体名称"
+              placeholder="如 zihunbaigetianxingti"
+              value={newName}
+              onValueChange={setNewName}
+            />
+          </div>
+          <div className="flex-[2] min-w-0">
+            <FormInput
+              label="CSS 地址"
+              placeholder="https://cdn.jsdmirror.com/.../index.css"
+              value={newCssUrl}
+              onValueChange={setNewCssUrl}
+            />
+          </div>
+          <button
+            type="button"
+            className="shrink-0 h-9 px-3 rounded-md bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50"
+            disabled={!newName.trim() || !newCssUrl.trim()}
+            onClick={handleAddCustomFont}
+          >
+            添加
+          </button>
+        </div>
+      </div>
+    </SettingsSection>
   );
 }
