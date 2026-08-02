@@ -1,0 +1,22 @@
+[Unit]
+Description=Blog NestJS backend
+After=network.target
+
+[Service]
+Type=simple
+User=node
+Group=node
+WorkingDirectory=/opt/blog/server
+ExecStart=/usr/bin/node /opt/blog/server/dist/main
+Restart=on-failure
+RestartSec=5
+Environment=NODE_ENV=production
+Environment=PORT=8091
+Environment=DB_PATH=/opt/blog/server/data/blog.db
+Environment=JWT_EXPIRES_IN=15m
+Environment=JWT_REFRESH_EXPIRES_IN=30d
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

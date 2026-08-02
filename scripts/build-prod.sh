@@ -1,5 +1,5 @@
 #!/bin/bash
-# anheyu-app 生产构建脚本（统一构建前后端）
+# Blog 生产构建脚本（统一构建前后端）
 # 产物：server/dist/main.js + frontend/.next/standalone/server.js
 # 被 deploy/install.sh 调用，也可单独执行（PM2 部署用）
 set -e

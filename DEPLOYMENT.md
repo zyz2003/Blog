@@ -1,6 +1,6 @@
-# 部署指南 - anheyu-app
+# 部署指南 - Blog
 
-> anheyu-app 后端为 NestJS + Drizzle + SQLite，前端为 Next.js（standalone）。提供三种部署方式：**Docker Compose（推荐）**、**systemd + Nginx（裸机）**、**PM2**。
+> Blog 后端为 NestJS + Drizzle + SQLite，前端为 Next.js（standalone）。提供三种部署方式：**Docker Compose（推荐）**、**systemd + Nginx（裸机）**、**PM2**。
 
 ## 目录
 
@@ -58,7 +58,7 @@ docker compose up -d --build
 - 前台：`https://your-domain.com`（已配 HTTPS）或 `http://localhost`（未配 HTTPS）
 - 后端 API：`http://localhost:8091/api`
 - 容器状态：`docker compose ps`
-- 查看日志：`docker compose logs -f anheyu`
+- 查看日志：`docker compose logs -f backend`
 
 **首次启动说明：**
 
@@ -66,7 +66,7 @@ docker compose up -d --build
 - 数据库 schema 需手动推送一次：
 
   ```bash
-  docker compose exec anheyu npx drizzle-kit push --force
+  docker compose exec backend npx drizzle-kit push --force
   ```
 
 - 数据库文件、上传文件、备份均持久化在宿主机 `./server/data` 目录（挂载到容器 `/app/data`）。
@@ -93,15 +93,15 @@ bash scripts/build-prod.sh
 cd server && npx drizzle-kit push --force && cd ..
 
 # 3. 安装 systemd 服务
-sudo cp deploy/anheyu-backend.service /etc/systemd/system/
-sudo cp deploy/anheyu-frontend.service /etc/systemd/system/
+sudo cp deploy/blog-backend.service /etc/systemd/system/
+sudo cp deploy/blog-frontend.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable --now anheyu-backend anheyu-frontend
+sudo systemctl enable --now blog-backend blog-frontend
 
 # 4. 配置 Nginx
-sudo cp deploy/nginx-anheyu.conf /etc/nginx/sites-available/anheyu
-sudo ln -sf /etc/nginx/sites-available/anheyu /etc/nginx/sites-enabled/anheyu
-sudo sed -i 's/YOUR_DOMAIN/your-domain.com/g' /etc/nginx/sites-available/anheyu
+sudo cp deploy/nginx-blog.conf /etc/nginx/sites-available/blog
+sudo ln -sf /etc/nginx/sites-available/blog /etc/nginx/sites-enabled/blog
+sudo sed -i 's/YOUR_DOMAIN/your-domain.com/g' /etc/nginx/sites-available/blog
 sudo nginx -t && sudo systemctl reload nginx
 
 # 5. 签发 HTTPS 证书
@@ -111,8 +111,8 @@ sudo certbot --nginx -d your-domain.com
 服务管理：
 
 ```bash
-systemctl status anheyu-backend anheyu-frontend
-journalctl -u anheyu-backend -f     # 实时日志
+systemctl status blog-backend blog-frontend
+journalctl -u blog-backend -f     # 实时日志
 ```
 
 ## 5. PM2 部署
@@ -132,19 +132,19 @@ pm2 save
 pm2 startup
 ```
 
-Nginx 配置与裸机相同（使用 `deploy/nginx-anheyu.conf`，上游为 `localhost:8091` / `localhost:3000`）。
+Nginx 配置与裸机相同（使用 `deploy/nginx-blog.conf`，上游为 `localhost:8091` / `localhost:3000`）。
 
 PM2 管理：
 
 ```bash
 pm2 status
-pm2 logs anheyu-backend
+pm2 logs blog-backend
 pm2 restart all
 ```
 
 ## 6. Nginx 反向代理与 HTTPS
 
-**路由规则**（见 `nginx/nginx.conf` 与 `deploy/nginx-anheyu.conf`）：
+**路由规则**（见 `nginx/nginx.conf` 与 `deploy/nginx-blog.conf`）：
 
 | 路径 | 上游 | 说明 |
 |------|------|------|
@@ -174,7 +174,7 @@ pm2 restart all
 | `JWT_EXPIRES_IN` | `15m` | JWT 过期时间 |
 | `JWT_REFRESH_EXPIRES_IN` | `30d` | Refresh Token 过期时间 |
 | `NODE_TLS_REJECT_UNAUTHORIZED` | - | 设为 `0` 可跳过音乐代理的 SSL 校验（对应 Go 的 `InsecureSkipVerify`） |
-| `API_URL` | `http://anheyu:8091`（Docker）/ `http://localhost:8091`（裸机） | 前端代理后端的地址 |
+| `API_URL` | `http://backend:8091`（Docker）/ `http://localhost:8091`（裸机） | 前端代理后端的地址 |
 
 > 本地开发无需 `.env` 文件。所有业务配置存在数据库 `settings` 表，通过后台面板修改。
 
@@ -193,11 +193,11 @@ pm2 restart all
 
 ```bash
 # Docker
-docker compose restart anheyu
+docker compose restart backend
 # systemd
-sudo systemctl restart anheyu-backend
+sudo systemctl restart blog-backend
 # PM2
-pm2 restart anheyu-backend
+pm2 restart blog-backend
 ```
 
 > 修改后已登录用户的 token 会失效，需重新登录。
@@ -248,12 +248,12 @@ cd server && npm run migrate:dry-run -- --source /path/to/go-backend.db --target
 
 ```bash
 # Docker：用 SQLite backup API 生成一致快照
-docker compose exec anheyu sqlite3 /app/data/blog.db ".backup /app/data/backups/backup-$(date +%F).db"
+docker compose exec backend sqlite3 /app/data/blog.db ".backup /app/data/backups/backup-$(date +%F).db"
 
 # 裸机/PM2：停后端后拷贝文件
-sudo systemctl stop anheyu-backend
+sudo systemctl stop blog-backend
 cp server/data/blog.db /backup/blog-$(date +%F).db
-sudo systemctl start anheyu-backend
+sudo systemctl start blog-backend
 ```
 
 同时备份 `server/data/uploads/`（上传文件）。`server/data/backups/` 下的设置备份由后端自动生成。
@@ -283,7 +283,7 @@ curl -I http://localhost:3000
 
 # 进程/容器状态
 docker compose ps              # Docker
-systemctl status anheyu-backend anheyu-frontend  # systemd
+systemctl status blog-backend blog-frontend  # systemd
 pm2 status                     # PM2
 ```
 

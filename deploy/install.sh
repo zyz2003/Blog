@@ -1,18 +1,18 @@
 #!/bin/bash
-# anheyu-app 裸机一键安装脚本（systemd + Nginx）
+# Blog 裸机一键安装脚本（systemd + Nginx）
 # 用法：sudo bash deploy/install.sh [your-domain.com]
 #
 # 前置：Node.js v22+、npm、nginx、rsync 已安装
-# 安装目录默认 /opt/anheyu，可通过 INSTALL_DIR 环境变量覆盖
+# 安装目录默认 /opt/blog，可通过 INSTALL_DIR 环境变量覆盖
 set -e
 
 DOMAIN="${1:-}"
-INSTALL_DIR="${INSTALL_DIR:-/opt/anheyu}"
+INSTALL_DIR="${INSTALL_DIR:-/opt/blog}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 echo "=========================================="
-echo " anheyu-app 裸机部署安装"
+echo " Blog 裸机部署安装"
 echo "=========================================="
 
 # 1. root 检查
@@ -61,28 +61,28 @@ chown -R node:node "$INSTALL_DIR"
 
 # 8. 安装 systemd 服务
 echo "[INFO] 安装 systemd 服务..."
-cp deploy/anheyu-backend.service /etc/systemd/system/
-cp deploy/anheyu-frontend.service /etc/systemd/system/
+cp deploy/blog-backend.service /etc/systemd/system/
+cp deploy/blog-frontend.service /etc/systemd/system/
 systemctl daemon-reload
-systemctl enable anheyu-backend anheyu-frontend
-systemctl restart anheyu-backend anheyu-frontend
+systemctl enable blog-backend blog-frontend
+systemctl restart blog-backend blog-frontend
 
 # 9. 配置 Nginx
 if [ -d /etc/nginx/sites-available ]; then
     echo "[INFO] 配置 Nginx..."
-    cp deploy/nginx-anheyu.conf /etc/nginx/sites-available/anheyu
+    cp deploy/nginx-blog.conf /etc/nginx/sites-available/blog
     [ -L /etc/nginx/sites-enabled/default ] && rm -f /etc/nginx/sites-enabled/default
-    ln -sf /etc/nginx/sites-available/anheyu /etc/nginx/sites-enabled/anheyu
+    ln -sf /etc/nginx/sites-available/blog /etc/nginx/sites-enabled/blog
 
     if [ -n "$DOMAIN" ]; then
-        sed -i "s/YOUR_DOMAIN/$DOMAIN/g" /etc/nginx/sites-available/anheyu
+        sed -i "s/YOUR_DOMAIN/$DOMAIN/g" /etc/nginx/sites-available/blog
         echo "[INFO] 已将域名替换为 $DOMAIN"
     fi
 
     mkdir -p /var/www/html
-    nginx -t && systemctl reload nginx || { echo "[ERROR] nginx 配置检查失败，请检查 /etc/nginx/sites-available/anheyu" >&2; exit 1; }
+    nginx -t && systemctl reload nginx || { echo "[ERROR] nginx 配置检查失败，请检查 /etc/nginx/sites-available/blog" >&2; exit 1; }
 else
-    echo "[WARN] 未检测到 /etc/nginx/sites-available，请手动配置 Nginx（参考 deploy/nginx-anheyu.conf）"
+    echo "[WARN] 未检测到 /etc/nginx/sites-available，请手动配置 Nginx（参考 deploy/nginx-blog.conf）"
 fi
 
 echo ""
@@ -95,9 +95,8 @@ echo " 前端: http://localhost:3000"
 echo ""
 echo " [重要] 首次部署后请立即："
 echo "   1. 登录后台修改默认管理员密码 (admin@test.com / password123)"
-echo "   2. 在后台设置中把 JWT_SECRET 设为强随机值 (见 DEPLOYMENT.md §8)"
-echo "       生成: openssl rand -base64 32"
+echo "   2. JWT_SECRET 已由首次启动自动生成强随机值（见 DEPLOYMENT.md §8）"
 echo ""
 echo " 服务管理:"
-echo "   systemctl status anheyu-backend anheyu-frontend"
-echo "   journalctl -u anheyu-backend -f"
+echo "   systemctl status blog-backend blog-frontend"
+echo "   journalctl -u blog-backend -f"

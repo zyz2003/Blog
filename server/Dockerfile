@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# anheyu-app NestJS 后端镜像
+# Blog NestJS 后端镜像
 # 多阶段构建：builder 编译 TS + 解析 better-sqlite3 原生模块；runtime 精简生产镜像
 
 # ---- builder：编译 TypeScript ----

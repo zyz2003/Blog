@@ -1,13 +1,13 @@
 [Unit]
-Description=anheyu-app Next.js frontend
-After=network.target anheyu-backend.service
+Description=Blog Next.js frontend
+After=network.target blog-backend.service
 
 [Service]
 Type=simple
 User=node
 Group=node
-WorkingDirectory=/opt/anheyu/frontend
-ExecStart=/usr/bin/node /opt/anheyu/frontend/.next/standalone/server.js
+WorkingDirectory=/opt/blog/frontend
+ExecStart=/usr/bin/node /opt/blog/frontend/.next/standalone/server.js
 Restart=on-failure
 RestartSec=5
 Environment=NODE_ENV=production

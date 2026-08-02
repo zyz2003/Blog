@@ -40,7 +40,7 @@ server {
         root /etc/nginx/conf;
     }
     location / {
-        return 200 'anheyu-app certbot bootstrap';
+        return 200 'Blog certbot bootstrap';
         add_header Content-Type text/plain;
     }
 }

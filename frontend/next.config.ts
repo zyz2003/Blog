@@ -42,7 +42,7 @@ const nextConfig: NextConfig = {
     // 开发环境使用 BACKEND_URL，生产环境使用 API_URL（Docker 内部网络）
     const backendUrl = isDev
       ? process.env.BACKEND_URL || "http://localhost:8091"
-      : process.env.API_URL || "http://anheyu:8091";
+      : process.env.API_URL || "http://backend:8091";
 
     return {
       // beforeFiles: 在检查 public 目录之前执行（API 等必须代理的路径）
