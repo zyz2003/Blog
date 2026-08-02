@@ -28,4 +28,6 @@ server/test-db.sqlite
 .claude/*
 !.claude/CLAUDE.md
 changelogs/
+.planning/
+test-results/
 *.db.bak*
