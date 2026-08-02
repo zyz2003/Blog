@@ -28,7 +28,7 @@ progress:
 | Phase | 19 (chat-hardening-frontend-integration) — EXECUTING |
 | Current Plan | 1 |
 | Status | Executing Phase 19 |
-| Last Activity | 2026-08-01 — Completed quick task 260801-rg8: 前台 AI 对话 UI 大改优化 |
+| Last Activity | 2026-08-02 - Completed quick task 260802-evy: anheyu-app 部署文档及脚本 |
 
 ## Phase Status
 
@@ -95,6 +95,7 @@ progress:
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260801-rg8 | 前台 AI 对话 UI 大改优化（AI-Native UI 风格） | 2026-08-01 | d69fc27 | [260801-rg8-ai-chat-ui-overhaul](./quick/260801-rg8-ai-chat-ui-overhaul/) |
+| 260802-evy | anheyu-app 部署文档及脚本（三方式+Nginx/HTTPS+JWT告警） | 2026-08-02 | 8ec879d | [260802-evy-anheyu-app-deployment-md-jwt-secret-dock](./quick/260802-evy-anheyu-app-deployment-md-jwt-secret-dock/) |
 
 ## Key Learnings
 
@@ -134,7 +135,7 @@ progress:
 | Post-Phase-11 Bugs Fixed | 3 (ScheduleService log spam, settings seed, timestamp conversion) |
 
 ---
-*Last updated: 2026-07-23*
+*Last updated: 2026-08-02*
 
 ## Session
 
