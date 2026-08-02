@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "@/providers";
-import { ChatWidget } from "@/components/chat";
+import dynamic from "next/dynamic";
 import { renderCustomBodyHtml, renderCustomHeadHtml } from "@/lib/custom-html";
 import {
   buildWebSiteJsonLd,
@@ -12,11 +12,16 @@ import {
   resolveSeoSiteInfo,
 } from "@/lib/seo";
 
-// Next.js 16 默认会尝试将 root layout 静态化（即使 fetch 带 cache:"no-store"，
-// 也只是跳过 Data Cache，不会让整个路由 shell 转为 dynamic）。
-// 自定义 HTML/CSS/JS、站点名、logo 等必须在 admin 保存后立即生效，
-// 所以显式把根布局声明为 dynamic，使每次请求都重新读取最新站点配置。
-export const dynamic = "force-dynamic";
+// ISR：根布局每 60s 重新生成；后台保存设置时通过 revalidateSiteConfig() 按需刷新，
+// 兼顾首屏性能（HTML 可缓存/边缘缓存）与配置即时生效。
+// （Next.js 16 默认静态化根布局 shell，无需 force-dynamic；no-store fetch 只跳过
+// Data Cache，不影响 ISR 渲染频率。）
+export const revalidate = 60;
+
+// ChatWidget 仅客户端交互时需要，懒加载避免 ChatWindow + AI SDK 进入首屏 bundle。
+const ChatWidget = dynamic(() => import("@/components/chat").then(m => m.ChatWidget), {
+  ssr: false,
+});
 
 /**
  * 动态生成 Metadata
