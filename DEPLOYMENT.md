@@ -183,7 +183,7 @@ pm2 restart all
 **行为（已修复）：**
 
 1. 环境变量 `JWT_SECRET` 在运行时**不被读取**，仅为兼容旧配置保留（Joi 校验为可选）。签发/校验 JWT 时，代码读取的是 `settingsService.get('JWT_SECRET')`，即数据库 `settings` 表里的值。
-2. 首次启动时（或数据库中 `JWT_SECRET` 为空时），`SettingsService.ensureJwtSecret()` 用 `crypto.randomBytes(32)` 生成强随机密钥并写入数据库，**不再使用空值或硬编码默认值**。
+2. 首次启动时（或数据库中对应值为空时），`SettingsService.ensureSecuritySecrets()` 用 `crypto.randomBytes(32)` 为 `JWT_SECRET` 与 `LOCAL_FILE_SIGNING_SECRET` 生成强随机密钥并写入数据库，**不再使用空值或硬编码默认值**。
 3. 已存在的非空 `JWT_SECRET`（如后台面板手动设置的）**永不被覆盖**。
 4. 旧版本存在缺陷：默认 seed 为空字符串，运行时回退到硬编码 `'change-me-in-production'`（公开密钥，等同未鉴权）。本次已修复--升级后首次启动会自动为空值库补上强随机密钥。
 

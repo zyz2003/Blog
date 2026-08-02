@@ -34,7 +34,7 @@ export class SettingsService implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     await this.ensureLoaded();
     await this.seedMissingDefaults();
-    await this.ensureJwtSecret();
+    await this.ensureSecuritySecrets();
   }
 
   /**
@@ -84,30 +84,32 @@ export class SettingsService implements OnModuleInit {
   }
 
   /**
-   * Ensure JWT_SECRET is a strong random value.
-   * The default seed inserts an empty string; without this the auth code
-   * (TokenService / JwtStrategy) falls back to a hardcoded insecure secret.
-   * If the DB value is empty or missing, generate a 32-byte random secret,
-   * persist it, and update the cache. A non-empty secret (e.g. set via the
-   * admin panel) is never overwritten - this also repairs existing databases
-   * that were seeded with an empty JWT_SECRET before this fix.
+   * Security secrets that must be strong random values - never the empty
+   * string from the default seed. If any is empty or missing in the database,
+   * generate a 32-byte random secret, persist it, and update the cache.
+   * A non-empty value (e.g. set via the admin panel) is never overwritten -
+   * this also repairs existing databases seeded with empty values.
    */
-  private async ensureJwtSecret(): Promise<void> {
-    if (this.cache.get('JWT_SECRET')) return;
+  private static readonly SECURITY_SECRETS = ['JWT_SECRET', 'LOCAL_FILE_SIGNING_SECRET'];
 
-    const secret = randomBytes(32).toString('base64');
-    await this.db
-      .insert(settings)
-      .values({ configKey: 'JWT_SECRET', value: secret })
-      .onConflictDoUpdate({
-        target: settings.configKey,
-        set: { value: secret },
-      })
-      .run();
-    this.cache.set('JWT_SECRET', secret);
-    this.logger.warn(
-      'JWT_SECRET 为空，已生成强随机密钥并写入数据库（原有空值被替换）',
-    );
+  private async ensureSecuritySecrets(): Promise<void> {
+    for (const key of SettingsService.SECURITY_SECRETS) {
+      if (this.cache.get(key)) continue;
+
+      const secret = randomBytes(32).toString('base64');
+      await this.db
+        .insert(settings)
+        .values({ configKey: key, value: secret })
+        .onConflictDoUpdate({
+          target: settings.configKey,
+          set: { value: secret },
+        })
+        .run();
+      this.cache.set(key, secret);
+      this.logger.warn(
+        `${key} 为空，已生成强随机密钥并写入数据库（原有空值被替换）`,
+      );
+    }
   }
 
   get(key: string): string | undefined {
