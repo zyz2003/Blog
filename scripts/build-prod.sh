@@ -27,36 +27,38 @@ if command -v free >/dev/null 2>&1; then
   fi
 fi
 
-# 带心跳地执行命令：后台跑，每 20s 报告用时/内存/末行日志，避免干瞪眼
+# 前台实时执行 + 后台心跳：构建输出实时流到终端，静默期每 20s 报告用时/内存
 run_step() {
   local label="$1"; shift
-  local log
-  log=$(mktemp)
-  echo "[INFO] $label 开始...（日志: $log，另开终端可 tail -f $log 看详情）"
-  "$@" > "$log" 2>&1 &
-  local pid=$!
   local start
   start=$(date +%s)
-  while kill -0 "$pid" 2>/dev/null; do
-    sleep 20
-    local elapsed=$(( $(date +%s) - start ))
-    local used_mb
-    used_mb=$(free -m 2>/dev/null | awk '/^Mem:/{print $3}')
-    local last_line
-    last_line=$(tail -1 "$log" 2>/dev/null | tr -d '\r')
-    echo "  → $label 仍在跑... ${elapsed}s 已用，系统内存 ${used_mb}MB | 末行: $last_line"
-  done
+  echo "[INFO] $label 开始..."
+  # 后台心跳：next build 静默编译期间，每 20s 报告还在跑 + 用时 + 内存
+  (
+    while true; do
+      sleep 20
+      local elapsed=$(( $(date +%s) - start ))
+      local used_mb
+      used_mb=$(free -m 2>/dev/null | awk '/^Mem:/{print $3}')
+      echo "  -> [$label] 仍在跑... ${elapsed}s, 内存 ${used_mb}MB" >&2
+    done
+  ) &
+  local hb_pid=$!
+  # 前台执行：输出实时显示（next build 的 "Compiled successfully" 等会立刻出现）
   local rc=0
-  wait "$pid" || rc=$?
+  set +e
+  "$@"
+  rc=$?
+  set -e
+  # 收掉心跳
+  kill "$hb_pid" 2>/dev/null
+  wait "$hb_pid" 2>/dev/null
   local dur=$(( $(date +%s) - start ))
   if [ "$rc" -ne 0 ]; then
-    echo "[ERROR] $label 失败（${dur}s，退出码 $rc）。最近 30 行："
-    tail -30 "$log"
-    rm -f "$log"
+    echo "[ERROR] $label 失败（${dur}s，退出码 $rc）"
     return "$rc"
   fi
   echo "[OK] $label 完成（${dur}s）"
-  rm -f "$log"
   return 0
 }
 
