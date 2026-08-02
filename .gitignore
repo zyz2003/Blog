@@ -30,4 +30,11 @@ server/test-db.sqlite
 changelogs/
 .planning/
 test-results/
+# 测试文件（本地保留，不提交远程）
+server/test/
+**/*.spec.ts
+**/*.spec.tsx
+**/*.test.ts
+**/*.test.tsx
+**/__tests__/
 *.db.bak*
