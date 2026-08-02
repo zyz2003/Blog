@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the anheyu-app NestJS backend project.
+All notable changes to the Blog NestJS backend project.
 
 ## Phase 18: Streaming Chat Endpoint — 2026-07-28
 

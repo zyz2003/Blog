@@ -2,9 +2,9 @@
 
 ## Project
 
-**anheyu-app**
+**Blog**
 
-用 NestJS + Drizzle + SQLite 重写 anheyu-app 的 Go 后端，替代原 Go + PostgreSQL + Redis 架构，实现零依赖本地运行。前端 Next.js 代码不做任何修改，新后端必须与原 Go 后端保持 API 兼容（相同路径 + 相同响应格式）。
+用 NestJS + Drizzle + SQLite 重写原 Go 后端，替代原 Go + PostgreSQL + Redis 架构，实现零依赖本地运行。前端 Next.js 代码不做任何修改，新后端必须与原 Go 后端保持 API 兼容（相同路径 + 相同响应格式）。
 
 **Core Value:** 前端零改动即可切换到新后端运行 — API 兼容是核心底线。
 
