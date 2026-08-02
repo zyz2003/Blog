@@ -1,0 +1,20 @@
+[Unit]
+Description=anheyu-app Next.js frontend
+After=network.target anheyu-backend.service
+
+[Service]
+Type=simple
+User=node
+Group=node
+WorkingDirectory=/opt/anheyu/frontend
+ExecStart=/usr/bin/node /opt/anheyu/frontend/.next/standalone/server.js
+Restart=on-failure
+RestartSec=5
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=API_URL=http://localhost:8091
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
