@@ -38,6 +38,7 @@ describe('SettingsService', () => {
       insert: vi.fn().mockReturnThis(),
       values: vi.fn().mockReturnThis(),
       onConflictDoUpdate: vi.fn().mockReturnThis(),
+      onConflictDoNothing: vi.fn().mockReturnThis(),
       returning: vi.fn(),
       run: vi.fn(),
     };
@@ -64,6 +65,44 @@ describe('SettingsService', () => {
       expect(service.get('JWT_SECRET')).toBe('super-secret-key');
       expect(service.get('SUB_TITLE')).toBe('生活明朗，万物可爱');
       expect(service.get('footer.owner.name')).toBe('安知鱼');
+    });
+  });
+
+  describe('ensureJwtSecret', () => {
+    it('should generate and persist a strong random JWT_SECRET when DB value is empty', async () => {
+      // DB returns settings with an empty JWT_SECRET
+      const emptyJwtSettings = sampleSettings.map(s =>
+        s.configKey === 'JWT_SECRET' ? { ...s, value: '' } : s,
+      );
+      mockDb.from.mockReturnValue(emptyJwtSettings);
+
+      let inserted: any;
+      mockDb.insert.mockReturnThis();
+      mockDb.values.mockImplementation((v: any) => {
+        inserted = v;
+        return mockDb;
+      });
+      mockDb.onConflictDoUpdate.mockReturnThis();
+      mockDb.run.mockResolvedValue(undefined);
+
+      await service.onModuleInit();
+
+      const jwt = service.get('JWT_SECRET');
+      expect(jwt).toBeTruthy();
+      expect(jwt!.length).toBeGreaterThan(20);
+      // ensureJwtSecret should have upserted the generated secret (last insert call)
+      expect(inserted).toBeDefined();
+      expect(inserted.configKey).toBe('JWT_SECRET');
+      expect(inserted.value).toBe(jwt);
+    });
+
+    it('should not overwrite a non-empty JWT_SECRET', async () => {
+      // sampleSettings has JWT_SECRET = 'super-secret-key'
+      await service.onModuleInit();
+      expect(service.get('JWT_SECRET')).toBe('super-secret-key');
+      // ensureJwtSecret early-returns -> onConflictDoUpdate not called during init
+      // (seedMissingDefaults uses onConflictDoNothing, not onConflictDoUpdate)
+      expect(mockDb.onConflictDoUpdate).not.toHaveBeenCalled();
     });
   });
 

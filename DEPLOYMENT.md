@@ -11,7 +11,7 @@
 5. [PM2 部署](#5-pm2-部署)
 6. [Nginx 反向代理与 HTTPS](#6-nginx-反向代理与-https)
 7. [环境变量](#7-环境变量)
-8. [⚠️ JWT_SECRET 安全告警](#8-️-jwt_secret-安全告警)
+8. [JWT_SECRET 说明](#8-jwt_secret-说明)
 9. [数据库](#9-数据库)
 10. [数据迁移（从 Go 后端）](#10-数据迁移从-go-后端)
 11. [备份与恢复](#11-备份与恢复)
@@ -170,50 +170,39 @@ pm2 restart all
 |------|--------|------|
 | `PORT` | `8091` | 后端端口（与原 Go 后端一致，前端依赖此端口） |
 | `DB_PATH` | `data/blog.db` | SQLite 路径；**容器/systemd 中必须用绝对路径**（如 `/app/data/blog.db`） |
-| `JWT_SECRET` | - | ⚠️ 仅为通过 Joi 校验，**运行时不读取**。详见 [§8](#8-️-jwt_secret-安全告警) |
+| `JWT_SECRET` | - | 运行时不读取；首次启动自动生成强随机值存入数据库。详见 [§8](#8-jwt_secret-说明) |
 | `JWT_EXPIRES_IN` | `15m` | JWT 过期时间 |
 | `JWT_REFRESH_EXPIRES_IN` | `30d` | Refresh Token 过期时间 |
 | `NODE_TLS_REJECT_UNAUTHORIZED` | - | 设为 `0` 可跳过音乐代理的 SSL 校验（对应 Go 的 `InsecureSkipVerify`） |
 | `API_URL` | `http://anheyu:8091`（Docker）/ `http://localhost:8091`（裸机） | 前端代理后端的地址 |
 
-> 本地开发无需 `.env` 文件（除 `JWT_SECRET` 需占位值满足 Joi 校验外）。所有业务配置存在数据库 `settings` 表，通过后台面板修改。
+> 本地开发无需 `.env` 文件。所有业务配置存在数据库 `settings` 表，通过后台面板修改。
 
-## 8. ⚠️ JWT_SECRET 安全告警
+## 8. JWT_SECRET 说明
 
-> **这是部署后必须立即处理的安全问题。** 旧文档曾称"JWT_SECRET 首次启动自动生成并存入数据库"，**此说法错误**，实际情况如下：
+**行为（已修复）：**
 
-**真实行为：**
+1. 环境变量 `JWT_SECRET` 在运行时**不被读取**，仅为兼容旧配置保留（Joi 校验为可选）。签发/校验 JWT 时，代码读取的是 `settingsService.get('JWT_SECRET')`，即数据库 `settings` 表里的值。
+2. 首次启动时（或数据库中 `JWT_SECRET` 为空时），`SettingsService.ensureJwtSecret()` 用 `crypto.randomBytes(32)` 生成强随机密钥并写入数据库，**不再使用空值或硬编码默认值**。
+3. 已存在的非空 `JWT_SECRET`（如后台面板手动设置的）**永不被覆盖**。
+4. 旧版本存在缺陷：默认 seed 为空字符串，运行时回退到硬编码 `'change-me-in-production'`（公开密钥，等同未鉴权）。本次已修复--升级后首次启动会自动为空值库补上强随机密钥。
 
-1. 环境变量 `JWT_SECRET` 被 Joi 标记为 `required()`——`.env` 中必须填一个非空值，**否则后端无法启动**。
-2. **但这个环境变量在运行时从不被读取。** 签发/校验 JWT 时，代码读取的是 `settingsService.get('JWT_SECRET')`，即数据库 `settings` 表里的值。
-3. 首次启动时，数据库 `settings` 表中的 `JWT_SECRET` 被 seed 为**空字符串**。
-4. 空字符串是 falsy，认证代码回退到**硬编码的不安全默认值** `'change-me-in-production'`。
+**轮换 / 自定义密钥：**
 
-**这意味着：** 开箱即用状态下，**所有 JWT 都用一个公开的硬编码密钥签发**——任何人都能伪造 token，等同未鉴权。
+如需自定义或轮换 `JWT_SECRET`，在后台管理面板 -> 系统设置中修改，然后重启后端：
 
-**必须执行的操作（部署后立即）：**
+```bash
+# Docker
+docker compose restart anheyu
+# systemd
+sudo systemctl restart anheyu-backend
+# PM2
+pm2 restart anheyu-backend
+```
 
-1. 生成一个强随机密钥：
+> 修改后已登录用户的 token 会失效，需重新登录。
 
-   ```bash
-   openssl rand -base64 32
-   ```
-
-2. 登录后台管理面板 → 系统设置，把 `JWT_SECRET` 设为上面生成的值。
-3. 重启后端使设置生效：
-
-   ```bash
-   # Docker
-   docker compose restart anheyu
-   # systemd
-   sudo systemctl restart anheyu-backend
-   # PM2
-   pm2 restart anheyu-backend
-   ```
-
-4. （已有用户需重新登录，旧 token 失效。）
-
-**关于 `.env` 里的 `JWT_SECRET`：** 它只是为通过 Joi 校验而存在，填任意非空字符串即可（如 `joi-placeholder`）。**不要**把真实密钥写进 `.env`——它会被忽略。
+**关于 `.env` 里的 `JWT_SECRET`：** 运行时不读取，可留空或删除。Dockerfile / compose / systemd 中的 `JWT_SECRET=joi-placeholder` 仅为兼容性保留，可忽略。
 
 ## 9. 数据库
 
@@ -323,7 +312,7 @@ cd server && npx vitest run test/api-compat/auth-api-compat.spec.ts
 - [ ] 数据库 schema 已推送（`drizzle-kit push --force`）
 - [ ] 后端 `/api/version` 返回 200
 - [ ] 前台可访问、后台可登录
-- [ ] **JWT_SECRET 已在后台面板设为强随机值**（[§8](#8-️-jwt_secret-安全告警)）
+- [ ] JWT_SECRET 已由首次启动自动生成（如需轮换见 [§8](#8-jwt_secret-说明)）
 - [ ] 默认管理员密码已修改（不再用 `password123`）
 - [ ] HTTPS 证书已签发并自动续期
 - [ ] `server/data/` 已纳入定期备份

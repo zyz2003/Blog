@@ -3,6 +3,7 @@ import { settings } from '../database/schemas/setting.schema';
 import { DRIZZLE } from '../database/database.module';
 import { PUBLIC_SETTING_KEYS } from './public-setting-keys';
 import { DEFAULT_SETTINGS } from './default-settings';
+import { randomBytes } from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -33,6 +34,7 @@ export class SettingsService implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     await this.ensureLoaded();
     await this.seedMissingDefaults();
+    await this.ensureJwtSecret();
   }
 
   /**
@@ -79,6 +81,33 @@ export class SettingsService implements OnModuleInit {
 
     this.configVersion = Date.now();
     this.logger.log(`Seeded ${missing.length} default settings. Total: ${this.cache.size}`);
+  }
+
+  /**
+   * Ensure JWT_SECRET is a strong random value.
+   * The default seed inserts an empty string; without this the auth code
+   * (TokenService / JwtStrategy) falls back to a hardcoded insecure secret.
+   * If the DB value is empty or missing, generate a 32-byte random secret,
+   * persist it, and update the cache. A non-empty secret (e.g. set via the
+   * admin panel) is never overwritten - this also repairs existing databases
+   * that were seeded with an empty JWT_SECRET before this fix.
+   */
+  private async ensureJwtSecret(): Promise<void> {
+    if (this.cache.get('JWT_SECRET')) return;
+
+    const secret = randomBytes(32).toString('base64');
+    await this.db
+      .insert(settings)
+      .values({ configKey: 'JWT_SECRET', value: secret })
+      .onConflictDoUpdate({
+        target: settings.configKey,
+        set: { value: secret },
+      })
+      .run();
+    this.cache.set('JWT_SECRET', secret);
+    this.logger.warn(
+      'JWT_SECRET 为空，已生成强随机密钥并写入数据库（原有空值被替换）',
+    );
   }
 
   get(key: string): string | undefined {
