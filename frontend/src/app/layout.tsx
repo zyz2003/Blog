@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "@/providers";
-import dynamic from "next/dynamic";
+import { ChatWidget } from "@/components/chat";
 import { renderCustomBodyHtml, renderCustomHeadHtml } from "@/lib/custom-html";
 import {
   buildWebSiteJsonLd,
@@ -17,11 +17,6 @@ import {
 // （Next.js 16 默认静态化根布局 shell，无需 force-dynamic；no-store fetch 只跳过
 // Data Cache，不影响 ISR 渲染频率。）
 export const revalidate = 60;
-
-// ChatWidget 仅客户端交互时需要，懒加载避免 ChatWindow + AI SDK 进入首屏 bundle。
-const ChatWidget = dynamic(() => import("@/components/chat").then(m => m.ChatWidget), {
-  ssr: false,
-});
 
 /**
  * 动态生成 Metadata

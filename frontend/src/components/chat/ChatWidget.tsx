@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import { Bot, X } from "lucide-react";
-import { ChatWindow } from "./ChatWindow";
+import dynamic from "next/dynamic";
+
+// 懒加载 ChatWindow（含 AI SDK），仅在用户打开聊天时加载，避免进入首屏 bundle。
+// ChatWidget 是 Client Component，此处可用 ssr:false（根 layout 是 Server Component 不允许）。
+const ChatWindow = dynamic(() => import("./ChatWindow").then(m => m.ChatWindow), {
+  ssr: false,
+});
 
 /**
  * Floating chat widget button (bottom-right corner).
