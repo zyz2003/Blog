@@ -30,7 +30,7 @@ const API_BASE_URL = process.env.BACKEND_URL || "http://localhost:8091";
 async function getArticle(id: string) {
   try {
     const res = await fetch(`${API_BASE_URL}/api/public/articles/${id}`, {
-      cache: "no-store",
+      next: { revalidate: 60 },
       headers: {
         "Content-Type": "application/json",
       },
