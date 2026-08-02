@@ -1,0 +1,16 @@
+# server/.dockerignore - 排除不需要进入镜像的文件
+# 注意：tsconfig.json / tsconfig.build.json / nest-cli.json / src/ 必须保留（构建需要）
+
+node_modules
+dist
+data
+test
+.env
+.env.*
+.git
+.gitignore
+*.md
+.DS_Store
+test-db.sqlite
+vitest.config.ts
+drizzle

@@ -1,0 +1,65 @@
+# anheyu-app Docker Compose 编排
+# 三服务：anheyu（后端 8091）+ frontend（前端 3000）+ nginx（反代 80/443）
+# 首次启用 HTTPS 前先执行：bash nginx/init-letsencrypt.sh your-domain.com you@example.com
+#
+# 持久化：./server/data 挂载到后端 /app/data（数据库 + 上传文件 + 备份）
+# 注意：根目录 data/ 与 server/data/ 是不同目录，切勿挂错
+
+services:
+  anheyu:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: anheyu
+    ports:
+      - "8091:8091"
+    environment:
+      - NODE_ENV=production
+      - PORT=8091
+      - DB_PATH=/app/data/blog.db
+      # JWT_SECRET 仅为通过 Joi 校验，运行时不读取；真实密钥在后台面板设置（见 DEPLOYMENT.md §8）
+      - JWT_SECRET=joi-placeholder
+      - JWT_EXPIRES_IN=15m
+      - JWT_REFRESH_EXPIRES_IN=30d
+    volumes:
+      - ./server/data:/app/data
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: anheyu-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - API_URL=http://anheyu:8091
+    restart: unless-stopped
+    depends_on:
+      - anheyu
+
+  nginx:
+    image: nginx:alpine
+    container_name: anheyu-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/certs:/etc/letsencrypt
+      - ./nginx/conf:/etc/nginx/conf
+    restart: unless-stopped
+    depends_on:
+      - frontend
+      - anheyu
+
+  # certbot：按需运行，用于签发/续期 Let's Encrypt 证书
+  # 用法见 nginx/init-letsencrypt.sh
+  certbot:
+    image: certbot/certbot
+    profiles: ["certbot"]
+    volumes:
+      - ./nginx/certs:/etc/letsencrypt
+      - ./nginx/conf:/var/www/html

@@ -1,0 +1,15 @@
+# frontend/.dockerignore - 排除不需要进入镜像的文件
+# 注意：public/ / src/ / 各配置文件必须保留（next build 需要）
+
+node_modules
+.next
+test-results
+.env
+.env*
+.git
+.gitignore
+*.md
+.DS_Store
+.vercel
+.cursor
+.vscode
