@@ -12,11 +12,11 @@ import {
   resolveSeoSiteInfo,
 } from "@/lib/seo";
 
-// ISR：根布局每 60s 重新生成；后台保存设置时通过 revalidateSiteConfig() 按需刷新，
-// 兼顾首屏性能（HTML 可缓存/边缘缓存）与配置即时生效。
-// （Next.js 16 默认静态化根布局 shell，无需 force-dynamic；no-store fetch 只跳过
-// Data Cache，不影响 ISR 渲染频率。）
-export const revalidate = 60;
+// force-dynamic：每次请求重新渲染根布局，读取最新站点配置。
+// 注：曾在生产用 revalidate=60(ISR) 优化首屏，但 dev 模式下根布局 ISR + 客户端
+// 动态 hook(usePathname/useSearchParams) 冲突导致 Turbopack 编译卡死(占满 CPU/内存)。
+// 生产若要 ISR，改用按页 revalidate（不放根布局），避免与动态 hook 冲突。
+export const dynamic = "force-dynamic";
 
 /**
  * 动态生成 Metadata
