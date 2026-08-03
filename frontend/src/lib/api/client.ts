@@ -501,6 +501,14 @@ export const apiClient = new ApiClient(axiosInstance);
 export { axiosInstance, AuthExpiredError };
 
 /**
+ * 主动刷新 access token（页面加载时若 token 过期可调用）。
+ * 成功返回新 access token；失败抛 AuthExpiredError。
+ */
+export async function refreshAccessToken(): Promise<string> {
+  return handleRefreshToken();
+}
+
+/**
  * API 错误类型
  */
 export interface ApiError {
