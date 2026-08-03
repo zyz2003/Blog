@@ -336,6 +336,7 @@ export const DEFAULT_SETTINGS: Array<{ key: string; value: string; comment: stri
   { key: "image_captcha.length", value: "4", comment: "图形验证码字符长度 (默认4位)" },
   { key: "image_captcha.expire", value: "300", comment: "图形验证码过期时间（秒，默认300秒/5分钟）" },
   { key: "userpanel.show_user_center", value: "true", comment: "是否显示用户中心按钮 (true/false)" },
+  { key: "userpanel.show_user_center_button", value: "true", comment: "是否显示顶栏外部个人中心按钮 (true/false)" },
   { key: "userpanel.show_notifications", value: "true", comment: "是否显示通知中心按钮 (true/false)" },
   { key: "userpanel.show_publish_article", value: "true", comment: "是否显示发布文章按钮 (true/false)" },
   { key: "userpanel.show_admin_dashboard", value: "true", comment: "是否显示进入后台按钮 (true/false)" },

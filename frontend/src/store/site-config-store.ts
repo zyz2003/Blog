@@ -30,6 +30,7 @@ export interface SiteConfigSyncPayload {
 
 interface UserPanelPublicConfig {
   show_user_center?: unknown;
+  show_user_center_button?: unknown;
   show_notifications?: unknown;
   show_publish_article?: unknown;
   show_admin_dashboard?: unknown;
@@ -53,6 +54,7 @@ interface SiteConfigState {
   isRightMenuDisabled: () => boolean;
   userPanelConfig: () => {
     showUserCenter: boolean;
+    showUserCenterButton: boolean;
     showNotifications: boolean;
     showPublishArticle: boolean;
     showAdminDashboard: boolean;
@@ -214,6 +216,7 @@ export const useSiteConfigStore = create<SiteConfigState>((set, get) => ({
 
     return {
       showUserCenter: isSettingEnabled(userPanel.show_user_center),
+      showUserCenterButton: isSettingEnabled(userPanel.show_user_center_button),
       showNotifications: isSettingEnabled(userPanel.show_notifications),
       showPublishArticle: isSettingEnabled(userPanel.show_publish_article),
       showAdminDashboard: isSettingEnabled(userPanel.show_admin_dashboard),

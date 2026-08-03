@@ -497,6 +497,7 @@ const categoryDescriptors: Record<SettingCategoryId, SettingDescriptor[]> = {
   ],
   "appearance-userpanel": [
     { backendKey: K.KEY_USERPANEL_SHOW_USER_CENTER, type: "boolean", defaultValue: "true" },
+    { backendKey: K.KEY_USERPANEL_SHOW_USER_CENTER_BUTTON, type: "boolean", defaultValue: "true" },
     { backendKey: K.KEY_USERPANEL_SHOW_NOTIFICATIONS, type: "boolean", defaultValue: "true" },
     { backendKey: K.KEY_USERPANEL_SHOW_PUBLISH_ARTICLE, type: "boolean", defaultValue: "true" },
     { backendKey: K.KEY_USERPANEL_SHOW_ADMIN_DASHBOARD, type: "boolean", defaultValue: "true" },

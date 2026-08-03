@@ -178,7 +178,7 @@ export function HeaderRight({
             </div>
           </PopoverContent>
         </Popover>
-      ) : (
+      ) : userPanelConfig.showUserCenterButton ? (
         <Popover
           placement="bottom-end"
           offset={8}
@@ -273,7 +273,7 @@ export function HeaderRight({
             </div>
           </PopoverContent>
         </Popover>
-      )}
+      ) : null}
 
       {/* 随机文章 */}
       {!isMobile && (

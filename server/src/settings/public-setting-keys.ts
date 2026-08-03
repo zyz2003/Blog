@@ -325,6 +325,7 @@ export const PUBLIC_SETTING_KEYS = new Set([
 
   // ─── User panel ───
   'userpanel.show_user_center',
+  'userpanel.show_user_center_button',
   'userpanel.show_notifications',
   'userpanel.show_publish_article',
   'userpanel.show_admin_dashboard',
