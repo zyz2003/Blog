@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useRef, Suspense, Component, type ReactNode, type ErrorInfo } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, Input, Button } from "@heroui/react";
@@ -90,7 +91,11 @@ function FormFallback() {
 // ==================== 主页面 ====================
 
 export default function SettingsPage() {
-  const [activeSection, setActiveSection] = useState<string>("site-basic");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [activeSection, setActiveSection] = useState<string>(
+    searchParams.get("section") || "site-basic"
+  );
   const [formRetryKey, setFormRetryKey] = useState(0);
 
   // 搜索相关状态
@@ -173,9 +178,13 @@ export default function SettingsPage() {
 
   const selectSection = useCallback((_categoryId: string, sectionId: string) => {
     setActiveSection(sectionId);
+    // 把当前分区写入 URL，刷新后保持
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("section", sectionId);
+    router.replace(`/admin/settings?${params.toString()}`, { scroll: false });
     setShowMobileSidebar(false);
     contentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-  }, []);
+  }, [searchParams, router]);
 
   // ==================== 重置功能 ====================
 
