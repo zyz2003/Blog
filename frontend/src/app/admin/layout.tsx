@@ -21,12 +21,16 @@ import Link from "next/link";
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const router = useRouter();
-  const { _hasHydrated, accessToken, user, isAdmin } = useAuthStore(
+  const { _hasHydrated, accessToken, refreshToken, expires, user, isAdmin, logout, updateAccessToken } = useAuthStore(
     useShallow(state => ({
       _hasHydrated: state._hasHydrated,
       accessToken: state.accessToken,
+      refreshToken: state.refreshToken,
+      expires: state.expires,
       user: state.user,
       isAdmin: state.isAdmin,
+      logout: state.logout,
+      updateAccessToken: state.updateAccessToken,
     }))
   );
   const isAuthenticated = !!accessToken && !!user;
@@ -38,6 +42,34 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     setSiteTitle(storeSiteTitle);
   }, [storeSiteTitle]);
 
+  const [validating, setValidating] = useState(false);
+
+  // access token 过期时主动刷新（用 store 的 refreshToken 直接 fetch，绕开 tokenManager getter 竞态）
+  useEffect(() => {
+    if (!_hasHydrated) return;
+    if (accessToken && expires && Date.now() >= Number(expires) && refreshToken) {
+      setValidating(true);
+      fetch("/api/auth/refresh-token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${refreshToken}` },
+        body: JSON.stringify({ refreshToken }),
+      })
+        .then(async res => {
+          const result = await res.json();
+          if (result.code === 200 && result.data?.accessToken) {
+            updateAccessToken(result.data.accessToken, result.data.expires);
+          } else {
+            throw new Error("refresh failed");
+          }
+        })
+        .catch(() => {
+          logout();
+          router.replace("/login");
+        })
+        .finally(() => setValidating(false));
+    }
+  }, [_hasHydrated, accessToken, expires, refreshToken, logout, router, updateAccessToken]);
+
   useEffect(() => {
     if (!_hasHydrated) return;
     if (!isAuthenticated) {
@@ -46,6 +78,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       router.replace("/");
     }
   }, [_hasHydrated, isAuthenticated, hasAdminAccess, router]);
+
+  // 正在主动刷新 token 时不加载 admin 界面
+  if (validating) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-muted/30">
+        <div className="animate-pulse text-muted-foreground">正在验证登录状态...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-layout h-screen flex flex-col overflow-hidden bg-muted/30">

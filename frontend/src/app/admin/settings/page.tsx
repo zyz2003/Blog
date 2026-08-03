@@ -171,8 +171,19 @@ export default function SettingsPage() {
 
   // ==================== 导航功能 ====================
 
+  // 页面加载时从 URL 读取 section（刷新保持当前分区，用 window.location 不走 useSearchParams 避免 RSC 问题）
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const section = params.get("section");
+    if (section) setActiveSection(section);
+  }, []);
+
   const selectSection = useCallback((_categoryId: string, sectionId: string) => {
     setActiveSection(sectionId);
+    // 把当前分区写入 URL，刷新后保持
+    const params = new URLSearchParams(window.location.search);
+    params.set("section", sectionId);
+    window.history.replaceState(null, "", `/admin/settings?${params.toString()}`);
     setShowMobileSidebar(false);
     contentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
