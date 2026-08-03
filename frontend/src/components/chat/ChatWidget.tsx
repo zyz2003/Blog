@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { Bot, X } from "lucide-react";
 import dynamic from "next/dynamic";
 
@@ -15,7 +16,18 @@ const ChatWindow = dynamic(() => import("./ChatWindow").then(m => m.ChatWindow),
  * Clicking toggles the ChatWindow visibility.
  */
 export function ChatWidget() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+
+  // 后台/登录等页面不显示聊天助手（仅前台访客可见）
+  if (
+    pathname?.startsWith("/admin") ||
+    pathname?.startsWith("/login") ||
+    pathname?.startsWith("/forgot") ||
+    pathname?.startsWith("/activate")
+  ) {
+    return null;
+  }
 
   return (
     <>
