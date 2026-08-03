@@ -90,7 +90,7 @@ function FormFallback() {
 
 // ==================== 主页面 ====================
 
-export default function SettingsPage() {
+function SettingsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeSection, setActiveSection] = useState<string>(
@@ -470,5 +470,14 @@ export default function SettingsPage() {
       {/* 悬浮保存按钮 */}
       <FloatingSaveButton hasChanges={isDirty} loading={saving} onSave={save} />
     </div>
+  );
+}
+
+// useSearchParams 必须在 Suspense 边界内（Next.js 16 要求），否则 dev 编译卡住
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={<FormFallback />}>
+      <SettingsPageContent />
+    </Suspense>
   );
 }
