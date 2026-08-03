@@ -7,6 +7,7 @@
  */
 "use client";
 
+import "@/lib/iconify-offline";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import type { ReactNode } from "react";
 import { useEffect } from "react";

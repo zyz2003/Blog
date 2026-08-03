@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useRef, Suspense, Component, type ReactNode, type ErrorInfo } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect, Suspense, Component, type ReactNode, type ErrorInfo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, Input, Button } from "@heroui/react";

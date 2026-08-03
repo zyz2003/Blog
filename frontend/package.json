@@ -13,6 +13,7 @@
     "@ai-sdk/react": "^4.0.40",
     "@fancyapps/ui": "^6.1.10",
     "@heroui/react": "^2.8.9",
+    "@iconify/json": "^2.2.509",
     "@iconify/react": "^6.0.2",
     "@tanstack/react-query": "^5.90.20",
     "@tiptap/core": "^3.19.0",

@@ -3,6 +3,7 @@ import {
   Post,
   Get,
   Body,
+  Query,
   Headers,
   HttpCode,
   HttpException,
@@ -98,9 +99,9 @@ export class AuthController {
   }
 
   @Public()
-  @Throttle({ default: { limit: 5, ttl: 60000 } }) // Go: CustomRateLimit(10, 5)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Get('check-email')
-  async checkEmail() {
-    throw new HttpException('邮箱检查功能暂未开放', HttpStatus.NOT_IMPLEMENTED);
+  async checkEmail(@Query('email') email: string) {
+    return this.authService.checkEmail(email);
   }
 }

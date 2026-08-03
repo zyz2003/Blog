@@ -12,11 +12,10 @@ import {
   resolveSeoSiteInfo,
 } from "@/lib/seo";
 
-// Next.js 16 默认会尝试将 root layout 静态化（即使 fetch 带 cache:"no-store"，
-// 也只是跳过 Data Cache，不会让整个路由 shell 转为 dynamic）。
-// 自定义 HTML/CSS/JS、站点名、logo 等必须在 admin 保存后立即生效，
-// 所以显式把根布局声明为 dynamic，使每次请求都重新读取最新站点配置。
-export const dynamic = "force-dynamic";
+// ISR：根布局每 60s 重新生成，兼顾首屏性能（HTML 可缓存）与配置时效。
+// 后台保存设置时客户端会 forceRefreshFromServer，配合 force-dynamic 的 layout
+// 每次请求读最新配置。no-store fetch 确保每次渲染拿最新 site config。
+export const revalidate = 60;
 
 /**
  * 动态生成 Metadata

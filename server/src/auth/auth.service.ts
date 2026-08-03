@@ -103,4 +103,10 @@ export class AuthService {
       expires: tokens.expires,
     };
   }
+
+  async checkEmail(email: string): Promise<{ exists: boolean; registrationEnabled: boolean }> {
+    const [user] = await this.db.select().from(users).where(eq(users.email, email));
+    const registrationEnabled = this.settingsService.get('ALLOW_REGISTRATION') === 'true';
+    return { exists: !!user, registrationEnabled };
+  }
 }

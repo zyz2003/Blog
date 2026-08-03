@@ -45,8 +45,10 @@ export function isQQNumber(str: string): boolean {
 /**
  * 获取 QQ 头像 URL
  */
-export function getQQAvatarUrl(qqNumber: string, size = 80): string {
-  return `https://thirdqq.qlogo.cn/g?b=sdk&nk=${qqNumber}&s=${size}`;
+export function getQQAvatarUrl(qqNumber: string, size = 100): string {
+  // QQ 头像 API 只支持 100/160/640，其他尺寸返回 400
+  const validSize = [100, 160, 640].includes(size) ? size : 100;
+  return `https://q.qlogo.cn/g?b=qq&nk=${qqNumber}&s=${validSize}`;
 }
 
 /**
