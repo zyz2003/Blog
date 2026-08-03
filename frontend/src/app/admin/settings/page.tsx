@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo, useCallback, useRef, Suspense, Component, type ReactNode, type ErrorInfo } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, Input, Button } from "@heroui/react";
@@ -90,12 +89,8 @@ function FormFallback() {
 
 // ==================== 主页面 ====================
 
-function SettingsPageContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [activeSection, setActiveSection] = useState<string>(
-    searchParams.get("section") || "site-basic"
-  );
+export default function SettingsPage() {
+  const [activeSection, setActiveSection] = useState<string>("site-basic");
   const [formRetryKey, setFormRetryKey] = useState(0);
 
   // 搜索相关状态
@@ -178,13 +173,9 @@ function SettingsPageContent() {
 
   const selectSection = useCallback((_categoryId: string, sectionId: string) => {
     setActiveSection(sectionId);
-    // 把当前分区写入 URL，刷新后保持
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("section", sectionId);
-    router.replace(`/admin/settings?${params.toString()}`, { scroll: false });
     setShowMobileSidebar(false);
     contentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-  }, [searchParams, router]);
+  }, []);
 
   // ==================== 重置功能 ====================
 
@@ -470,14 +461,5 @@ function SettingsPageContent() {
       {/* 悬浮保存按钮 */}
       <FloatingSaveButton hasChanges={isDirty} loading={saving} onSave={save} />
     </div>
-  );
-}
-
-// useSearchParams 必须在 Suspense 边界内（Next.js 16 要求），否则 dev 编译卡住
-export default function SettingsPage() {
-  return (
-    <Suspense fallback={<FormFallback />}>
-      <SettingsPageContent />
-    </Suspense>
   );
 }
