@@ -10,7 +10,7 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PROJECT_ROOT"
 export NEXT_TELEMETRY_DISABLED=1
 
-echo "========== [1/4] 构建前端 (next build) =========="
+echo "========== [1/5] 构建前端 (next build) =========="
 cd frontend
 npm ci
 npm run build
@@ -23,14 +23,14 @@ cp -r public .next/standalone/public
 cd "$PROJECT_ROOT"
 
 echo ""
-echo "========== [2/4] 构建后端 (nest build -> dist) =========="
+echo "========== [2/5] 构建后端 (nest build -> dist) =========="
 cd server
 npm ci
 npm run build
 cd "$PROJECT_ROOT"
 
 echo ""
-echo "========== [3/4] 生成部署说明 =========="
+echo "========== [3/5] 生成部署说明 =========="
 cat > 部署说明.md << 'DOC_EOF'
 # Blog 部署说明（本地构建产物）
 
@@ -105,7 +105,7 @@ DOC_EOF
 echo "   已生成 部署说明.md"
 
 echo ""
-echo "========== [4/4] 打包 blog-build.tar.gz =========="
+echo "========== [4/5] 打包 blog-build.tar.gz =========="
 # 前端 standalone（含 traced node_modules + static + public，纯 JS 可移植）
 # 后端 dist（TS 编译产物，可移植）+ package.json + package-lock.json（服务器装依赖用）
 # 部署说明.md（本文件）
@@ -116,6 +116,28 @@ tar -czf blog-build.tar.gz \
   server/package-lock.json \
   部署说明.md
 rm -f 部署说明.md
+
+echo ""
+echo "========== [5/5] 打包自检 =========="
+# 验证关键内容确实在压缩包内（前端 standalone 含 public/static，后端 dist + package 文件）
+check_in_tar() {
+  local count
+  count=$(tar -tzf blog-build.tar.gz | grep -c "$1")
+  if [ "$count" -gt 0 ]; then
+    echo "   ✅ $1 ($count 项)"
+  else
+    echo "   ❌ $1 缺失！打包失败" >&2
+    exit 1
+  fi
+}
+check_in_tar "^frontend/.next/standalone/public/"
+check_in_tar "^frontend/.next/standalone/.next/static/"
+check_in_tar "^frontend/.next/standalone/server.js$"
+check_in_tar "^server/dist/main.js$"
+check_in_tar "^server/package.json$"
+check_in_tar "^server/package-lock.json$"
+check_in_tar "部署说明"
+echo "   自检通过 ✓"
 
 echo ""
 echo "✅ 构建打包完成"
