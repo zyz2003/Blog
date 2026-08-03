@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# Blog Next.js 前端镜像（standalone 输出）
+# anheyu-app Next.js 前端镜像（standalone 输出）
 # 多阶段构建：deps 装依赖 -> builder 执行 next build -> runtime 仅跑 standalone server
 
 # ---- deps：安装依赖 ----
@@ -23,8 +23,8 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=3000
-# 前端通过 API_URL 把 /api、/f、/static 等代理到后端服务（Docker Compose 中后端服务名为 backend）
-ENV API_URL=http://backend:8091
+# 前端通过 API_URL 把 /api、/f、/static 等代理到后端服务（Docker Compose 中后端服务名为 anheyu）
+ENV API_URL=http://anheyu:8091
 
 # standalone 产物：需把 .next/static 与 public 拷到 server.js 同级
 COPY --from=builder /app/.next/standalone ./

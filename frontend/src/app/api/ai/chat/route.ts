@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
   const isDev = process.env.NODE_ENV === "development";
   const backendUrl = isDev
     ? process.env.BACKEND_URL || "http://localhost:8091"
-    : process.env.API_URL || "http://backend:8091";
+    : process.env.API_URL || "http://anheyu:8091";
 
   const backendRes = await fetch(`${backendUrl}/api/ai/chat`, {
     method: "POST",

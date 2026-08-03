@@ -12,7 +12,6 @@ import { Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
-import { refreshAccessToken } from "@/lib/api/client";
 import { useShallow } from "zustand/shallow";
 import { AdminSidebar } from "@/components/admin";
 import { useSiteConfigStore } from "@/store/site-config-store";
@@ -22,16 +21,12 @@ import Link from "next/link";
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const router = useRouter();
-  const { _hasHydrated, accessToken, refreshToken, expires, user, isAdmin, logout, updateAccessToken } = useAuthStore(
+  const { _hasHydrated, accessToken, user, isAdmin } = useAuthStore(
     useShallow(state => ({
       _hasHydrated: state._hasHydrated,
       accessToken: state.accessToken,
-      refreshToken: state.refreshToken,
-      expires: state.expires,
       user: state.user,
       isAdmin: state.isAdmin,
-      logout: state.logout,
-      updateAccessToken: state.updateAccessToken,
     }))
   );
   const isAuthenticated = !!accessToken && !!user;
@@ -43,27 +38,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     setSiteTitle(storeSiteTitle);
   }, [storeSiteTitle]);
 
-  const [validating, setValidating] = useState(false);
-
-  // 页面加载/刷新时，若 access token 已过期，主动刷新。
-  // 用 store 的 refreshToken（绕开 tokenManager getter 的设置时机竞态），
-  // 刷新后直接 updateAccessToken 更新 store（绕开 tokenManager updater 竞态）。
-  useEffect(() => {
-    if (!_hasHydrated) return;
-    if (accessToken && expires && Date.now() >= Number(expires) && refreshToken) {
-      setValidating(true);
-      refreshAccessToken(refreshToken)
-        .then(({ accessToken: newToken, expires: newExpires }) => {
-          updateAccessToken(newToken, newExpires);
-        })
-        .catch(() => {
-          logout();
-          router.replace("/login");
-        })
-        .finally(() => setValidating(false));
-    }
-  }, [_hasHydrated, accessToken, expires, refreshToken, logout, router, updateAccessToken]);
-
   useEffect(() => {
     if (!_hasHydrated) return;
     if (!isAuthenticated) {
@@ -72,15 +46,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       router.replace("/");
     }
   }, [_hasHydrated, isAuthenticated, hasAdminAccess, router]);
-
-  // 正在主动刷新 token 时不加载 admin 界面，避免 stale 闪烁
-  if (validating) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-muted/30">
-        <div className="animate-pulse text-muted-foreground">正在验证登录状态...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="admin-layout h-screen flex flex-col overflow-hidden bg-muted/30">

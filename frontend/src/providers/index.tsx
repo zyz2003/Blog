@@ -10,7 +10,6 @@
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import type { ReactNode } from "react";
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useSiteConfigStore } from "@/store/site-config-store";
 import { subscribeSiteConfigUpdates } from "@/store/site-config-store";
 import { useAuthStore } from "@/store/auth-store";
@@ -54,7 +53,6 @@ function AuthTokenInitializer({ children }: { children: ReactNode }) {
   const updateAccessToken = useAuthStore(state => state.updateAccessToken);
   const logout = useAuthStore(state => state.logout);
   const hasHydrated = useAuthStore(state => state._hasHydrated);
-  const router = useRouter();
 
   useEffect(() => {
     // 等待 Zustand 水合完成后再初始化
@@ -75,19 +73,15 @@ function AuthTokenInitializer({ children }: { children: ReactNode }) {
   useEffect(() => {
     const handleUnauthorized = () => {
       logout();
+      // 可以在这里显示登录弹窗或跳转到登录页
       console.warn("[Auth] 登录已过期，请重新登录");
-      // 需登录的页面（admin/user-center）主动跳登录页，不靠路由守卫间接跳
-      const path = window.location.pathname;
-      if (path.startsWith("/admin") || path.startsWith("/user-center")) {
-        router.replace("/login");
-      }
     };
 
     window.addEventListener("auth:unauthorized", handleUnauthorized);
     return () => {
       window.removeEventListener("auth:unauthorized", handleUnauthorized);
     };
-  }, [logout, router]);
+  }, [logout]);
 
   return <>{children}</>;
 }

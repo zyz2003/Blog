@@ -253,8 +253,12 @@ class AuthExpiredError extends Error {
   }
 }
 
-// 核心刷新逻辑：用给定 refreshToken 调刷新接口，返回新 token 数据
-async function doRefresh(refreshToken: string): Promise<{ accessToken: string; expires: string }> {
+async function handleRefreshToken(): Promise<string> {
+  const refreshToken = tokenManager.getRefreshToken();
+  if (!refreshToken) {
+    throw new AuthExpiredError("登录已过期，请重新登录");
+  }
+
   const response = await axios.post<ApiResponse<RefreshTokenResponseData>>(
     buildApiUrl("/api/auth/refresh-token"),
     { refreshToken },
@@ -271,18 +275,8 @@ async function doRefresh(refreshToken: string): Promise<{ accessToken: string; e
     throw new Error("刷新 token 响应缺少必要字段");
   }
 
-  return { accessToken: data.accessToken, expires: data.expires };
-}
-
-// 拦截器路径：从 tokenManager 取 refreshToken，刷新，更新 tokenManager，返回 accessToken
-async function handleRefreshToken(): Promise<string> {
-  const refreshToken = tokenManager.getRefreshToken();
-  if (!refreshToken) {
-    throw new AuthExpiredError("登录已过期，请重新登录");
-  }
-  const { accessToken, expires } = await doRefresh(refreshToken);
-  tokenManager.updateToken(accessToken, expires);
-  return accessToken;
+  tokenManager.updateToken(data.accessToken, data.expires);
+  return data.accessToken;
 }
 
 /**
@@ -505,17 +499,6 @@ export const apiClient = new ApiClient(axiosInstance);
  * 导出 axios 实例（用于特殊场景）
  */
 export { axiosInstance, AuthExpiredError };
-
-/**
- * 主动刷新 access token（页面加载时若 token 过期可调用）。
- * 传入 refreshToken（从 store 取），绕开 tokenManager getter 的设置时机竞态。
- * 成功返回 { accessToken, expires }；失败抛错。调用方需自行更新 store。
- */
-export async function refreshAccessToken(
-  refreshToken: string,
-): Promise<{ accessToken: string; expires: string }> {
-  return doRefresh(refreshToken);
-}
 
 /**
  * API 错误类型

@@ -12,10 +12,10 @@ import {
   resolveSeoSiteInfo,
 } from "@/lib/seo";
 
-// force-dynamic：每次请求重新渲染根布局，读取最新站点配置。
-// 注：曾在生产用 revalidate=60(ISR) 优化首屏，但 dev 模式下根布局 ISR + 客户端
-// 动态 hook(usePathname/useSearchParams) 冲突导致 Turbopack 编译卡死(占满 CPU/内存)。
-// 生产若要 ISR，改用按页 revalidate（不放根布局），避免与动态 hook 冲突。
+// Next.js 16 默认会尝试将 root layout 静态化（即使 fetch 带 cache:"no-store"，
+// 也只是跳过 Data Cache，不会让整个路由 shell 转为 dynamic）。
+// 自定义 HTML/CSS/JS、站点名、logo 等必须在 admin 保存后立即生效，
+// 所以显式把根布局声明为 dynamic，使每次请求都重新读取最新站点配置。
 export const dynamic = "force-dynamic";
 
 /**
