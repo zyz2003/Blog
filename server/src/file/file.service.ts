@@ -179,7 +179,7 @@ export class FileService {
     }
 
     return {
-      filePath: entity.source,
+      filePath: entity.source.replace(/\\/g, '/'),
       fileName: file.name,
       mimeType: entity.mimeType || inferMimeType(file.name),
       size: entity.size,
@@ -323,7 +323,7 @@ export class FileService {
     }
 
     return {
-      filePath: entity.source,
+      filePath: entity.source.replace(/\\/g, '/'),
       mimeType: entity.mimeType || inferMimeType(file.name),
     };
   }

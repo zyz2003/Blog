@@ -145,6 +145,10 @@ export class FileRepository {
       .select()
       .from(entities)
       .where(eq(entities.id, id));
+    // 归一化路径分隔符：Windows 存的反斜杠在 Linux 上读不到，统一用 /
+    if (entity && entity.source) {
+      entity.source = entity.source.replace(/\\/g, '/');
+    }
     return entity ?? null;
   }
 

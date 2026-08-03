@@ -158,8 +158,9 @@ export class DirectLinkService {
       .where(eq(storagePolicies.id, entityData.policyId));
 
     // For local storage per D-108
+    // 归一化路径分隔符：Windows 存的反斜杠在 Linux 上读不到，统一用 /
     return {
-      filePath: entityData.source,
+      filePath: entityData.source.replace(/\\/g, '/'),
       fileName: link.fileName || fileName,
       mimeType: entityData.mimeType || 'application/octet-stream',
       size: entityData.size,
