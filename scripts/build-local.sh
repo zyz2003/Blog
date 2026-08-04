@@ -136,7 +136,8 @@ check_in_tar "^frontend/.next/standalone/server.js$"
 check_in_tar "^server/dist/main.js$"
 check_in_tar "^server/package.json$"
 check_in_tar "^server/package-lock.json$"
-check_in_tar "部署说明"
+# 部署说明.md 用根目录 .md 匹配（中文文件名在部分系统 tar 输出中编码不一致，直接 grep 中文会误报）
+check_in_tar "^[^/]*\.md$"
 echo "   自检通过 ✓"
 
 echo ""
