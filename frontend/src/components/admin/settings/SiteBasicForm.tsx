@@ -19,6 +19,8 @@ import {
   KEY_POLICE_RECORD_ICON,
   KEY_ENABLE_REGISTRATION,
   KEY_DEFAULT_THEME_MODE,
+  KEY_THEME_AUTO_LIGHT_HOUR,
+  KEY_THEME_AUTO_DARK_HOUR,
   KEY_ABOUT_LINK,
   KEY_DEFAULT_THUMB_PARAM,
   KEY_DEFAULT_BIG_PARAM,
@@ -122,11 +124,37 @@ export function SiteBasicForm({ values, onChange, loading }: SiteBasicFormProps)
           value={values[KEY_DEFAULT_THEME_MODE]}
           onValueChange={v => onChange(KEY_DEFAULT_THEME_MODE, v)}
           placeholder="请选择默认主题"
-          description="新访客首次访问时的默认主题"
+          description="新访客首次访问时的默认主题。选「自动」则按下方时间节点自动切换深浅色"
         >
           <FormSelectItem key="light">浅色模式</FormSelectItem>
           <FormSelectItem key="dark">深色模式</FormSelectItem>
+          <FormSelectItem key="auto">自动（按时间）</FormSelectItem>
         </FormSelect>
+
+        {values[KEY_DEFAULT_THEME_MODE] === "auto" && (
+          <SettingsFieldGroup cols={2}>
+            <FormSelect
+              label="浅色开始时间"
+              value={values[KEY_THEME_AUTO_LIGHT_HOUR] || "8"}
+              onValueChange={v => onChange(KEY_THEME_AUTO_LIGHT_HOUR, v)}
+              description="到此时间自动切换为浅色"
+            >
+              {Array.from({ length: 24 }, (_, i) => (
+                <FormSelectItem key={String(i)}>{String(i).padStart(2, "0")}:00</FormSelectItem>
+              ))}
+            </FormSelect>
+            <FormSelect
+              label="深色开始时间"
+              value={values[KEY_THEME_AUTO_DARK_HOUR] || "20"}
+              onValueChange={v => onChange(KEY_THEME_AUTO_DARK_HOUR, v)}
+              description="到此时间自动切换为深色"
+            >
+              {Array.from({ length: 24 }, (_, i) => (
+                <FormSelectItem key={String(i)}>{String(i).padStart(2, "0")}:00</FormSelectItem>
+              ))}
+            </FormSelect>
+          </SettingsFieldGroup>
+        )}
 
         <FormMonacoEditor
           label="站点公告（HTML）"

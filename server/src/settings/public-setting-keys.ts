@@ -39,6 +39,8 @@ export const PUBLIC_SETTING_KEYS = new Set([
   'APPEARANCE_SKIN',
   'APPEARANCE_TOKENS',
   'DEFAULT_THEME_MODE',
+  'theme.auto.light_hour',
+  'theme.auto.dark_hour',
 
   // ─── Announcements & custom ───
   'SITE_ANNOUNCEMENT',

@@ -20,6 +20,7 @@ import { HeroUIProviderWrapper } from "./heroui-provider";
 import { QueryProvider } from "./query-provider";
 import { GlobalLoading } from "@/components/common/GlobalLoading";
 import { DefaultThemeSync } from "./DefaultThemeSync";
+import { AutoThemeSwitcher } from "./AutoThemeSwitcher";
 import { SiteThemeColorsSync } from "./SiteThemeColorsSync";
 import { ReducedMotionSync } from "./ReducedMotionSync";
 import { VisitStatisticsTracker } from "./visit-statistics-tracker";
@@ -133,6 +134,7 @@ export function Providers({ children }: ProvidersProps) {
             <SiteConfigLoader>
               <SiteConfigSyncListener />
               <DefaultThemeSync />
+              <AutoThemeSwitcher />
               <SiteThemeColorsSync />
               <ReducedMotionSync />
               <FontLoader />

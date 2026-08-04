@@ -445,6 +445,8 @@ const categoryDescriptors: Record<SettingCategoryId, SettingDescriptor[]> = {
     { backendKey: K.KEY_POLICE_RECORD_ICON, type: "string" },
     { backendKey: K.KEY_ENABLE_REGISTRATION, type: "boolean", defaultValue: "false" },
     { backendKey: K.KEY_DEFAULT_THEME_MODE, type: "string", defaultValue: "light" },
+    { backendKey: K.KEY_THEME_AUTO_LIGHT_HOUR, type: "string", defaultValue: "8" },
+    { backendKey: K.KEY_THEME_AUTO_DARK_HOUR, type: "string", defaultValue: "20" },
     { backendKey: K.KEY_ABOUT_LINK, type: "string" },
     { backendKey: K.KEY_DEFAULT_THUMB_PARAM, type: "string" },
     { backendKey: K.KEY_DEFAULT_BIG_PARAM, type: "string" },
