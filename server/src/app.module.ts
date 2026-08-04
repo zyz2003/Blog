@@ -20,6 +20,7 @@ import { FileModule } from './file/file.module';
 import { StoragePolicyModule } from './storage-policy/storage-policy.module';
 import { ThumbnailModule } from './thumbnail/thumbnail.module';
 import { DirectLinkModule } from './direct-link/direct-link.module';
+import { ImageLibraryModule } from './image-library/image-library.module';
 import { CommentModule } from './comment/comment.module';
 import { SearchModule } from './search/search.module';
 import { WeatherModule } from './weather/weather.module';
@@ -69,6 +70,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     FileModule,
     ThumbnailModule,
     DirectLinkModule,
+    ImageLibraryModule,
     // Static file serving for uploaded files per D-114
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', '..', 'data', 'uploads'),

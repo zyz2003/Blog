@@ -25,6 +25,7 @@ import {
   Upload,
   TextQuote,
   Sparkles,
+  FolderOpen,
 } from "lucide-react";
 import {
   addToast,
@@ -50,6 +51,7 @@ import type { ArticleMeta } from "./use-article-meta";
 import { clipSummaryPlainText, SUMMARY_AUTO_MAX_CHARS } from "@/lib/article-summary";
 import { aiApi } from "@/lib/api/ai";
 import { SeoScorePanel } from "./SeoScorePanel";
+import { ImagePickerDialog } from "@/components/common/ImagePickerDialog";
 
 // ═══════════════════════════════════════════
 // Props & 常量
@@ -800,6 +802,7 @@ function SettingsContent({
   const [isUploadingTopImg, setIsUploadingTopImg] = useState(false);
   const coverImgInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [coverPickerOpen, setCoverPickerOpen] = useState(false);
   const [isExtractingColor, setIsExtractingColor] = useState(false);
   const [fillSummaryDialogOpen, setFillSummaryDialogOpen] = useState(false);
   const [pendingSummaryClip, setPendingSummaryClip] = useState<string | null>(null);
@@ -1053,6 +1056,19 @@ function SettingsContent({
             >
               {isUploadingCover ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
             </button>
+            <button
+              type="button"
+              className="sb-upload-btn"
+              onClick={() => setCoverPickerOpen(true)}
+              title="从文件库选择"
+            >
+              <FolderOpen className="w-3.5 h-3.5" />
+            </button>
+            <ImagePickerDialog
+              isOpen={coverPickerOpen}
+              onClose={() => setCoverPickerOpen(false)}
+              onSelect={url => onUpdateField("cover_url", url)}
+            />
             <input
               ref={coverImgInputRef}
               type="file"

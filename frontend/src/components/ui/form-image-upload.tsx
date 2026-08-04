@@ -3,9 +3,10 @@
 import * as React from "react";
 import { Input, Button } from "@heroui/react";
 import { cn } from "@/lib/utils";
-import { Upload, Loader2 } from "lucide-react";
+import { Upload, Loader2, FolderOpen } from "lucide-react";
 import { postManagementApi } from "@/lib/api/post-management";
 import { addToast } from "@heroui/react";
+import { ImagePickerDialog } from "@/components/common/ImagePickerDialog";
 
 export interface FormImageUploadProps {
   /** 标签 */
@@ -38,6 +39,8 @@ export interface FormImageUploadProps {
   disableImageStyle?: boolean;
   /** 是否必填（label 后显示红色星号） */
   isRequired?: boolean;
+  /** 是否显示"从文件库选择"按钮（默认 true，出问题设 false 隔离） */
+  enablePicker?: boolean;
 }
 
 const FormImageUpload = React.forwardRef<HTMLDivElement, FormImageUploadProps>(
@@ -58,12 +61,14 @@ const FormImageUpload = React.forwardRef<HTMLDivElement, FormImageUploadProps>(
       accept = "image/*",
       disableImageStyle,
       isRequired,
+      enablePicker,
     },
     ref
   ) => {
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const [imgError, setImgError] = React.useState(false);
     const [uploading, setUploading] = React.useState(false);
+    const [pickerOpen, setPickerOpen] = React.useState(false);
 
     const sizeMap = {
       sm: { maxW: 56, maxH: 56 },
@@ -187,6 +192,20 @@ const FormImageUpload = React.forwardRef<HTMLDivElement, FormImageUploadProps>(
             <Upload className="w-4 h-4" />
           </Button>
 
+          {/* 从文件库选择按钮 */}
+          {enablePicker !== false && (
+            <Button
+              isIconOnly
+              variant="flat"
+              aria-label="从文件库选择"
+              onPress={() => setPickerOpen(true)}
+              className="shrink-0 rounded-xl"
+              size="md"
+            >
+              <FolderOpen className="w-4 h-4" />
+            </Button>
+          )}
+
           <input ref={fileInputRef} type="file" accept={accept} onChange={handleFileChange} className="hidden" />
         </div>
 
@@ -232,6 +251,14 @@ const FormImageUpload = React.forwardRef<HTMLDivElement, FormImageUploadProps>(
               />
             </div>
           ))}
+
+        {enablePicker !== false && (
+          <ImagePickerDialog
+            isOpen={pickerOpen}
+            onClose={() => setPickerOpen(false)}
+            onSelect={(url) => onValueChange?.(url)}
+          />
+        )}
       </div>
     );
   }
