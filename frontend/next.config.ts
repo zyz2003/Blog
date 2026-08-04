@@ -18,6 +18,11 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
+  // images.unoptimized=true 时运行时不需要 sharp 图片优化，
+  // 排除其平台 binary 避免 standalone 膨胀（Linux @img/sharp-linux-x64 达 33M）
+  outputFileTracingExcludes: {
+    "/": ["./node_modules/@img/**/*", "./node_modules/sharp/**/*"],
+  },
   experimental: {
     staleTimes: {
       dynamic: 30,
