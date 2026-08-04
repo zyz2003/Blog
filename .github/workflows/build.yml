@@ -32,6 +32,17 @@ jobs:
       - name: Build & Package
         run: bash scripts/build-local.sh
 
+      # Next.js 16 Turbopack 的 outputFileTracingExcludes 不生效，
+      # @img/sharp-linux-x64（33M）被打进 standalone。项目设了 unoptimized=true
+      # 不需要 sharp，构建后删除平台 binary 省体积。
+      - name: Strip sharp platform binaries
+        run: |
+          mkdir -p _strip
+          tar -xzf blog-build.tar.gz -C _strip
+          rm -rf _strip/frontend/.next/standalone/node_modules/@img
+          tar -czf blog-build.tar.gz -C _strip .
+          rm -rf _strip
+
       - name: Upload blog-build.tar.gz
         uses: actions/upload-artifact@v4
         with:
