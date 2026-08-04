@@ -1,0 +1,84 @@
+name: Build & Package
+
+# push 到 master 自动构建产物；手动触发时可勾选"部署到服务器"
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: '构建后自动部署到服务器'
+        type: boolean
+        default: false
+
+jobs:
+  # ── 构建 + 打包 ──
+  build:
+    name: 构建并打包
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: |
+            frontend/package-lock.json
+            server/package-lock.json
+
+      - name: Build & Package
+        run: bash scripts/build-local.sh
+
+      - name: Upload blog-build.tar.gz
+        uses: actions/upload-artifact@v4
+        with:
+          name: blog-build
+          path: blog-build.tar.gz
+          retention-days: 30
+          if-no-files-found: error
+
+  # ── 预留：自动部署到服务器 ──
+  # 默认不执行。手动触发 workflow 并勾选 deploy 时才运行。
+  #
+  # 启用前需在 GitHub 仓库 Settings -> Secrets and variables -> Actions 配置：
+  #   SSH_HOST      服务器 IP/域名
+  #   SSH_USER      SSH 用户名（如 root 或 zhangyazhou）
+  #   SSH_KEY       SSH 私钥完整内容（cat ~/.ssh/id_xxx 的输出）
+  #   SSH_PORT      SSH 端口（可选，默认 22）
+  #   DEPLOY_PATH   部署目录（如 /home/zhangyazhou/blog-new）
+  deploy:
+    name: 部署到服务器
+    needs: build
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: blog-build
+
+      - name: 上传压缩包到服务器
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          source: blog-build.tar.gz
+          target: ${{ secrets.DEPLOY_PATH }}
+
+      - name: 服务器端解压 + 装依赖
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH }}
+            tar -xzf blog-build.tar.gz
+            cd server && npm ci --omit=dev && cd ..
+            echo "✅ 部署完成，请重启服务（pm2 reload blog 或 systemctl restart blog）"
