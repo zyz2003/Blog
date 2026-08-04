@@ -71,7 +71,9 @@ export class ThumbnailService implements OnModuleInit {
       const outputPath = path.join(THUMBNAIL_DIR, `${publicID}.${THUMBNAIL_FORMAT}`);
 
       // Use sharp to resize
-      await sharp(entitySource)
+      // 用 buffer 读取再传给 sharp，避免中文路径在 Windows 上读取失败
+      const imageBuffer = await fs.readFile(entitySource);
+      await sharp(imageBuffer)
         .resize(THUMBNAIL_MAX_WIDTH, THUMBNAIL_MAX_HEIGHT, {
           fit: 'inside',
           withoutEnlargement: true,

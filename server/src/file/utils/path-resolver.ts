@@ -63,6 +63,7 @@ export function inferMimeType(fileName: string): string {
     gif: 'image/gif',
     webp: 'image/webp',
     svg: 'image/svg+xml',
+    ico: 'image/x-icon',
     pdf: 'application/pdf',
     mp4: 'video/mp4',
     mov: 'video/quicktime',

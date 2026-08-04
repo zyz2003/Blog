@@ -13,7 +13,7 @@ import { ErrorCodes } from '../common/constants/error-codes';
 import * as fs from 'fs';
 import * as path from 'path';
 
-const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'];
+const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico'];
 const THUMBNAIL_DIR = 'data/uploads/thumbnails';
 const THUMBNAIL_FORMAT = 'webp';
 

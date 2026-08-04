@@ -59,15 +59,20 @@ export function FileThumbnail({ file }: FileThumbnailProps) {
           if (timeoutRef.current) clearTimeout(timeoutRef.current);
           timeoutRef.current = window.setTimeout(fetchPreviewInner, POLLING_INTERVAL);
         } else {
-          setImageUrl(null);
+          // 缩略图不可用（sharp 不支持 ico 等），图片文件回退到 inline 原图
+          const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+          const isImage = ["jpg", "jpeg", "png", "webp", "gif", "svg", "bmp", "ico", "heic", "heif", "tiff", "tif", "avif"].includes(ext);
+          setImageUrl(isImage ? `/api/image-library/img/${file.id}` : null);
           setIsLoading(false);
         }
       } catch {
-        setImageUrl(null);
+        const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+        const isImage = ["jpg", "jpeg", "png", "webp", "gif", "svg", "bmp", "ico", "heic", "heif", "tiff", "tif", "avif"].includes(ext);
+        setImageUrl(isImage ? `/api/image-library/img/${file.id}` : null);
         setIsLoading(false);
       }
     },
-    [file.id]
+    [file.id, file.name]
   );
 
   const startFetchingPreview = useCallback(async () => {

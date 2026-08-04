@@ -94,7 +94,7 @@ export async function getFileSize(filePath: string): Promise<number> {
 export function isThumbnailableExtension(fileName: string): boolean {
   const ext = fileName.split('.').pop()?.toLowerCase() || '';
   const thumbnailable = new Set([
-    'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg',
+    'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'ico',
     'mp4', 'mov', 'avi', 'mkv', 'webm', 'pdf',
   ]);
   return thumbnailable.has(ext);
