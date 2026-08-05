@@ -40,12 +40,18 @@ export class ImageLibraryController {
     const { filePath, fileName, mimeType } =
       await this.service.serveImage(publicID);
 
+    if (!fs.existsSync(filePath)) {
+      res.status(404).json({ code: 404, message: `文件不存在: ${filePath}`, data: null });
+      return;
+    }
+
     res.setHeader('Content-Type', mimeType);
     res.setHeader('Content-Disposition', 'inline');
     const stream = fs.createReadStream(filePath);
-    stream.on('error', () => {
+    stream.on('error', (err: any) => {
+      console.error(`[ImageLibrary] serveImage stream error: ${filePath}`, err?.message);
       if (!res.headersSent) {
-        res.status(404).json({ code: 404, message: '文件不存在', data: null });
+        res.status(404).json({ code: 404, message: '文件读取失败', data: null });
       } else {
         res.end();
       }
@@ -62,13 +68,19 @@ export class ImageLibraryController {
     const { filePath, mimeType } =
       await this.service.serveThumbnail(publicID);
 
+    if (!fs.existsSync(filePath)) {
+      res.status(404).json({ code: 404, message: `文件不存在: ${filePath}`, data: null });
+      return;
+    }
+
     res.setHeader('Content-Type', mimeType);
     res.setHeader('Content-Disposition', 'inline');
     res.setHeader('Cache-Control', 'public, max-age=86400');
     const stream = fs.createReadStream(filePath);
-    stream.on('error', () => {
+    stream.on('error', (err: any) => {
+      console.error(`[ImageLibrary] serveThumbnail stream error: ${filePath}`, err?.message);
       if (!res.headersSent) {
-        res.status(404).json({ code: 404, message: '缩略图不存在', data: null });
+        res.status(404).json({ code: 404, message: '文件读取失败', data: null });
       } else {
         res.end();
       }

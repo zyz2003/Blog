@@ -92,7 +92,17 @@ export function ImagePickerDialog({
   const hasMore = images.length < total;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="4xl" scrollBehavior="inside">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="4xl"
+      scrollBehavior="inside"
+      classNames={{
+        wrapper: "!z-[99999]",
+        backdrop: "!z-[99999] !bg-black/60 !opacity-100",
+        base: "!bg-card",
+      }}
+    >
       <ModalContent>
         <ModalHeader>从文件库选择图片</ModalHeader>
         <ModalBody className="pb-6">

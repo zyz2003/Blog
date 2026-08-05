@@ -10,6 +10,7 @@ import {
 } from '../common/utils/sqids.util';
 import { isNull, eq, and, desc, sql, like, or } from 'drizzle-orm';
 import { ErrorCodes } from '../common/constants/error-codes';
+import { inferMimeType } from '../file/utils/path-resolver';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -75,11 +76,12 @@ export class ImageLibraryService {
 
   /**
    * 获取原图文件路径（inline 显示用）。复用 FileService.downloadFile。
+   * 按文件名重新推断 mimeType，避免 multer 存的 octet-stream 等错误值。
    */
   async serveImage(publicID: string) {
     const { filePath, fileName, mimeType } =
       await this.fileService.downloadFile(publicID);
-    return { filePath, fileName, mimeType };
+    return { filePath, fileName, mimeType: inferMimeType(fileName) || mimeType };
   }
 
   /**
@@ -106,10 +108,10 @@ export class ImageLibraryService {
       await fs.promises.access(thumbnailPath);
       return { filePath: thumbnailPath, mimeType: 'image/webp' };
     } catch {
-      // 缩略图不存在，回退到原图
-      const { filePath, mimeType } =
+      // 缩略图不存在，回退到原图（按文件名推断 mimeType）
+      const { filePath, fileName, mimeType } =
         await this.fileService.downloadFile(publicID);
-      return { filePath, mimeType };
+      return { filePath, mimeType: inferMimeType(fileName) || mimeType };
     }
   }
 }

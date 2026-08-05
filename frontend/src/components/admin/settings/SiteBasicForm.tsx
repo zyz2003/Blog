@@ -140,7 +140,9 @@ export function SiteBasicForm({ values, onChange, loading }: SiteBasicFormProps)
               description="到此时间自动切换为浅色"
             >
               {Array.from({ length: 24 }, (_, i) => (
-                <FormSelectItem key={String(i)}>{String(i).padStart(2, "0")}:00</FormSelectItem>
+                <FormSelectItem key={String(i)} textValue={`${String(i).padStart(2, "0")}:00`}>
+                  {String(i).padStart(2, "0")}:00
+                </FormSelectItem>
               ))}
             </FormSelect>
             <FormSelect
@@ -150,7 +152,9 @@ export function SiteBasicForm({ values, onChange, loading }: SiteBasicFormProps)
               description="到此时间自动切换为深色"
             >
               {Array.from({ length: 24 }, (_, i) => (
-                <FormSelectItem key={String(i)}>{String(i).padStart(2, "0")}:00</FormSelectItem>
+                <FormSelectItem key={String(i)} textValue={`${String(i).padStart(2, "0")}:00`}>
+                  {String(i).padStart(2, "0")}:00
+                </FormSelectItem>
               ))}
             </FormSelect>
           </SettingsFieldGroup>

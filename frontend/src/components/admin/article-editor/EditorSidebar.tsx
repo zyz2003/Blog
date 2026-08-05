@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { DatePicker } from "@heroui/date-picker";
 import { AdminDatePickerLocale } from "@/components/admin/AdminDatePickerLocale";
 import { parseAbsoluteToLocal } from "@internationalized/date";
@@ -1064,11 +1065,6 @@ function SettingsContent({
             >
               <FolderOpen className="w-3.5 h-3.5" />
             </button>
-            <ImagePickerDialog
-              isOpen={coverPickerOpen}
-              onClose={() => setCoverPickerOpen(false)}
-              onSelect={url => onUpdateField("cover_url", url)}
-            />
             <input
               ref={coverImgInputRef}
               type="file"
@@ -1081,6 +1077,14 @@ function SettingsContent({
               }}
             />
           </div>
+          {typeof window !== "undefined" && createPortal(
+            <ImagePickerDialog
+              isOpen={coverPickerOpen}
+              onClose={() => setCoverPickerOpen(false)}
+              onSelect={url => onUpdateField("cover_url", url)}
+            />,
+            document.body
+          )}
         </div>
 
         {/* 文章主色 */}
