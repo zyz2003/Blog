@@ -23,6 +23,7 @@ import {
   EntityType,
 } from '../common/utils/sqids.util';
 import { getUploadBaseDir } from '../common/utils/upload-path';
+import { findOrCreateParentPath } from '../file/utils/parent-path';
 import { ErrorCodes } from '../common/constants/error-codes';
 import { users } from '../database/schemas/user.schema';
 import { userGroups } from '../database/schemas/user-group.schema';
@@ -1075,7 +1076,15 @@ export class CommentService {
     const targetPath = path.join(targetDir, uniqueName);
     await fs.writeFile(targetPath, file.buffer);
 
-    // 5. Create entity record (matching ArticleController pattern)
+    // 5. Create parent directory record (so file manager can navigate into comments/)
+    const parentId = await findOrCreateParentPath(
+      `/comments/${uniqueName}`,
+      ownerId,
+      policy.id,
+      this.db,
+    );
+
+    // 6. Create entity record (matching ArticleController pattern)
     const { entities } = await import('../database/schemas/entity.schema');
     const [entity] = await this.db
       .insert(entities)
@@ -1089,12 +1098,13 @@ export class CommentService {
       })
       .returning();
 
-    // 6. Create file record
+    // 7. Create file record (with parentId for file manager navigation)
     const { files } = await import('../database/schemas/file.schema');
     const [fileRecord] = await this.db
       .insert(files)
       .values({
         ownerId,
+        parentId,
         name: file.originalname,
         size: file.size,
         type: 1, // file

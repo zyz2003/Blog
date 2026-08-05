@@ -25,6 +25,7 @@ import { StoragePolicyService } from '../storage-policy/storage-policy.service';
 import { ThumbnailService } from '../thumbnail/thumbnail.service';
 import { generatePublicID } from '../common/utils/sqids.util';
 import { getUploadBaseDir, getUploadSubdir } from '../common/utils/upload-path';
+import { findOrCreateParentPath } from '../file/utils/parent-path';
 import { files } from '../database/schemas/file.schema';
 import { entities } from '../database/schemas/entity.schema';
 import { DRIZZLE } from '../database/database.module';
@@ -128,7 +129,16 @@ export class ArticleController {
     const targetPath = path.join(targetDir, uniqueName);
     await fs.writeFile(targetPath, file.buffer);
 
-    // 5. Create entity record
+    // 5. Create parent directory records (so file manager can navigate into articles/ etc.)
+    const subdir = getUploadSubdir(purpose);
+    const parentId = await findOrCreateParentPath(
+      `/${subdir}/${uniqueName}`,
+      ownerId,
+      policy.id,
+      this.db,
+    );
+
+    // 6. Create entity record
     const [entity] = await this.db
       .insert(entities)
       .values({
@@ -141,11 +151,12 @@ export class ArticleController {
       })
       .returning();
 
-    // 6. Create file record
+    // 7. Create file record (with parentId for file manager navigation)
     const [fileRecord] = await this.db
       .insert(files)
       .values({
         ownerId,
+        parentId,
         name: file.originalname,
         size: file.size,
         type: 1, // file
