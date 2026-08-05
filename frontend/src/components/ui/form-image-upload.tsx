@@ -37,6 +37,8 @@ export interface FormImageUploadProps {
   accept?: string;
   /** 上传后是否跳过文章图片样式后缀 */
   disableImageStyle?: boolean;
+  /** 落盘用途：article/album/logo/avatar/config（决定存储目录） */
+  purpose?: string;
   /** 是否必填（label 后显示红色星号） */
   isRequired?: boolean;
   /** 是否显示"从文件库选择"按钮（默认 true，出问题设 false 隔离） */
@@ -60,6 +62,7 @@ const FormImageUpload = React.forwardRef<HTMLDivElement, FormImageUploadProps>(
       className,
       accept = "image/*",
       disableImageStyle,
+      purpose,
       isRequired,
       enablePicker,
     },
@@ -106,7 +109,7 @@ const FormImageUpload = React.forwardRef<HTMLDivElement, FormImageUploadProps>(
         }
         setUploading(true);
         try {
-          const url = await postManagementApi.uploadArticleImage(file, { disableImageStyle });
+          const url = await postManagementApi.uploadArticleImage(file, { disableImageStyle, purpose });
           onValueChange?.(url);
           addToast({ title: "上传成功", color: "success" });
         } catch (err) {

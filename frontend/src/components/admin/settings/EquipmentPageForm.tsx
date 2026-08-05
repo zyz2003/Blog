@@ -35,6 +35,7 @@ export function EquipmentPageForm({ values, onChange, loading }: EquipmentPageFo
         <div className="rounded-xl border border-border/60 bg-muted/20 p-5 shadow-[0_0_0_0.5px_rgba(0,0,0,0.04)] dark:shadow-none">
           <SettingsFieldGroup cols={2}>
             <FormImageUpload
+          purpose="config"
               label="背景图"
               value={values[KEY_EQUIPMENT_BANNER_BG]}
               onValueChange={v => onChange(KEY_EQUIPMENT_BANNER_BG, v)}

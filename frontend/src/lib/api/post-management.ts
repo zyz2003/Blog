@@ -22,6 +22,8 @@ import { toSameOriginMediaUrl } from "@/utils/same-origin-media-url";
 
 interface UploadArticleImageOptions {
   disableImageStyle?: boolean;
+  /** 落盘用途：article/album/logo/avatar/config */
+  purpose?: string;
 }
 
 export const postManagementApi = {
@@ -146,6 +148,9 @@ export const postManagementApi = {
     formData.append("file", file);
     if (options.disableImageStyle) {
       formData.append("skip_image_style", "true");
+    }
+    if (options.purpose) {
+      formData.append("purpose", options.purpose);
     }
 
     const response = await apiClient.post<{ url: string; file_id: string }>("/api/articles/upload", formData, {

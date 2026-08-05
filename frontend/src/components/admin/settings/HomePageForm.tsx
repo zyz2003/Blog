@@ -320,6 +320,7 @@ export function HomePageForm({ values, onChange, loading }: HomePageFormProps) {
 
             <SettingsFieldGroup cols={2}>
               <FormImageUpload
+          purpose="config"
                 label="工作状态图片"
                 value={values[KEY_FOOTER_RUNTIME_WORK_IMG]}
                 onValueChange={v => onChange(KEY_FOOTER_RUNTIME_WORK_IMG, v)}
@@ -335,6 +336,7 @@ export function HomePageForm({ values, onChange, loading }: HomePageFormProps) {
 
             <SettingsFieldGroup cols={2}>
               <FormImageUpload
+          purpose="config"
                 label="休息状态图片"
                 value={values[KEY_FOOTER_RUNTIME_OFFDUTY_IMG]}
                 onValueChange={v => onChange(KEY_FOOTER_RUNTIME_OFFDUTY_IMG, v)}
@@ -360,6 +362,7 @@ export function HomePageForm({ values, onChange, loading }: HomePageFormProps) {
       {/* 社交与链接 */}
       <SettingsSection title="社交与链接">
         <FormImageUpload
+          purpose="config"
           label="社交栏中心图片"
           value={values[KEY_FOOTER_SOCIALBAR_CENTER_IMG]}
           onValueChange={v => onChange(KEY_FOOTER_SOCIALBAR_CENTER_IMG, v)}

@@ -193,6 +193,7 @@ export function AboutPageForm({ values, onChange, loading }: AboutPageFormProps)
           onValueChange={v => onChange(KEY_ABOUT_DESCRIPTION, v)}
         />
         <FormImageUpload
+          purpose="config"
           label="头像"
           value={values[KEY_ABOUT_AVATAR_IMG]}
           onValueChange={v => onChange(KEY_ABOUT_AVATAR_IMG, v)}
@@ -396,12 +397,14 @@ export function AboutPageForm({ values, onChange, loading }: AboutPageFormProps)
               />
             </SettingsFieldGroup>
             <FormImageUpload
+          purpose="config"
               label="地图背景图（亮色）"
               value={String(mapObject.background ?? "")}
               onValueChange={v => onChange(KEY_ABOUT_MAP, patchObjectJsonValue(values[KEY_ABOUT_MAP], "background", v))}
               placeholder="请输入地图背景图 URL"
             />
             <FormImageUpload
+          purpose="config"
               label="地图背景图（暗色）"
               value={String(mapObject.backgroundDark ?? "")}
               onValueChange={v =>
@@ -529,6 +532,7 @@ export function AboutPageForm({ values, onChange, loading }: AboutPageFormProps)
             />
             <SettingsFieldGroup cols={2}>
               <FormImageUpload
+          purpose="config"
                 label="人格图"
                 value={String(personalityObject.personalityImg ?? "")}
                 onValueChange={v =>
@@ -540,6 +544,7 @@ export function AboutPageForm({ values, onChange, loading }: AboutPageFormProps)
                 placeholder="请输入人格图 URL"
               />
               <FormImageUpload
+          purpose="config"
                 label="照片图"
                 value={String(personalityObject.photoUrl ?? "")}
                 onValueChange={v =>
@@ -645,6 +650,7 @@ export function AboutPageForm({ values, onChange, loading }: AboutPageFormProps)
               onValueChange={v => onChange(KEY_ABOUT_GAME, patchObjectJsonValue(values[KEY_ABOUT_GAME], "uid", v))}
             />
             <FormImageUpload
+          purpose="config"
               label="游戏背景图"
               value={String(gameObject.background ?? "")}
               onValueChange={v =>
@@ -723,6 +729,7 @@ export function AboutPageForm({ values, onChange, loading }: AboutPageFormProps)
               onValueChange={v => onChange(KEY_ABOUT_LIKE, patchObjectJsonValue(values[KEY_ABOUT_LIKE], "bottom", v))}
             />
             <FormImageUpload
+          purpose="config"
               label="技术背景图"
               value={String(likeObject.background ?? "")}
               onValueChange={v =>
@@ -764,6 +771,7 @@ export function AboutPageForm({ values, onChange, loading }: AboutPageFormProps)
               onValueChange={v => onChange(KEY_ABOUT_MUSIC, patchObjectJsonValue(values[KEY_ABOUT_MUSIC], "link", v))}
             />
             <FormImageUpload
+          purpose="config"
               label="音乐背景图"
               value={String(musicObject.background ?? "")}
               onValueChange={v =>
@@ -801,6 +809,7 @@ export function AboutPageForm({ values, onChange, loading }: AboutPageFormProps)
               />
             </SettingsFieldGroup>
             <FormImageUpload
+          purpose="config"
               label="职业经历配图"
               value={String(careersObject.img ?? "")}
               onValueChange={v =>
@@ -831,6 +840,7 @@ export function AboutPageForm({ values, onChange, loading }: AboutPageFormProps)
 
         {enableStatistic ? (
           <FormImageUpload
+          purpose="config"
             label="统计背景图"
             value={values[KEY_ABOUT_STATISTICS_BG]}
             onValueChange={v => onChange(KEY_ABOUT_STATISTICS_BG, v)}

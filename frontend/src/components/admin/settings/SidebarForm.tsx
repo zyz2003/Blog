@@ -98,6 +98,7 @@ export function SidebarForm({ values, onChange, loading }: SidebarFormProps) {
         />
 
         <FormImageUpload
+          purpose="config"
           label="状态图标"
           value={values[KEY_SIDEBAR_AUTHOR_STATUS_IMG]}
           onValueChange={v => onChange(KEY_SIDEBAR_AUTHOR_STATUS_IMG, v)}
@@ -131,12 +132,14 @@ export function SidebarForm({ values, onChange, loading }: SidebarFormProps) {
 
         <SettingsFieldGroup cols={2}>
           <FormImageUpload
+          purpose="config"
             label="正面图片"
             value={values[KEY_SIDEBAR_WECHAT_FACE]}
             onValueChange={v => onChange(KEY_SIDEBAR_WECHAT_FACE, v)}
             description="二维码卡片正面图片"
           />
           <FormImageUpload
+          purpose="config"
             label="背面图片"
             value={values[KEY_SIDEBAR_WECHAT_BACK_FACE]}
             onValueChange={v => onChange(KEY_SIDEBAR_WECHAT_BACK_FACE, v)}
@@ -145,6 +148,7 @@ export function SidebarForm({ values, onChange, loading }: SidebarFormProps) {
         </SettingsFieldGroup>
 
         <FormImageUpload
+          purpose="config"
           label="模糊背景"
           value={values[KEY_SIDEBAR_WECHAT_BLUR_BG]}
           onValueChange={v => onChange(KEY_SIDEBAR_WECHAT_BLUR_BG, v)}

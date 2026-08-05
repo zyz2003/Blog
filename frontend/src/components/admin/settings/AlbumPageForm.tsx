@@ -75,6 +75,7 @@ export function AlbumPageForm({ values, onChange, loading }: AlbumPageFormProps)
       <SettingsSection title="横幅" description="页面顶部展示区域">
         <div className="rounded-xl border border-border/60 bg-muted/30 p-5 shadow-[0_0_0_0.5px_rgba(0,0,0,0.04)] dark:shadow-[0_0_0_0.5px_rgba(255,255,255,0.04)]">
           <FormImageUpload
+          purpose="album"
             label="背景图"
             value={values[KEY_ALBUM_BANNER_BG]}
             onValueChange={v => onChange(KEY_ALBUM_BANNER_BG, v)}

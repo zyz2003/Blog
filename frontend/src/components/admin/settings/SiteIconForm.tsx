@@ -38,6 +38,7 @@ export function SiteIconForm({ values, onChange, loading }: SiteIconFormProps) {
       <SettingsSection title="LOGO">
         <div className="space-y-3">
           <FormImageUpload
+          purpose="logo"
             inlineLabel="日间模式"
             value={values[KEY_LOGO_HORIZONTAL_DAY]}
             onValueChange={v => onChange(KEY_LOGO_HORIZONTAL_DAY, v)}
@@ -45,6 +46,7 @@ export function SiteIconForm({ values, onChange, loading }: SiteIconFormProps) {
             hidePreview
           />
           <FormImageUpload
+          purpose="logo"
             inlineLabel="黑暗模式"
             value={values[KEY_LOGO_HORIZONTAL_NIGHT]}
             onValueChange={v => onChange(KEY_LOGO_HORIZONTAL_NIGHT, v)}
@@ -85,6 +87,7 @@ export function SiteIconForm({ values, onChange, loading }: SiteIconFormProps) {
       {/* 小图标 (Favicon) */}
       <SettingsSection title="小图标 (Favicon)">
         <FormImageUpload
+          purpose="logo"
           value={values[KEY_ICON_URL]}
           onValueChange={v => onChange(KEY_ICON_URL, v)}
           placeholder="favicon 图标地址"
@@ -99,6 +102,7 @@ export function SiteIconForm({ values, onChange, loading }: SiteIconFormProps) {
       <SettingsSection title="PWA 图标">
         <SettingsFieldGroup cols={2}>
           <FormImageUpload
+          purpose="logo"
             label="中图标 (192x192)"
             value={values[KEY_LOGO_URL_192]}
             onValueChange={v => onChange(KEY_LOGO_URL_192, v)}
@@ -109,6 +113,7 @@ export function SiteIconForm({ values, onChange, loading }: SiteIconFormProps) {
             previewMaxHeight={120}
           />
           <FormImageUpload
+          purpose="logo"
             label="大图标 (512x512)"
             value={values[KEY_LOGO_URL_512]}
             onValueChange={v => onChange(KEY_LOGO_URL_512, v)}
@@ -124,6 +129,7 @@ export function SiteIconForm({ values, onChange, loading }: SiteIconFormProps) {
       {/* 通用 Logo */}
       <SettingsSection title="通用 Logo">
         <FormImageUpload
+          purpose="logo"
           label="站点 Logo"
           value={values[KEY_LOGO_URL]}
           onValueChange={v => onChange(KEY_LOGO_URL, v)}
@@ -138,6 +144,7 @@ export function SiteIconForm({ values, onChange, loading }: SiteIconFormProps) {
       {/* 头像配置 */}
       <SettingsSection title="头像配置">
         <FormImageUpload
+          purpose="logo"
           label="站长头像"
           value={values[KEY_USER_AVATAR]}
           onValueChange={v => onChange(KEY_USER_AVATAR, v)}

@@ -908,7 +908,7 @@ function SettingsContent({
     async (file: File) => {
       setIsUploadingTopImg(true);
       try {
-        const url = await postManagementApi.uploadArticleImage(file);
+        const url = await postManagementApi.uploadArticleImage(file, { purpose: "article" });
         onUpdateField("top_img_url", url);
       } catch (err) {
         console.error("顶部大图上传失败:", err);
@@ -924,7 +924,7 @@ function SettingsContent({
     async (file: File) => {
       setIsUploadingCover(true);
       try {
-        const url = await postManagementApi.uploadArticleImage(file);
+        const url = await postManagementApi.uploadArticleImage(file, { purpose: "article" });
         onUpdateField("cover_url", url);
       } catch (err) {
         console.error("封面图上传失败:", err);

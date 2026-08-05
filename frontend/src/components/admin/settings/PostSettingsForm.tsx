@@ -139,6 +139,7 @@ export function PostSettingsForm({ values, onChange, loading }: PostSettingsForm
       {/* 基本配置 */}
       <SettingsSection title="基本配置">
         <FormImageUpload
+          purpose="config"
           label="默认封面"
           value={values[KEY_POST_DEFAULT_COVER]}
           onValueChange={v => onChange(KEY_POST_DEFAULT_COVER, v)}
@@ -177,6 +178,7 @@ export function PostSettingsForm({ values, onChange, loading }: PostSettingsForm
         </SettingsFieldGroup>
 
         <FormImageUpload
+          purpose="config"
           label="404 页面图片"
           value={values[KEY_POST_404_IMAGE]}
           onValueChange={v => onChange(KEY_POST_404_IMAGE, v)}
@@ -336,11 +338,13 @@ export function PostSettingsForm({ values, onChange, loading }: PostSettingsForm
 
         <SettingsFieldGroup cols={2}>
           <FormImageUpload
+          purpose="config"
             label="微信收款码"
             value={values[KEY_POST_REWARD_WECHAT_QR]}
             onValueChange={v => onChange(KEY_POST_REWARD_WECHAT_QR, v)}
           />
           <FormImageUpload
+          purpose="config"
             label="支付宝收款码"
             value={values[KEY_POST_REWARD_ALIPAY_QR]}
             onValueChange={v => onChange(KEY_POST_REWARD_ALIPAY_QR, v)}

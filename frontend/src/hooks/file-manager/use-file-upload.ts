@@ -588,7 +588,8 @@ export function useFileUpload({
   const dragCounterRef = useRef(0);
 
   const handleDrop = async (dataTransfer: DataTransfer) => {
-    const currentTargetPath = path;
+    // 拖拽上传也落到 manager/ 下
+    const currentTargetPath = path === "/" ? "/manager" : `/manager${path}`;
     try {
       const allProcessedFiles = await processDragDropItems(dataTransfer);
       if (allProcessedFiles.length === 0) {
@@ -684,11 +685,13 @@ export function useFileUpload({
   const handleUploadFile = () => {
     createFileInput(
       async files => {
+        // 文件管理器上传的文件统一落到 manager/ 子目录，与系统自动分类的目录分开
+        const managerPath = path === "/" ? "/manager" : `/manager${path}`;
         const newUploads: UploadCandidate[] = Array.from(files).map(file => ({
           file,
           name: file.name,
           size: file.size,
-          targetPath: path,
+          targetPath: managerPath,
           relativePath: file.name,
         }));
         const hasAdded = await addUploadsToQueue(newUploads);
@@ -709,11 +712,13 @@ export function useFileUpload({
     input.onchange = async e => {
       const files = (e.target as HTMLInputElement).files;
       if (files && files.length > 0) {
+        // 文件夹上传也落到 manager/ 下
+        const managerPath = path === "/" ? "/manager" : `/manager${path}`;
         const newUploads: UploadCandidate[] = Array.from(files).map(file => ({
           file,
           name: file.name,
           size: file.size,
-          targetPath: path,
+          targetPath: managerPath,
           relativePath: file.webkitRelativePath || file.name,
         }));
         const hasAdded = await addUploadsToQueue(newUploads);

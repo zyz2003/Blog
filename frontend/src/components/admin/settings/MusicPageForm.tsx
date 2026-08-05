@@ -151,6 +151,7 @@ export function MusicPageForm({ values, onChange, loading }: MusicPageFormProps)
           onToggle={() => setShowVinyl(!showVinyl)}
         >
           <FormImageUpload
+          purpose="config"
             label="背景图"
             value={values[KEY_MUSIC_VINYL_BACKGROUND]}
             onValueChange={v => onChange(KEY_MUSIC_VINYL_BACKGROUND, v)}
@@ -158,6 +159,7 @@ export function MusicPageForm({ values, onChange, loading }: MusicPageFormProps)
           />
           <SettingsFieldGroup cols={2}>
             <FormImageUpload
+          purpose="config"
               label="外圈"
               value={values[KEY_MUSIC_VINYL_OUTER]}
               onValueChange={v => onChange(KEY_MUSIC_VINYL_OUTER, v)}
@@ -165,6 +167,7 @@ export function MusicPageForm({ values, onChange, loading }: MusicPageFormProps)
               previewSize="sm"
             />
             <FormImageUpload
+          purpose="config"
               label="内圈"
               value={values[KEY_MUSIC_VINYL_INNER]}
               onValueChange={v => onChange(KEY_MUSIC_VINYL_INNER, v)}
@@ -172,6 +175,7 @@ export function MusicPageForm({ values, onChange, loading }: MusicPageFormProps)
               previewSize="sm"
             />
             <FormImageUpload
+          purpose="config"
               label="唱针"
               value={values[KEY_MUSIC_VINYL_NEEDLE]}
               onValueChange={v => onChange(KEY_MUSIC_VINYL_NEEDLE, v)}
@@ -179,6 +183,7 @@ export function MusicPageForm({ values, onChange, loading }: MusicPageFormProps)
               previewSize="sm"
             />
             <FormImageUpload
+          purpose="config"
               label="纹路"
               value={values[KEY_MUSIC_VINYL_GROOVE]}
               onValueChange={v => onChange(KEY_MUSIC_VINYL_GROOVE, v)}

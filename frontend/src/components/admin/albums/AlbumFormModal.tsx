@@ -176,6 +176,7 @@ function AlbumFormContent({
         </FormSelect>
 
         <FormImageUpload
+          purpose="album"
           label="图片 URL"
           isRequired
           placeholder="粘贴外链或上传后自动填入，可随时修改"

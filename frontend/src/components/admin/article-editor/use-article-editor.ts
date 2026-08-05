@@ -100,9 +100,9 @@ function handleImageUpload(view: EditorView, files: File[], pos?: number) {
       });
     };
 
-    // 异步上传
+    // 异步上传（落盘到 articles/ 目录）
     postManagementApi
-      .uploadArticleImage(file)
+      .uploadArticleImage(file, { purpose: "article" })
       .then(url => {
         // 上传成功：替换为远程 URL，清除状态
         findAndUpdate({

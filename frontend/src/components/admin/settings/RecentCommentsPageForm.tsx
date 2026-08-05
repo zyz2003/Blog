@@ -31,6 +31,7 @@ export function RecentCommentsPageForm({ values, onChange, loading }: RecentComm
       {/* 横幅配置 */}
       <SettingsSection title="横幅配置">
         <FormImageUpload
+          purpose="config"
           label="背景图"
           value={values[KEY_RECENT_COMMENTS_BANNER_BG]}
           onValueChange={v => onChange(KEY_RECENT_COMMENTS_BANNER_BG, v)}

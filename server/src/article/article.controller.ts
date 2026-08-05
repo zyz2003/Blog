@@ -24,7 +24,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { StoragePolicyService } from '../storage-policy/storage-policy.service';
 import { ThumbnailService } from '../thumbnail/thumbnail.service';
 import { generatePublicID } from '../common/utils/sqids.util';
-import { getUploadBaseDir } from '../common/utils/upload-path';
+import { getUploadBaseDir, getUploadSubdir } from '../common/utils/upload-path';
 import { files } from '../database/schemas/file.schema';
 import { entities } from '../database/schemas/entity.schema';
 import { DRIZZLE } from '../database/database.module';
@@ -96,6 +96,7 @@ export class ArticleController {
   @UseInterceptors(FileInterceptor('file'))
   async uploadImage(
     @UploadedFile() file: Express.Multer.File,
+    @Body('purpose') purpose: string,
     @CurrentUser() user: any,
   ) {
     if (!file) {
@@ -120,7 +121,7 @@ export class ArticleController {
     const uniqueName = `${timestamp}-${file.originalname}`;
 
     // 3. Ensure target directory exists
-    const targetDir = path.join(getUploadBaseDir(), 'articles');
+    const targetDir = path.join(getUploadBaseDir(), getUploadSubdir(purpose));
     await fs.mkdir(targetDir, { recursive: true });
 
     // 4. Write uploaded file to target path

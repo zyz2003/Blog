@@ -45,6 +45,41 @@ export function getThumbnailDir(): string {
  * 2. data/uploads/...（旧记录，相对 cwd）：去掉前缀拼接 uploadBase
  * 3. data\uploads\...（Windows 旧记录）：归一化后按 2 处理
  */
+/**
+ * 按用途返回落盘子目录。
+ *
+ * 目录结构（全部在 uploads/ 下）：
+ *   articles/   -- 文章编辑器上传的图片
+ *   albums/     -- 相册上传的图片
+ *   logos/      -- 站点 logo、图标、头像等站点级素材
+ *   comments/   -- 评论上传的图片
+ *   manager/    -- 文件管理器直接上传的文件（用户手动管理）
+ *   config/     -- 设置页其他图片（兜底）
+ *
+ * 文件管理器展示策略：
+ *   - 根目录展示所有子目录 + 根目录下的散落文件
+ *   - 进子目录看对应分类的文件
+ *   - articles/albums/logos/comments 是系统自动分类，用户也能进去看
+ *   - manager/ 是用户通过文件管理器上传的文件
+ */
+export function getUploadSubdir(purpose: string): string {
+  switch (purpose) {
+    case 'article':
+      return 'articles';
+    case 'album':
+      return 'albums';
+    case 'logo':
+    case 'avatar':
+      return 'logos';
+    case 'comment':
+      return 'comments';
+    case 'manager':
+      return 'manager';
+    default:
+      return 'config';
+  }
+}
+
 export function resolveEntitySource(source: string): string {
   if (!source) return source;
   const normalized = source.replace(/\\/g, '/');
