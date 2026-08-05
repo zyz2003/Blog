@@ -994,9 +994,22 @@ export class FileService {
           .where(eq(files.id, dup.id));
         skipCount++;
       }
-      // 若记录挂载目录不对，重挂到目标目录
+      // 若记录挂载目录不对，重挂到目标目录。
+      // 重挂前检查目标目录是否已有同名记录（含软删，避免软删记录阻挡 UNIQUE），
+      // 若有则跳过重挂，避免撞 UNIQUE(parent_id,name,owner_id)。
       if (keep.parentId !== targetParentId) {
-        await this.db.update(files).set({ parentId: targetParentId }).where(eq(files.id, keep.id));
+        const conflict = await this.db
+          .select()
+          .from(files)
+          .where(and(
+            eq(files.name, keep.name),
+            eq(files.ownerId, ownerId),
+            targetParentId === null ? isNull(files.parentId) : eq(files.parentId, targetParentId),
+          ))
+          .all();
+        if (conflict.length === 0) {
+          await this.db.update(files).set({ parentId: targetParentId }).where(eq(files.id, keep.id));
+        }
       }
       skipCount++;
       return true;
@@ -1027,6 +1040,23 @@ export class FileService {
           // 按物理路径匹配已有记录（旧记录重挂载 / 去重），有则跳过新建
           if (await attachOrSkip(parentId, filePath)) continue;
 
+          // 目标目录已有同名记录（含软删）时不新建，避免撞 UNIQUE。
+          // 注意：唯一索引 idx_files_parent_name_owner 不排除软删记录，
+          // 因此软删的同名记录同样会阻挡 INSERT。
+          const nameConflict = await this.db
+            .select()
+            .from(files)
+            .where(and(
+              eq(files.name, fileName),
+              eq(files.ownerId, ownerId),
+              parentId === null ? isNull(files.parentId) : eq(files.parentId, parentId),
+            ))
+            .all();
+          if (nameConflict.length > 0) {
+            skipCount++;
+            continue;
+          }
+
           // 创建 entity + file 记录
           const [entity] = await this.db
             .insert(entities)
@@ -1054,6 +1084,21 @@ export class FileService {
       } else {
         // 根目录下的散落文件（parentId=null）
         if (await attachOrSkip(null, entryPath)) continue;
+
+        // 根目录已有同名记录（含软删）时不新建，避免撞 UNIQUE
+        const rootNameConflict = await this.db
+          .select()
+          .from(files)
+          .where(and(
+            eq(files.name, entry),
+            eq(files.ownerId, ownerId),
+            isNull(files.parentId),
+          ))
+          .all();
+        if (rootNameConflict.length > 0) {
+          skipCount++;
+          continue;
+        }
 
         const [entity] = await this.db
           .insert(entities)

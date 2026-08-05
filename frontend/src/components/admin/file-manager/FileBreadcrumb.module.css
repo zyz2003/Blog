@@ -1,11 +1,12 @@
 /* 面包屑容器 */
 .file-breadcrumb-wrapper {
+  position: relative;
   display: flex;
   flex: 1;
+  min-width: 0;
   align-items: center;
   min-height: 52px;
   padding: 0 20px;
-  overflow: hidden;
   cursor: text;
   background-color: var(--anzhiyu-card-bg);
   border: var(--style-border);
@@ -27,7 +28,7 @@
   display: flex;
   align-items: center;
   width: 100%;
-  overflow: hidden;
+  min-width: 0;
 }
 
 /* 首页图标 - 匹配 anheyu-app（font-size: 16px） */
@@ -49,24 +50,29 @@
   display: flex;
   align-items: center;
   gap: 2px;
-  overflow: hidden;
+  min-width: 0;
 }
 
 .breadcrumb-item {
   display: flex;
   align-items: center;
+  min-width: 0;
   color: var(--anzhiyu-fontcolor);
 }
 
 /* 面包屑链接 */
 .breadcrumb-link {
   display: inline-block;
+  max-width: 100%;
   padding: 6px 10px;
   font-weight: 500;
   font-size: 14px;
   color: var(--anzhiyu-secondtext);
   cursor: pointer;
   border-radius: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -92,6 +98,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  min-width: 0;
   padding: 6px 12px;
   font-weight: 600;
   font-size: 14px;
@@ -99,6 +106,13 @@
   cursor: pointer;
   border-radius: 8px;
   transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dropdown-trigger > span:first-child {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .dropdown-trigger:hover {
