@@ -735,12 +735,14 @@ export class ArticleRepository {
   async batchUpdateViewCounts(updates: Map<number, number>): Promise<void> {
     if (updates.size === 0) return;
 
-    await this.db.transaction(async (tx: any) => {
+    // better-sqlite3 is synchronous — db.transaction() requires a sync callback.
+    this.db.transaction((tx: any) => {
       for (const [dbId, increment] of updates) {
-        await tx
+        tx
           .update(articles)
           .set({ viewCount: sql`${articles.viewCount} + ${increment}` })
-          .where(eq(articles.id, dbId));
+          .where(eq(articles.id, dbId))
+          .run();
       }
     });
   }

@@ -6,18 +6,23 @@ import { eq, and, isNull, sql } from 'drizzle-orm';
  * Walk path segments and create missing directory file records.
  * Shared between UploadService and FileService to avoid duplication.
  *
+ * NOTE: This function is SYNCHRONOUS — Drizzle's better-sqlite3 driver requires
+ * synchronous callbacks inside db.transaction() (better-sqlite3 is sync, its
+ * transaction() throws on async callbacks). Callers must NOT await it inside
+ * a transaction callback; they may call it directly and read the returned value.
+ *
  * @param uriPath - The URI path (e.g., "/images/photo.jpg")
  * @param ownerId - The owner user DB ID
  * @param policyId - The storage policy DB ID
  * @param tx - Drizzle transaction or db instance
  * @returns The parent directory file ID, or null for root level
  */
-export async function findOrCreateParentPath(
+export function findOrCreateParentPath(
   uriPath: string,
   ownerId: number,
   policyId: number,
   tx: any,
-): Promise<number | null> {
+): number | null {
   const segments = uriPath.split('/').filter(Boolean);
   // Remove the last segment (file name) — we only want directories
   const dirSegments = segments.slice(0, -1);
@@ -42,16 +47,17 @@ export async function findOrCreateParentPath(
       conditions.push(eq(files.parentId, currentParentId));
     }
 
-    const [existing] = await tx
+    const [existing] = tx
       .select()
       .from(files)
-      .where(and(...conditions));
+      .where(and(...conditions))
+      .all();
 
     if (existing) {
       currentParentId = existing.id;
     } else {
       // Create directory entity record
-      const [dirEntity] = await tx
+      const [dirEntity] = tx
         .insert(entities)
         .values({
           type: 'directory',
@@ -60,10 +66,11 @@ export async function findOrCreateParentPath(
           policyId,
           createdBy: ownerId,
         })
-        .returning();
+        .returning()
+        .all();
 
       // Create directory file record
-      const [dirFile] = await tx
+      const [dirFile] = tx
         .insert(files)
         .values({
           ownerId,
@@ -73,16 +80,18 @@ export async function findOrCreateParentPath(
           type: 2, // directory
           primaryEntityId: dirEntity.id,
         })
-        .returning();
+        .returning()
+        .all();
 
       // Update parent's childrenCount
       if (currentParentId !== null) {
-        await tx
+        tx
           .update(files)
           .set({
             childrenCount: sql`${files.childrenCount} + 1`,
           })
-          .where(eq(files.id, currentParentId));
+          .where(eq(files.id, currentParentId))
+          .run();
       }
 
       currentParentId = dirFile.id;

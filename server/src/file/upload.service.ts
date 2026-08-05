@@ -136,9 +136,12 @@ export class UploadService implements OnModuleInit, OnModuleDestroy {
     const sessionId = uuidv4();
     const chunkSize = policyRow.settings?.chunk_size || DEFAULT_CHUNK_SIZE;
 
-    const result = await this.db.transaction(async (tx: any) => {
+    // NOTE: better-sqlite3 is synchronous — Drizzle's db.transaction() requires
+    // a synchronous callback (async callbacks throw "Transaction function cannot
+    // return a promise" and the tx body silently runs outside the transaction).
+    const result = this.db.transaction((tx: any) => {
       // findOrCreateParentPath — create directory file records as needed
-      const parentId = await findOrCreateParentPath(
+      const parentId = findOrCreateParentPath(
         uriPath,
         ownerId,
         policyId,
@@ -158,17 +161,18 @@ export class UploadService implements OnModuleInit, OnModuleDestroy {
           conditions.push(eq(files.parentId, parentId));
         }
 
-        const [existing] = await tx
+        const [existing] = tx
           .select()
           .from(files)
-          .where(and(...conditions));
+          .where(and(...conditions))
+          .all();
         if (existing) {
           throw new ConflictException(ErrorCodes.UPLOAD_FILE_EXISTS);
         }
       }
 
       // Create temp entity record
-      const [entity] = await tx
+      const [entity] = tx
         .insert(entities)
         .values({
           type: 'file_content',
@@ -178,7 +182,8 @@ export class UploadService implements OnModuleInit, OnModuleDestroy {
           createdBy: ownerId,
           uploadSessionId: sessionId,
         })
-        .returning();
+        .returning()
+        .all();
 
       // Store session
       const expireAt = new Date(
@@ -291,10 +296,13 @@ export class UploadService implements OnModuleInit, OnModuleDestroy {
     const actualSize = await mergeChunkFiles(tmpDir, targetPath, totalChunks);
 
     // 3. In a transaction: update entity + create file record
+    // NOTE: better-sqlite3 is synchronous — Drizzle's db.transaction() requires
+    // a synchronous callback (async callbacks throw "Transaction function cannot
+    // return a promise" and the tx body silently runs outside the transaction).
     let fileRecord: any;
-    await this.db.transaction(async (tx: any) => {
+    this.db.transaction((tx: any) => {
       // Update temp entity
-      await tx
+      tx
         .update(entities)
         .set({
           source: targetPath,
@@ -302,10 +310,11 @@ export class UploadService implements OnModuleInit, OnModuleDestroy {
           size: actualSize,
           uploadSessionId: null,
         })
-        .where(eq(entities.id, session.tempEntityId));
+        .where(eq(entities.id, session.tempEntityId))
+        .run();
 
       // Find parent directory
-      const parentId = await findOrCreateParentPath(
+      const parentId = findOrCreateParentPath(
         uriPath,
         session.ownerId,
         session.policyId,
@@ -325,24 +334,26 @@ export class UploadService implements OnModuleInit, OnModuleDestroy {
           conditions.push(eq(files.parentId, parentId));
         }
 
-        const [existing] = await tx
+        const [existing] = tx
           .select()
           .from(files)
-          .where(and(...conditions));
+          .where(and(...conditions))
+          .all();
         if (existing) {
-          await tx
+          tx
             .update(files)
             .set({
               primaryEntityId: session.tempEntityId,
               size: actualSize,
             })
-            .where(eq(files.id, existing.id));
+            .where(eq(files.id, existing.id))
+            .run();
           fileRecord = existing;
         }
       }
 
       if (!fileRecord) {
-        [fileRecord] = await tx
+        [fileRecord] = tx
           .insert(files)
           .values({
             ownerId: session.ownerId,
@@ -352,7 +363,8 @@ export class UploadService implements OnModuleInit, OnModuleDestroy {
             type: 1, // file
             primaryEntityId: session.tempEntityId,
           })
-          .returning();
+          .returning()
+          .all();
       }
     });
 
@@ -477,16 +489,19 @@ export class UploadService implements OnModuleInit, OnModuleDestroy {
     const stat = await fs.stat(targetPath);
 
     // Create entity + file records in transaction
+    // NOTE: better-sqlite3 is synchronous — Drizzle's db.transaction() requires
+    // a synchronous callback (async callbacks throw "Transaction function cannot
+    // return a promise" and the tx body silently runs outside the transaction).
     let fileRecord: any;
-    await this.db.transaction(async (tx: any) => {
-      const parentId = await findOrCreateParentPath(
+    this.db.transaction((tx: any) => {
+      const parentId = findOrCreateParentPath(
         uriPath,
         ownerId,
         policyId,
         tx,
       );
 
-      const [entity] = await tx
+      const [entity] = tx
         .insert(entities)
         .values({
           type: 'file_content',
@@ -496,9 +511,10 @@ export class UploadService implements OnModuleInit, OnModuleDestroy {
           createdBy: ownerId,
           mimeType: inferMimeType(fileName),
         })
-        .returning();
+        .returning()
+        .all();
 
-      [fileRecord] = await tx
+      [fileRecord] = tx
         .insert(files)
         .values({
           ownerId,
@@ -508,7 +524,8 @@ export class UploadService implements OnModuleInit, OnModuleDestroy {
           type: 1,
           primaryEntityId: entity.id,
         })
-        .returning();
+        .returning()
+        .all();
     });
 
     // Dispatch thumbnail generation via ScheduleService (fire-and-forget)

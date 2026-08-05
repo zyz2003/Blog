@@ -18,7 +18,7 @@ import { toISODateString } from '../common/utils/time.util';
 import { parseAnzhiyuURI, resolvePhysicalPath, inferMimeType } from './utils/path-resolver';
 import { ensureDirectoryExists, isThumbnailableExtension } from './utils/file-system';
 import { findOrCreateParentPath } from './utils/parent-path';
-import { getUploadBaseDir } from '../common/utils/upload-path';
+import { getUploadBaseDir, resolveEntitySource } from '../common/utils/upload-path';
 import { files } from '../database/schemas/file.schema';
 import { entities } from '../database/schemas/entity.schema';
 import { storagePolicies } from '../database/schemas/storage-policy.schema';
@@ -86,7 +86,7 @@ export class FileService {
     // Get parent info
     let parent = null;
     if (directoryFile) {
-      parent = this.toFileItem(directoryFile);
+      parent = this.toFileItem(directoryFile, undefined, uriPath);
     }
 
     // Get storage policy for the first file's entity
@@ -128,8 +128,14 @@ export class FileService {
       }
     }
 
+    // Build logical path for each child: uriPath + '/' + name
+    const childPath = (name: string) => {
+      const base = uriPath.endsWith('/') ? uriPath.slice(0, -1) : uriPath;
+      return `${base}/${name}`;
+    };
+
     return {
-      files: list.map((f: any) => this.toFileItem(f)),
+      files: list.map((f: any) => this.toFileItem(f, undefined, childPath(f.name))),
       parent,
       pagination: { page, page_size: pageSize, next_token: '', is_cursor: true },
       props: { total },
@@ -176,10 +182,27 @@ export class FileService {
       }
     }
 
+    const logicalPath = await this.buildLogicalPath(file);
     return {
-      file: this.toFileItem(file, entity),
+      file: this.toFileItem(file, entity, logicalPath),
       storagePolicy,
     };
+  }
+
+  /**
+   * Walk up parent chain to build the logical path for a file record,
+   * e.g. /articles/photo.png. Root-level files get '/name'.
+   */
+  private async buildLogicalPath(file: any): Promise<string> {
+    const segments: string[] = [];
+    let current = file;
+    while (current?.parentId) {
+      const parent = await this.repository.findById(current.parentId);
+      if (!parent) break;
+      segments.unshift(parent.name);
+      current = parent;
+    }
+    return `/${[...segments, file.name].join('/')}`;
   }
 
   /**
@@ -382,9 +405,12 @@ export class FileService {
 
     const policyId = defaultPolicy?.id || 1;
 
-    const fileRecord = await this.db.transaction(async (tx: any) => {
-      // findOrCreateParentPath
-      const parentId = await findOrCreateParentPath(
+    // NOTE: better-sqlite3 is synchronous — Drizzle's db.transaction() requires
+    // a synchronous callback (async callbacks throw "Transaction function cannot
+    // return a promise" and the tx body silently runs outside the transaction).
+    const fileRecord = this.db.transaction((tx: any) => {
+      // findOrCreateParentPath (synchronous)
+      const parentId = findOrCreateParentPath(
         uriPath,
         ownerId,
         policyId,
@@ -393,18 +419,28 @@ export class FileService {
 
       // Check name conflict if err_on_conflict
       if (dto.err_on_conflict) {
-        const existing = await this.repository.findByParentAndName(
-          parentId,
-          fileName,
-          ownerId,
-        );
+        const conditions = [
+          eq(files.name, fileName),
+          eq(files.ownerId, ownerId),
+          isNull(files.deletedAt),
+        ];
+        if (parentId === null) {
+          conditions.push(isNull(files.parentId));
+        } else {
+          conditions.push(eq(files.parentId, parentId));
+        }
+        const [existing] = tx
+          .select()
+          .from(files)
+          .where(and(...conditions))
+          .all();
         if (existing) {
           throw new ConflictException(ErrorCodes.FILE_NAME_EXISTS);
         }
       }
 
       // Create entity record
-      const [entity] = await tx
+      const [entity] = tx
         .insert(entities)
         .values({
           type: fileType === 2 ? 'directory' : 'file_content',
@@ -413,10 +449,11 @@ export class FileService {
           policyId,
           createdBy: ownerId,
         })
-        .returning();
+        .returning()
+        .all();
 
       // Create file record
-      const [file] = await tx
+      const [file] = tx
         .insert(files)
         .values({
           ownerId,
@@ -426,14 +463,16 @@ export class FileService {
           type: fileType,
           primaryEntityId: entity.id,
         })
-        .returning();
+        .returning()
+        .all();
 
       // Update parent childrenCount
       if (parentId !== null) {
-        await tx
+        tx
           .update(files)
           .set({ childrenCount: sql`${files.childrenCount} + 1` })
-          .where(eq(files.id, parentId));
+          .where(eq(files.id, parentId))
+          .run();
       }
 
       return file;
@@ -836,7 +875,7 @@ export class FileService {
   /**
    * Convert DB row to frontend FileItem format per RESEARCH Section 9.
    */
-  toFileItem(file: any, entity?: any): any {
+  toFileItem(file: any, entity?: any, logicalPath?: string): any {
     return {
       id: generatePublicID(file.id, EntityType.File),
       name: file.name,
@@ -844,7 +883,7 @@ export class FileService {
       size: file.size,
       created_at: toISODateString(file.createdAt),
       updated_at: toISODateString(file.updatedAt),
-      path: '',
+      path: logicalPath || '',
       owned: true,
       shared: false,
       permission: null,
@@ -902,6 +941,32 @@ export class FileService {
       .where(and(eq(storagePolicies.flag, 'article_image'), isNull(storagePolicies.deletedAt)));
     const policyId = defaultPolicy?.id || 1;
 
+    // 预载所有现有文件记录 + 其实体 source（解析为绝对路径），
+    // 以便按"物理文件"匹配旧记录而不是按 name —— 旧记录 name 与磁盘文件名可能不一致
+    // （如目录分类改造前上传的 Favicon.png，磁盘上是 1784789438487-Favicon.png）。
+    const allFiles = await this.db
+      .select()
+      .from(files)
+      .where(and(eq(files.ownerId, ownerId), isNull(files.deletedAt)));
+
+    const entityIds = allFiles.map((f: any) => f.primaryEntityId).filter(Boolean);
+    const existingEntities = entityIds.length
+      ? await this.db.select().from(entities).where(sql`${entities.id} IN (${sql.join(entityIds, sql`, `)})`)
+      : [];
+
+    const entityById = new Map<number, any>(existingEntities.map((e: any) => [e.id, e]));
+    const normSource = (s: string) => resolveEntitySource(s).replace(/\\/g, '/');
+
+    // 按解析后的绝对路径索引现有文件记录
+    const bySource = new Map<string, any[]>();
+    for (const f of allFiles) {
+      const e = entityById.get(f.primaryEntityId);
+      if (!e?.source) continue;
+      const key = normSource(e.source);
+      if (!bySource.has(key)) bySource.set(key, []);
+      bySource.get(key)!.push(f);
+    }
+
     // 扫描 uploads/ 下的子目录
     let entries: string[];
     try {
@@ -909,6 +974,33 @@ export class FileService {
     } catch {
       return { dirs: 0, files: 0, skipped: 0 };
     }
+
+    // 当磁盘文件已存在同名记录（按物理路径匹配）时，把记录重挂载到正确目录，
+    // 而不是新建重复记录。返回 true 表示已处理（跳过新建）。
+    const attachOrSkip = async (
+      targetParentId: number | null,
+      diskAbsPath: string,
+    ): Promise<boolean> => {
+      const matches = bySource.get(diskAbsPath.replace(/\\/g, '/')) || [];
+      if (matches.length === 0) return false;
+
+      // 多个记录指向同一物理文件时，保留最旧的一条（含 direct_link 的旧记录），其余软删
+      matches.sort((a, b) => a.id - b.id);
+      const keep = matches[0];
+      for (const dup of matches.slice(1)) {
+        await this.db
+          .update(files)
+          .set({ deletedAt: new Date() })
+          .where(eq(files.id, dup.id));
+        skipCount++;
+      }
+      // 若记录挂载目录不对，重挂到目标目录
+      if (keep.parentId !== targetParentId) {
+        await this.db.update(files).set({ parentId: targetParentId }).where(eq(files.id, keep.id));
+      }
+      skipCount++;
+      return true;
+    };
 
     for (const entry of entries) {
       if (entry === 'thumbnails' || entry === 'tmp') continue; // 跳过系统目录
@@ -932,21 +1024,8 @@ export class FileService {
           const fileStat = await fs.stat(filePath).catch(() => null);
           if (!fileStat || fileStat.isDirectory()) continue;
 
-          // 检查是否已有文件记录（按 name + ownerId + parentId 查）
-          const [existing] = await this.db
-            .select()
-            .from(files)
-            .where(and(
-              eq(files.name, fileName),
-              eq(files.ownerId, ownerId),
-              eq(files.parentId, parentId),
-              isNull(files.deletedAt),
-            ));
-
-          if (existing) {
-            skipCount++;
-            continue;
-          }
+          // 按物理路径匹配已有记录（旧记录重挂载 / 去重），有则跳过新建
+          if (await attachOrSkip(parentId, filePath)) continue;
 
           // 创建 entity + file 记录
           const [entity] = await this.db
@@ -974,20 +1053,7 @@ export class FileService {
         dirCount++;
       } else {
         // 根目录下的散落文件（parentId=null）
-        const [existing] = await this.db
-          .select()
-          .from(files)
-          .where(and(
-            eq(files.name, entry),
-            eq(files.ownerId, ownerId),
-            isNull(files.parentId),
-            isNull(files.deletedAt),
-          ));
-
-        if (existing) {
-          skipCount++;
-          continue;
-        }
+        if (await attachOrSkip(null, entryPath)) continue;
 
         const [entity] = await this.db
           .insert(entities)
