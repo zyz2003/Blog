@@ -152,6 +152,8 @@ interface UseArticleEditorOptions {
   onUpdate?: (html: string) => void;
   /** 占位文字 */
   placeholder?: string;
+  /** 斜杠命令 /ai 触发回调 */
+  onAIWriting?: () => void;
 }
 
 /**
@@ -162,6 +164,7 @@ export function useArticleEditor({
   initialContent = "",
   onUpdate,
   placeholder = "输入 / 打开命令菜单...",
+  onAIWriting,
 }: UseArticleEditorOptions = {}) {
   const editor = useEditor({
     extensions: [
@@ -233,7 +236,8 @@ export function useArticleEditor({
       PasswordContent,
       LoginRequiredContent,
       SlashCommands.configure({
-        hasAIWriting: false,
+        hasAIWriting: true,
+        onAIWriting,
       }),
     ],
     content: preprocessButtonHTML(initialContent),

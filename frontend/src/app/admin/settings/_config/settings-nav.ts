@@ -21,6 +21,7 @@ import {
   DatabaseBackup,
   Bot,
   PenLine,
+  Wrench,
 } from "lucide-react";
 import type { SettingCategoryId } from "@/lib/settings/setting-descriptors";
 
@@ -135,6 +136,7 @@ export const settingsCategories: CategorySection[] = [
       { id: "ai-summary", label: "AI 摘要", icon: FileText, keywords: ["AI", "摘要", "提示词", "文章摘要"] },
       { id: "ai-chat", label: "AI 对话", icon: MessageCircle, keywords: ["AI", "对话", "聊天"] },
       { id: "ai-writing", label: "AI 写作", icon: PenLine, keywords: ["AI", "写作", "辅助"] },
+      { id: "ai-tools", label: "AI 工具", icon: Wrench, keywords: ["AI", "工具", "MCP", "工具调用", "外部工具"] },
     ],
   },
 ];

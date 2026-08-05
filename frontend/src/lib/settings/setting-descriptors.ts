@@ -44,7 +44,8 @@ export type SettingCategoryId =
   | "ai-models"
   | "ai-summary"
   | "ai-chat"
-  | "ai-writing";
+  | "ai-writing"
+  | "ai-tools";
 
 /** 文章版权声明默认模板（与前台渲染兜底保持一致） */
 const DEFAULT_POST_COPYRIGHT_TEMPLATE_ORIGINAL =
@@ -859,9 +860,17 @@ const categoryDescriptors: Record<SettingCategoryId, SettingDescriptor[]> = {
   ],
   "ai-chat": [
     { backendKey: K.KEY_AI_CHAT_PROFILE_ID, type: "string" },
+    { backendKey: K.KEY_AI_CHAT_ENABLED_TOOLS, type: "string", defaultValue: "" },
     { backendKey: K.KEY_AI_CHAT_WELCOME_MESSAGE, type: "string", defaultValue: "你好！我是博客 AI 助手，有什么可以帮你？" },
     { backendKey: K.KEY_AI_CHAT_SUGGESTED_QUESTIONS, type: "json", defaultValue: '["这篇文章讲了什么？","推荐一些技术文章","博客最近更新了什么？"]' },
     { backendKey: K.KEY_AI_CHAT_SYSTEM_PROMPT, type: "string", defaultValue: "你是博客站的 AI 助手，可以搜索和阅读博客文章来回答用户问题。请用中文回答。" },
   ],
-  "ai-writing": [],
+  "ai-writing": [
+    { backendKey: K.KEY_AI_WRITING_PROFILE_ID, type: "string", defaultValue: "" },
+    { backendKey: K.KEY_AI_WRITING_ENABLED_TOOLS, type: "string", defaultValue: "" },
+    { backendKey: K.KEY_AI_WRITING_SYSTEM_PROMPT, type: "string", defaultValue: "" },
+    { backendKey: K.KEY_AI_WRITING_MAX_TOKENS, type: "string", defaultValue: "2000" },
+    { backendKey: K.KEY_AI_WRITING_TEMPERATURE, type: "string", defaultValue: "0.7" },
+  ],
+  "ai-tools": [],
 };

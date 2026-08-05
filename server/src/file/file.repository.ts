@@ -4,6 +4,7 @@ import { files } from '../database/schemas/file.schema';
 import { entities } from '../database/schemas/entity.schema';
 import { storagePolicies } from '../database/schemas/storage-policy.schema';
 import { isNull, eq, and, desc, asc, count, sql } from 'drizzle-orm';
+import { resolveEntitySource } from '../common/utils/upload-path';
 
 @Injectable()
 export class FileRepository {
@@ -145,9 +146,9 @@ export class FileRepository {
       .select()
       .from(entities)
       .where(eq(entities.id, id));
-    // 归一化路径分隔符：Windows 存的反斜杠在 Linux 上读不到，统一用 /
+    // 解析 entity.source 为绝对路径（兼容旧相对路径 + Windows 路径）
     if (entity && entity.source) {
-      entity.source = entity.source.replace(/\\/g, '/');
+      entity.source = resolveEntitySource(entity.source);
     }
     return entity ?? null;
   }

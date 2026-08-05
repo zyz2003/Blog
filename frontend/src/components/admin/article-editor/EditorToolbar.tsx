@@ -30,6 +30,8 @@ import {
   Sigma,
   Plus,
   Sparkles,
+  PenLine,
+  Wand2,
   ChevronDown,
   Check,
   Coins,
@@ -51,6 +53,8 @@ export type EditorMode = "visual" | "html" | "markdown";
 interface EditorToolbarProps {
   editor: Editor | null;
   onAIWriting?: () => void;
+  onAIContinue?: () => void;
+  onAIRewrite?: () => void;
   editorMode?: EditorMode;
   onModeChange?: (mode: EditorMode) => void;
 }
@@ -278,7 +282,7 @@ const HIGHLIGHT_COLORS = ["#fef08a", "#bbf7d0", "#bfdbfe", "#e9d5ff", "#fecaca",
 // 主工具栏组件
 // ===================================
 
-export function EditorToolbar({ editor, onAIWriting, editorMode = "visual", onModeChange }: EditorToolbarProps) {
+export function EditorToolbar({ editor, onAIWriting, onAIContinue, onAIRewrite, editorMode = "visual", onModeChange }: EditorToolbarProps) {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showHighlightPicker, setShowHighlightPicker] = useState(false);
 
@@ -710,12 +714,24 @@ export function EditorToolbar({ editor, onAIWriting, editorMode = "visual", onMo
       <InsertBlockMenu editor={editor} />
 
       {/* AI 写作 */}
-      {onAIWriting && (
+      {(onAIWriting || onAIContinue || onAIRewrite) && (
         <>
           <Divider />
-          <ToolbarButton onClick={onAIWriting} title="AI 写作助手">
-            <Sparkles className="w-4 h-4 text-primary" />
-          </ToolbarButton>
+          {onAIWriting && (
+            <ToolbarButton onClick={onAIWriting} title="AI 写作（从头写）">
+              <Sparkles className="w-4 h-4 text-primary" />
+            </ToolbarButton>
+          )}
+          {onAIContinue && (
+            <ToolbarButton onClick={onAIContinue} title="AI 续写">
+              <PenLine className="w-4 h-4 text-primary" />
+            </ToolbarButton>
+          )}
+          {onAIRewrite && (
+            <ToolbarButton onClick={onAIRewrite} title="AI 改写（选中文本）">
+              <Wand2 className="w-4 h-4 text-primary" />
+            </ToolbarButton>
+          )}
         </>
       )}
 

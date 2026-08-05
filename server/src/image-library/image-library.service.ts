@@ -11,11 +11,11 @@ import {
 import { isNull, eq, and, desc, sql, like, or } from 'drizzle-orm';
 import { ErrorCodes } from '../common/constants/error-codes';
 import { inferMimeType } from '../file/utils/path-resolver';
+import { getThumbnailDir } from '../common/utils/upload-path';
 import * as fs from 'fs';
 import * as path from 'path';
 
 const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico'];
-const THUMBNAIL_DIR = 'data/uploads/thumbnails';
 const THUMBNAIL_FORMAT = 'webp';
 
 @Injectable()
@@ -101,7 +101,7 @@ export class ImageLibraryService {
 
     // 检查缩略图文件是否存在
     const thumbnailPath = path.join(
-      THUMBNAIL_DIR,
+      getThumbnailDir(),
       `${publicID}.${THUMBNAIL_FORMAT}`,
     );
     try {

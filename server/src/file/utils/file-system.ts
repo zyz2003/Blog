@@ -1,5 +1,6 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { getUploadBaseDir } from '../../common/utils/upload-path';
 
 /**
  * Ensure a directory exists, creating it recursively if needed.
@@ -12,7 +13,7 @@ export async function ensureDirectoryExists(dirPath: string): Promise<void> {
  * Delete the temp directory for a session: data/uploads/tmp/{sessionId}/
  */
 export async function cleanupTempDirectory(sessionId: string): Promise<void> {
-  const tmpDir = path.join('data', 'uploads', 'tmp', sessionId);
+  const tmpDir = path.join(getUploadBaseDir(), 'tmp', sessionId);
   await fs.rm(tmpDir, { recursive: true, force: true });
 }
 

@@ -22,6 +22,7 @@ import {
   decodePublicID,
   EntityType,
 } from '../common/utils/sqids.util';
+import { getUploadBaseDir } from '../common/utils/upload-path';
 import { ErrorCodes } from '../common/constants/error-codes';
 import { users } from '../database/schemas/user.schema';
 import { userGroups } from '../database/schemas/user-group.schema';
@@ -1067,7 +1068,7 @@ export class CommentService {
     const uniqueName = `${uuidv4()}${path.extname(file.originalname)}`;
 
     // 3. Ensure target directory exists
-    const targetDir = path.join(policy.basePath || 'data/uploads', 'comments');
+    const targetDir = path.join(getUploadBaseDir(), 'comments');
     await fs.mkdir(targetDir, { recursive: true });
 
     // 4. Write uploaded file to target path

@@ -510,6 +510,8 @@ export const KEY_AI_WRITING_PROVIDER = "ai_writing_provider";
 export const KEY_AI_WRITING_API_KEY = "ai_writing_api_key";
 export const KEY_AI_WRITING_API_URL = "ai_writing_api_url";
 export const KEY_AI_WRITING_MODEL = "ai_writing_model";
+export const KEY_AI_WRITING_PROFILE_ID = "ai_writing_profile_id";
+export const KEY_AI_WRITING_ENABLED_TOOLS = "ai_writing_enabled_tools";
 export const KEY_AI_WRITING_SYSTEM_PROMPT = "ai_writing_system_prompt";
 export const KEY_AI_WRITING_MAX_TOKENS = "ai_writing_max_tokens";
 export const KEY_AI_WRITING_TEMPERATURE = "ai_writing_temperature";
@@ -542,6 +544,7 @@ export const KEY_AI_ASSISTANT_NO_CONTEXT_PROMPT = "ai_assistant.no_context_promp
 
 // ==================== AI 对话配置 ====================
 export const KEY_AI_CHAT_PROFILE_ID = "ai_chat_profile_id";
+export const KEY_AI_CHAT_ENABLED_TOOLS = "ai_chat_enabled_tools";
 export const KEY_AI_CHAT_WELCOME_MESSAGE = "ai_chat_welcome_message";
 export const KEY_AI_CHAT_SUGGESTED_QUESTIONS = "ai_chat_suggested_questions";
 export const KEY_AI_CHAT_SYSTEM_PROMPT = "ai_chat_system_prompt";

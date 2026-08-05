@@ -22,8 +22,8 @@ import * as fs from 'fs/promises';
 import * as fsStat from 'fs';
 import * as path from 'path';
 import sharp from 'sharp';
+import { getThumbnailDir, resolveEntitySource } from '../common/utils/upload-path';
 
-const THUMBNAIL_DIR = 'data/uploads/thumbnails';
 const THUMBNAIL_MAX_WIDTH = 400;
 const THUMBNAIL_MAX_HEIGHT = 400;
 const THUMBNAIL_FORMAT = 'webp';
@@ -39,7 +39,7 @@ export class ThumbnailService implements OnModuleInit {
   async onModuleInit() {
     // Ensure thumbnail directory exists
     try {
-      await fs.mkdir(THUMBNAIL_DIR, { recursive: true });
+      await fs.mkdir(getThumbnailDir(), { recursive: true });
     } catch {
       // May already exist
     }
@@ -65,10 +65,10 @@ export class ThumbnailService implements OnModuleInit {
 
     try {
       // Ensure thumbnail directory exists
-      await fs.mkdir(THUMBNAIL_DIR, { recursive: true });
+      await fs.mkdir(getThumbnailDir(), { recursive: true });
 
       const publicID = generatePublicID(fileId, EntityType.File);
-      const outputPath = path.join(THUMBNAIL_DIR, `${publicID}.${THUMBNAIL_FORMAT}`);
+      const outputPath = path.join(getThumbnailDir(), `${publicID}.${THUMBNAIL_FORMAT}`);
 
       // Use sharp to resize
       // 用 buffer 读取再传给 sharp，避免中文路径在 Windows 上读取失败
@@ -117,7 +117,7 @@ export class ThumbnailService implements OnModuleInit {
     }
 
     const thumbnailPath = path.join(
-      THUMBNAIL_DIR,
+      getThumbnailDir(),
       `${publicID}.${THUMBNAIL_FORMAT}`,
     );
 
@@ -148,7 +148,7 @@ export class ThumbnailService implements OnModuleInit {
         throw new NotFoundException(ErrorCodes.THUMBNAIL_NOT_FOUND);
       }
 
-      const result = await this.generateThumbnail(dbID, entity.source, file.name);
+      const result = await this.generateThumbnail(dbID, resolveEntitySource(entity.source), file.name);
       thumbnailExists = result !== null;
     }
 
@@ -215,7 +215,7 @@ export class ThumbnailService implements OnModuleInit {
     }
 
     const filePath = path.join(
-      THUMBNAIL_DIR,
+      getThumbnailDir(),
       `${publicID}.${THUMBNAIL_FORMAT}`,
     );
 
@@ -269,7 +269,7 @@ export class ThumbnailService implements OnModuleInit {
 
     // Delete existing thumbnail
     const thumbnailPath = path.join(
-      THUMBNAIL_DIR,
+      getThumbnailDir(),
       `${publicID}.${THUMBNAIL_FORMAT}`,
     );
     try {
@@ -327,7 +327,7 @@ export class ThumbnailService implements OnModuleInit {
 
       const publicID = generatePublicID(f.id, EntityType.File);
       const thumbnailPath = path.join(
-        THUMBNAIL_DIR,
+        getThumbnailDir(),
         `${publicID}.${THUMBNAIL_FORMAT}`,
       );
 
@@ -347,7 +347,7 @@ export class ThumbnailService implements OnModuleInit {
         : null;
 
       if (entity && entity.length > 0 && entity[0].source) {
-        await this.generateThumbnail(f.id, entity[0].source, f.name);
+        await this.generateThumbnail(f.id, resolveEntitySource(entity[0].source), f.name);
         filesProcessed++;
       }
     }

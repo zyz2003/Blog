@@ -20,6 +20,7 @@ import {
   EntityType,
 } from '../common/utils/sqids.util';
 import { ErrorCodes } from '../common/constants/error-codes';
+import { getUploadBaseDir } from '../common/utils/upload-path';
 import {
   UploadSession,
   UPLOAD_SESSION_EXPIRE_HOURS,
@@ -74,7 +75,7 @@ export class UploadService implements OnModuleInit, OnModuleDestroy {
 
     // Startup cleanup: remove expired temp directories per D-95
     try {
-      const tmpBase = path.join('data', 'uploads', 'tmp');
+      const tmpBase = path.join(getUploadBaseDir(), 'tmp');
       const count = await cleanupExpiredTempDirs(tmpBase, 24);
       if (count > 0) {
         this.logger.log(`Cleaned up ${count} expired temp directories`);
@@ -278,7 +279,7 @@ export class UploadService implements OnModuleInit, OnModuleDestroy {
 
     // 1. Create output file path
     const targetPath = resolvePhysicalPath(
-      policyRow?.basePath || 'data/uploads',
+      getUploadBaseDir(),
       uriPath,
     );
     await ensureDirectoryExists(path.dirname(targetPath));
@@ -464,7 +465,7 @@ export class UploadService implements OnModuleInit, OnModuleDestroy {
 
     // Verify file exists on disk at expected path
     const targetPath = resolvePhysicalPath(
-      policyRow.basePath || 'data/uploads',
+      getUploadBaseDir(),
       uriPath,
     );
     try {

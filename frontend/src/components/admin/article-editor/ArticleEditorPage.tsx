@@ -12,6 +12,11 @@ import { TiptapEditor } from "./TiptapEditor";
 import { SourceCodeEditor } from "./SourceCodeEditor";
 import { EditorSidebar, TOCContent } from "./EditorSidebar";
 import { useArticleEditor } from "./use-article-editor";
+import { useAiWriting } from "./use-ai-writing";
+import { AiWritingInput } from "./ai-writing-input";
+import { AiWritingToolbar } from "./ai-writing-toolbar";
+import { REWRITE_INSTRUCTIONS } from "@/lib/api/ai-writing";
+import { Wand2 } from "lucide-react";
 import { useArticleMeta } from "./use-article-meta";
 import { useAutoSave } from "./use-auto-save";
 import { useArticleForEdit, useCreateArticle, useUpdateArticle } from "@/hooks/queries/use-post-management";
@@ -108,7 +113,13 @@ export function ArticleEditorPage({ articleId }: ArticleEditorPageProps) {
   const editor = useArticleEditor({
     initialContent: "",
     placeholder: "开始编写内容...",
+    onAIWriting: () => setShowAiInput(true),
   });
+
+  // AI 写作
+  const aiWriting = useAiWriting(editor);
+  const [showAiInput, setShowAiInput] = useState(false);
+  const [showRewriteMenu, setShowRewriteMenu] = useState(false);
 
   // 编辑模式切换（可视化 / HTML / Markdown）
   const [editorMode, setEditorMode] = useState<EditorMode>("visual");
@@ -351,7 +362,14 @@ export function ArticleEditorPage({ articleId }: ArticleEditorPageProps) {
       {/* 工具栏 - 专注模式下隐藏桌面端工具栏 */}
       {!focusMode && (
         <div className="hidden md:block">
-          <EditorToolbar editor={editor} editorMode={editorMode} onModeChange={handleModeChange} />
+          <EditorToolbar
+            editor={editor}
+            editorMode={editorMode}
+            onModeChange={handleModeChange}
+            onAIWriting={() => setShowAiInput(true)}
+            onAIContinue={aiWriting.continueWriting}
+            onAIRewrite={() => setShowRewriteMenu(true)}
+          />
         </div>
       )}
 
@@ -361,6 +379,60 @@ export function ArticleEditorPage({ articleId }: ArticleEditorPageProps) {
         <div className="flex-1 min-h-0 relative flex flex-col">
           {/* TipTap 始终挂载，源码模式时隐藏（避免 flushSync 重挂载错误） */}
           <div className={editorMode === "visual" ? "flex-1 overflow-auto bg-card" : "hidden"}>
+            {/* AI 写作提示词输入框 */}
+            {showAiInput && (
+              <div className="max-w-4xl mx-auto px-8 pt-4">
+                <AiWritingInput
+                  onSubmit={(prompt) => {
+                    setShowAiInput(false);
+                    aiWriting.generate(prompt);
+                  }}
+                  onCancel={() => setShowAiInput(false)}
+                  isGenerating={aiWriting.isGenerating}
+                />
+              </div>
+            )}
+            {/* AI 改写指令选择 */}
+            {showRewriteMenu && (
+              <div className="max-w-4xl mx-auto px-8 pt-4">
+                <div className="flex items-center gap-2 px-3 py-2 bg-primary/5 border border-primary/20 rounded-xl flex-wrap">
+                  <Wand2 className="w-4 h-4 text-primary shrink-0" />
+                  <span className="text-sm font-medium">选择改写指令：</span>
+                  {REWRITE_INSTRUCTIONS.map((item) => (
+                    <button
+                      key={item.label}
+                      type="button"
+                      onClick={() => {
+                        const text = aiWriting.getSelectedText();
+                        if (text) aiWriting.rewrite(text, item.value);
+                        setShowRewriteMenu(false);
+                      }}
+                      className="px-2 py-1 text-xs hover:bg-primary/10 rounded transition-colors"
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setShowRewriteMenu(false)}
+                    className="text-xs text-muted-foreground ml-auto"
+                  >
+                    取消
+                  </button>
+                </div>
+              </div>
+            )}
+            {/* AI 生成工具栏（生成中/接受/撤销/重新生成） */}
+            {(aiWriting.isGenerating || aiWriting.showToolbar) && (
+              <div className="max-w-4xl mx-auto px-8 pt-2 sticky top-0 z-10">
+                <AiWritingToolbar
+                  isGenerating={aiWriting.isGenerating}
+                  onAccept={aiWriting.accept}
+                  onUndo={aiWriting.undo}
+                  onRegenerate={aiWriting.regenerate}
+                />
+              </div>
+            )}
             <div className="max-w-4xl mx-auto">
               <TiptapEditor editor={editor} />
             </div>

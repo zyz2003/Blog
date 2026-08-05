@@ -13,6 +13,7 @@ import { entities } from '../database/schemas/entity.schema';
 import { storagePolicies } from '../database/schemas/storage-policy.schema';
 import { ErrorCodes } from '../common/constants/error-codes';
 import { eq, and, isNull, sql } from 'drizzle-orm';
+import { resolveEntitySource } from '../common/utils/upload-path';
 
 @Injectable()
 export class DirectLinkService {
@@ -158,9 +159,8 @@ export class DirectLinkService {
       .where(eq(storagePolicies.id, entityData.policyId));
 
     // For local storage per D-108
-    // 归一化路径分隔符：Windows 存的反斜杠在 Linux 上读不到，统一用 /
     return {
-      filePath: entityData.source.replace(/\\/g, '/'),
+      filePath: resolveEntitySource(entityData.source),
       fileName: link.fileName || fileName,
       mimeType: entityData.mimeType || 'application/octet-stream',
       size: entityData.size,

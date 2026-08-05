@@ -29,6 +29,7 @@ import { ChatHistoryService } from './chat-history.service';
 import { DomainError } from './domain-error';
 import { toAiSdkTools } from './tools/tool-bridge';
 import { articleTools } from './tools/article-tools';
+import { ToolRegistry } from './tools/tool-registry';
 import { ArticleService } from '../article/article.service';
 import { htmlToPlainText } from './adapters/html-to-text';
 import { decodePublicID, EntityType } from '../common/utils/sqids.util';
@@ -55,6 +56,7 @@ export class ChatService {
     private chatHistory: ChatHistoryService,
     private settings: SettingsService,
     private moduleRef: ModuleRef,
+    private toolRegistry: ToolRegistry,
   ) {
     this.toolCtx = {
       db: this.db,
@@ -62,7 +64,7 @@ export class ChatService {
       getService: <T>(token: ServiceIdentifier) =>
         this.moduleRef.get<T>(token as any, { strict: false }),
     };
-    this.tools = toAiSdkTools(articleTools, this.toolCtx);
+    this.tools = this.toolRegistry.getAllTools(this.toolCtx);
   }
 
   /**

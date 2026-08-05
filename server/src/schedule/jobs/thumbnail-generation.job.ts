@@ -5,6 +5,7 @@ import { entities } from '../../database/schemas/entity.schema';
 import { DRIZZLE } from '../../database/database.module';
 import { Inject } from '@nestjs/common';
 import { eq, isNull, and } from 'drizzle-orm';
+import { resolveEntitySource } from '../../common/utils/upload-path';
 
 /**
  * ThumbnailGenerationJob — generates thumbnail for a single file.
@@ -76,6 +77,6 @@ export class ThumbnailGenerationJob {
     }
 
     // Generate thumbnail — errors are caught internally by ThumbnailService per D-106
-    await this.thumbnailService.generateThumbnail(fileId, entity.source, file.name);
+    await this.thumbnailService.generateThumbnail(fileId, resolveEntitySource(entity.source), file.name);
   }
 }
