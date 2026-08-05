@@ -189,6 +189,16 @@ export class SettingsService implements OnModuleInit {
     });
 
     const result = this.unflatten(publicSettings);
+
+    // 兼容前端 siteConfig 结构：flat key 是 post.default.cover，但前端组件读取
+    // siteConfig.post.default.default_cover（Go 后端 siteConfig 组装时也这样命名）。
+    // 仅映射输出结构，不影响 getByKeys/update 使用的 flat key（post.default.cover）。
+    const postDefault = result?.post?.default;
+    if (postDefault && 'cover' in postDefault && !('default_cover' in postDefault)) {
+      postDefault.default_cover = postDefault.cover;
+      delete postDefault.cover;
+    }
+
     (result as any)._config_version = this.configVersion;
     return result;
   }

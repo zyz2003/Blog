@@ -24,7 +24,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { StoragePolicyService } from '../storage-policy/storage-policy.service';
 import { ThumbnailService } from '../thumbnail/thumbnail.service';
 import { generatePublicID } from '../common/utils/sqids.util';
-import { getUploadBaseDir, getUploadSubdir } from '../common/utils/upload-path';
+import { getUploadBaseDir, getUploadSubdir, toRelativeSource } from '../common/utils/upload-path';
 import { findOrCreateParentPath } from '../file/utils/parent-path';
 import { files } from '../database/schemas/file.schema';
 import { entities } from '../database/schemas/entity.schema';
@@ -143,7 +143,7 @@ export class ArticleController {
       .insert(entities)
       .values({
         type: 'image_content',
-        source: targetPath,
+        source: toRelativeSource(targetPath),
         size: file.size,
         policyId: policy.id,
         createdBy: ownerId,

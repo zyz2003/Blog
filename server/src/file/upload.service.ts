@@ -20,7 +20,7 @@ import {
   EntityType,
 } from '../common/utils/sqids.util';
 import { ErrorCodes } from '../common/constants/error-codes';
-import { getUploadBaseDir } from '../common/utils/upload-path';
+import { getUploadBaseDir, toRelativeSource } from '../common/utils/upload-path';
 import {
   UploadSession,
   UPLOAD_SESSION_EXPIRE_HOURS,
@@ -305,7 +305,7 @@ export class UploadService implements OnModuleInit, OnModuleDestroy {
       tx
         .update(entities)
         .set({
-          source: targetPath,
+          source: toRelativeSource(targetPath),
           mimeType: inferMimeType(fileName),
           size: actualSize,
           uploadSessionId: null,
@@ -505,7 +505,7 @@ export class UploadService implements OnModuleInit, OnModuleDestroy {
         .insert(entities)
         .values({
           type: 'file_content',
-          source: targetPath,
+          source: toRelativeSource(targetPath),
           size: stat.size,
           policyId,
           createdBy: ownerId,

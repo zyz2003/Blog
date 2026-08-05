@@ -92,3 +92,24 @@ export function resolveEntitySource(source: string): string {
   // 其他相对路径，拼接 uploadBase
   return path.join(getUploadBaseDir(), normalized);
 }
+
+/**
+ * 把上传落盘时的绝对路径转为可移植的相对路径（data/uploads/...）。
+ *
+ * entity.source 存相对路径后，正式环境迁移只需整体搬 server/data/ + 改 DB_PATH，
+ * 所有 source 由 resolveEntitySource() 基于新的 DB_PATH 自动解析，无需逐个改数据。
+ *
+ * 若传入的不是 uploads 下的绝对路径（如已是相对路径 / 其他目录），原样返回，
+ * 保证幂等。
+ */
+export function toRelativeSource(absPath: string): string {
+  if (!absPath) return absPath;
+  const normalized = absPath.replace(/\\/g, '/');
+  const base = getUploadBaseDir().replace(/\\/g, '/');
+  const basePrefix = base.endsWith('/') ? base : `${base}/`;
+  if (normalized.startsWith(basePrefix)) {
+    return `data/uploads/${normalized.slice(basePrefix.length)}`;
+  }
+  // 已在 uploads 外或已是相对路径，保持原样（兼容迁移前记录）
+  return normalized;
+}

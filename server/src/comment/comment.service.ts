@@ -22,7 +22,7 @@ import {
   decodePublicID,
   EntityType,
 } from '../common/utils/sqids.util';
-import { getUploadBaseDir } from '../common/utils/upload-path';
+import { getUploadBaseDir, toRelativeSource } from '../common/utils/upload-path';
 import { findOrCreateParentPath } from '../file/utils/parent-path';
 import { ErrorCodes } from '../common/constants/error-codes';
 import { users } from '../database/schemas/user.schema';
@@ -1090,7 +1090,7 @@ export class CommentService {
       .insert(entities)
       .values({
         type: 'image_content',
-        source: targetPath,
+        source: toRelativeSource(targetPath),
         size: file.size,
         policyId: policy.id,
         createdBy: ownerId,

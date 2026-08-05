@@ -18,7 +18,7 @@ import { toISODateString } from '../common/utils/time.util';
 import { parseAnzhiyuURI, resolvePhysicalPath, inferMimeType } from './utils/path-resolver';
 import { ensureDirectoryExists, isThumbnailableExtension } from './utils/file-system';
 import { findOrCreateParentPath } from './utils/parent-path';
-import { getUploadBaseDir, resolveEntitySource } from '../common/utils/upload-path';
+import { getUploadBaseDir, resolveEntitySource, toRelativeSource } from '../common/utils/upload-path';
 import { files } from '../database/schemas/file.schema';
 import { entities } from '../database/schemas/entity.schema';
 import { storagePolicies } from '../database/schemas/storage-policy.schema';
@@ -1032,7 +1032,7 @@ export class FileService {
             .insert(entities)
             .values({
               type: 'file_content',
-              source: filePath,
+              source: toRelativeSource(filePath),
               size: fileStat.size,
               policyId,
               createdBy: ownerId,
@@ -1059,7 +1059,7 @@ export class FileService {
           .insert(entities)
           .values({
             type: 'file_content',
-            source: entryPath,
+            source: toRelativeSource(entryPath),
             size: stat.size,
             policyId,
             createdBy: ownerId,
