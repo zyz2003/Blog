@@ -143,6 +143,7 @@ export function FileManager() {
         onGetDirectLink={onActionGetDirectLink}
         onCopy={onActionCopy}
         onMove={onActionMove}
+        onRefresh={handleRefresh}
       />
 
       <div className={styles["breadcrumb-toolbar-row"]}>

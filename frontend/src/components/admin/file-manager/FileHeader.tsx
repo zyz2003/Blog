@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   RiCloseLine,
@@ -12,10 +13,12 @@ import {
   RiSearch2Line,
   RiShareLine,
   RiUpload2Line,
+  RiRefreshLine,
 } from "react-icons/ri";
-import { Button } from "@heroui/react";
+import { Button, addToast } from "@heroui/react";
 import { Tooltip } from "@/components/ui/tooltip";
 import { springTransition } from "@/lib/motion";
+import { migrateDiskFilesApi } from "@/lib/api/file-manager";
 import styles from "./FileHeader.module.css";
 
 interface FileHeaderProps {
@@ -32,6 +35,7 @@ interface FileHeaderProps {
   onShare: () => void;
   onGetDirectLink: () => void;
   onDelete: () => void;
+  onRefresh: () => void;
 }
 
 export function FileHeader({
@@ -48,7 +52,30 @@ export function FileHeader({
   onGetDirectLink,
   onDelete,
   onTriggerSearch,
+  onRefresh,
 }: FileHeaderProps) {
+  const [isMigrating, setIsMigrating] = useState(false);
+
+  const handleMigrate = async () => {
+    setIsMigrating(true);
+    try {
+      const res = await migrateDiskFilesApi();
+      if (res.code === 200 && res.data) {
+        const { dirs, files, skipped } = res.data;
+        addToast({
+          title: "扫描完成",
+          description: `新增 ${dirs} 个目录、${files} 个文件记录${skipped > 0 ? `，跳过 ${skipped} 个已有记录` : ""}`,
+          color: "success",
+        });
+        onRefresh();
+      }
+    } catch {
+      addToast({ title: "扫描失败", color: "danger" });
+    } finally {
+      setIsMigrating(false);
+    }
+  };
+
   return (
     <div className={styles["file-heard-actions"]}>
       <div className={styles["primary-actions"]}>
@@ -81,6 +108,20 @@ export function FileHeader({
               aria-label="搜索"
             >
               <RiSearch2Line />
+            </Button>
+          </motion.div>
+        </Tooltip>
+        <Tooltip content="扫描磁盘文件（补录旧文件到文件管理器）" placement="bottom" showArrow={false}>
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.93 }}>
+            <Button
+              isIconOnly
+              className={styles["search-btn"]}
+              variant="bordered"
+              isLoading={isMigrating}
+              onPress={handleMigrate}
+              aria-label="扫描磁盘"
+            >
+              <RiRefreshLine />
             </Button>
           </motion.div>
         </Tooltip>

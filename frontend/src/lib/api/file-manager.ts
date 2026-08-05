@@ -219,3 +219,7 @@ export const regenerateDirectoryThumbnailsApi = (
 export const createShareLinkApi = (params: CreateShareLinkRequest): Promise<CreateShareLinkResponse> => {
   return apiClient.post<CreateShareLinkResponse["data"]>(apiPath("files/share/create"), params);
 };
+
+export const migrateDiskFilesApi = (): Promise<BaseResponse<{ dirs: number; files: number; skipped: number }>> => {
+  return apiClient.post<{ dirs: number; files: number; skipped: number }>(apiPath("file/migrate"));
+};
