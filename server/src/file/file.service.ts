@@ -96,6 +96,28 @@ export class FileService {
       }
     }
 
+    // 根目录或目录无关联策略时，回退到 article_image 默认策略，
+    // 保证文件管理器上传有可用策略（前端依赖 storage_policy 决定上传目标）
+    if (!storagePolicy) {
+      const [defaultPolicy] = await this.db
+        .select()
+        .from(storagePolicies)
+        .where(
+          and(
+            eq(storagePolicies.flag, 'article_image'),
+            isNull(storagePolicies.deletedAt),
+          ),
+        );
+      if (defaultPolicy) {
+        storagePolicy = {
+          id: generatePublicID(defaultPolicy.id, EntityType.StoragePolicy),
+          name: defaultPolicy.name,
+          type: defaultPolicy.type,
+          max_size: defaultPolicy.maxSize,
+        };
+      }
+    }
+
     return {
       files: list.map((f: any) => this.toFileItem(f)),
       parent,
