@@ -224,8 +224,8 @@
   font-size: 14px;
   font-weight: 500;
   border-radius: 8px;
-  border: none;
-  background: transparent;
+  border: 1px solid var(--anzhiyu-card-border);
+  background: var(--anzhiyu-card-bg);
   color: var(--anzhiyu-fontcolor);
   outline: none;
 }

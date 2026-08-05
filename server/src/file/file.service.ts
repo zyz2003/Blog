@@ -18,6 +18,7 @@ import { toISODateString } from '../common/utils/time.util';
 import { parseAnzhiyuURI, resolvePhysicalPath, inferMimeType } from './utils/path-resolver';
 import { ensureDirectoryExists, isThumbnailableExtension } from './utils/file-system';
 import { findOrCreateParentPath } from './utils/parent-path';
+import { getUploadBaseDir } from '../common/utils/upload-path';
 import { files } from '../database/schemas/file.schema';
 import { entities } from '../database/schemas/entity.schema';
 import { storagePolicies } from '../database/schemas/storage-policy.schema';
@@ -58,7 +59,16 @@ export class FileService {
         ownerId,
       );
       if (!dir || dir.type !== 2) {
-        throw new NotFoundException(ErrorCodes.FOLDER_NOT_FOUND);
+        // 目录记录不存在（旧文件未创建目录记录），返回空列表而非 404
+        return {
+          files: [],
+          parent: null,
+          pagination: { page: options?.page ?? 1, page_size: options?.pageSize ?? 50, next_token: '', is_cursor: true },
+          props: { total: 0 },
+          context_hint: '',
+          storage_policy: null,
+          view: null,
+        };
       }
       currentParentId = dir.id;
       directoryFile = dir;
@@ -871,7 +881,139 @@ export class FileService {
   }
 
   private getHmacSecret(): string {
-    // For now use a fixed secret. Will be read from SettingsService in Plan 05-05.
     return process.env.HMAC_SECRET || 'anheyu-hmac-secret-key-2024';
+  }
+
+  /**
+   * 迁移：扫描磁盘 uploads/ 目录，为缺少 files 记录的文件创建记录。
+   * 旧上传的文件有磁盘文件但没 files 表记录（没目录记录、parentId=null），
+   * 导致文件管理器看不到。此方法扫描磁盘，补录文件和目录记录。
+   */
+  async migrateDiskFiles(ownerId: number): Promise<{ dirs: number; files: number; skipped: number }> {
+    const uploadBase = getUploadBaseDir();
+    let dirCount = 0;
+    let fileCount = 0;
+    let skipCount = 0;
+
+    // 获取默认策略
+    const [defaultPolicy] = await this.db
+      .select()
+      .from(storagePolicies)
+      .where(and(eq(storagePolicies.flag, 'article_image'), isNull(storagePolicies.deletedAt)));
+    const policyId = defaultPolicy?.id || 1;
+
+    // 扫描 uploads/ 下的子目录
+    let entries: string[];
+    try {
+      entries = await fs.readdir(uploadBase);
+    } catch {
+      return { dirs: 0, files: 0, skipped: 0 };
+    }
+
+    for (const entry of entries) {
+      if (entry === 'thumbnails' || entry === 'tmp') continue; // 跳过系统目录
+      const entryPath = path.join(uploadBase, entry);
+      const stat = await fs.stat(entryPath).catch(() => null);
+      if (!stat) continue;
+
+      if (stat.isDirectory()) {
+        // 为子目录创建目录记录
+        const parentId = await findOrCreateParentPath(
+          `/${entry}/dummy`,
+          ownerId,
+          policyId,
+          this.db,
+        );
+
+        // 扫描子目录内的文件
+        const fileEntries = await fs.readdir(entryPath).catch(() => []);
+        for (const fileName of fileEntries) {
+          const filePath = path.join(entryPath, fileName);
+          const fileStat = await fs.stat(filePath).catch(() => null);
+          if (!fileStat || fileStat.isDirectory()) continue;
+
+          // 检查是否已有文件记录（按 name + ownerId + parentId 查）
+          const [existing] = await this.db
+            .select()
+            .from(files)
+            .where(and(
+              eq(files.name, fileName),
+              eq(files.ownerId, ownerId),
+              eq(files.parentId, parentId),
+              isNull(files.deletedAt),
+            ));
+
+          if (existing) {
+            skipCount++;
+            continue;
+          }
+
+          // 创建 entity + file 记录
+          const [entity] = await this.db
+            .insert(entities)
+            .values({
+              type: 'file_content',
+              source: filePath,
+              size: fileStat.size,
+              policyId,
+              createdBy: ownerId,
+              mimeType: inferMimeType(fileName),
+            })
+            .returning();
+
+          await this.db.insert(files).values({
+            ownerId,
+            parentId,
+            name: fileName,
+            size: fileStat.size,
+            type: 1,
+            primaryEntityId: entity.id,
+          });
+          fileCount++;
+        }
+        dirCount++;
+      } else {
+        // 根目录下的散落文件（parentId=null）
+        const [existing] = await this.db
+          .select()
+          .from(files)
+          .where(and(
+            eq(files.name, entry),
+            eq(files.ownerId, ownerId),
+            isNull(files.parentId),
+            isNull(files.deletedAt),
+          ));
+
+        if (existing) {
+          skipCount++;
+          continue;
+        }
+
+        const [entity] = await this.db
+          .insert(entities)
+          .values({
+            type: 'file_content',
+            source: entryPath,
+            size: stat.size,
+            policyId,
+            createdBy: ownerId,
+            mimeType: inferMimeType(entry),
+          })
+          .returning();
+
+        await this.db.insert(files).values({
+          ownerId,
+          parentId: null,
+          name: entry,
+          size: stat.size,
+          type: 1,
+          primaryEntityId: entity.id,
+        });
+        fileCount++;
+      }
+    }
+
+    this.logger.log(`Migration complete: ${dirCount} dirs, ${fileCount} files created, ${skipCount} skipped`);
+    return { dirs: dirCount, files: fileCount, skipped: skipCount };
   }
 }

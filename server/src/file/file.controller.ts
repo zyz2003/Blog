@@ -222,6 +222,12 @@ export class FileController {
     return this.fileService.renameItem(dto.id, dto.new_name, ownerId);
   }
 
+  @Post('migrate')
+  async migrateDiskFiles(@CurrentUser() user: any) {
+    const ownerId = this.extractOwnerDbId(user);
+    return this.fileService.migrateDiskFiles(ownerId);
+  }
+
   private extractOwnerDbId(user: any): number {
     if (!user) return 1;
     if (user.dbId) return user.dbId;
