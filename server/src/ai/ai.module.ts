@@ -12,6 +12,8 @@ import { ChatService } from './chat.service';
 import { ChatHistoryService } from './chat-history.service';
 import { AiWritingService } from './writing/ai-writing.service';
 import { ToolRegistry } from './tools/tool-registry';
+import { ExternalToolService } from './tools/external/external-tool.service';
+import { McpClientManager } from './tools/external/mcp-client-manager';
 
 @Module({
   imports: [DatabaseModule, SettingsModule, SearchModule, ArticleModule],
@@ -22,6 +24,8 @@ import { ToolRegistry } from './tools/tool-registry';
     ChatHistoryService,
     AiWritingService,
     ToolRegistry,
+    ExternalToolService,
+    McpClientManager,
     { provide: 'ARTICLE_AI_PORT', useClass: SummaryAdapter },
   ],
   exports: ['ARTICLE_AI_PORT', ChatService, ChatHistoryService],

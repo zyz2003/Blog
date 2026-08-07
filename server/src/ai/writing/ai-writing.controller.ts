@@ -11,6 +11,7 @@
 import {
   Controller,
   Post,
+  Get,
   Body,
   Res,
   UseGuards,
@@ -21,6 +22,7 @@ import { AdminGuard } from '../../common/guards/admin.guard';
 import type { Response } from 'express';
 import { AiWritingService } from './ai-writing.service';
 import { DomainError } from '../domain-error';
+import { AI_BLOCKS } from './block-registry';
 
 @Controller('ai/writing')
 @UseGuards(JwtAuthGuard, AdminGuard)
@@ -28,6 +30,15 @@ export class AiWritingController {
   private readonly logger = new Logger(AiWritingController.name);
 
   constructor(private readonly writingService: AiWritingService) {}
+
+  /**
+   * GET /api/ai/writing/blocks - 返回 AI 可用的自定义块注册表（给后台开关 UI 用）。
+   * 走 ResponseInterceptor 包成 { code, data, message }。
+   */
+  @Get('blocks')
+  listBlocks() {
+    return AI_BLOCKS;
+  }
 
   @Post('generate')
   async generate(

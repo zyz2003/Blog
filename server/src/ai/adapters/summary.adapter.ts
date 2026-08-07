@@ -10,6 +10,19 @@ import { ModelResolver } from '../model/model-resolver.service';
 import { htmlToPlainText } from './html-to-text';
 import { DomainError } from '../domain-error';
 
+const DEFAULT_SYSTEM_PROMPT = `# 角色
+你是本博客的 AI 摘要助手。
+
+# 任务
+为给定文章生成摘要。
+
+# 输出格式
+- 用中文输出一段摘要，200 字以内
+
+# 约束
+- 突出文章核心内容和要点
+- 不要输出正文以外的任何内容`;
+
 @Injectable()
 export class SummaryAdapter implements ArticleAiPort {
   private readonly logger = new Logger(SummaryAdapter.name);
@@ -42,8 +55,7 @@ export class SummaryAdapter implements ArticleAiPort {
 
     // 3. Read AI summary system prompt from settings
     const systemPrompt =
-      this.settings.get('ai_summary_system_prompt') ||
-      '请用中文为以下文章生成一段200字以内的摘要，突出文章核心内容和要点。';
+      this.settings.get('ai_summary_system_prompt') || DEFAULT_SYSTEM_PROMPT;
 
     // 4. Convert HTML to plain text and truncate
     const plainText = htmlToPlainText(contentHtml);
@@ -57,7 +69,7 @@ export class SummaryAdapter implements ArticleAiPort {
     const summaryProfileId = this.settings.get('ai_summary_profile_id') || undefined;
     let model;
     try {
-      model = this.modelResolver.resolve(summaryProfileId);
+      model = this.modelResolver.resolve(summaryProfileId, 'summary');
     } catch (error) {
       // ModelResolver throws DomainError for '未配置可用的 AI 模型'
       throw error instanceof DomainError

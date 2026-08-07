@@ -4,6 +4,16 @@
  * 不走 apiClient（axios 不支持流式），直接用 fetch + ReadableStream 解析 SSE。
  */
 import { useAuthStore } from "@/store/auth-store";
+import { apiClient } from "./client";
+
+/** AI 可用自定义块（与后端 block-registry 一致） */
+export interface AiBlock {
+  id: string;
+  label: string;
+  syntax: string;
+  example: string;
+  streamable: boolean;
+}
 
 interface StreamOptions {
   onChunk: (text: string) => void;
@@ -76,6 +86,12 @@ export const aiWritingApi = {
     options: StreamOptions,
   ): Promise<void> {
     return streamSSE("/api/ai/writing/rewrite", { text, instruction }, options);
+  },
+  /** 拉取 AI 可用自定义块注册表（给后台开关 UI 用） */
+  getBlocks(): Promise<AiBlock[]> {
+    return apiClient
+      .get<AiBlock[]>("/api/ai/writing/blocks")
+      .then((res) => res.data);
   },
 };
 

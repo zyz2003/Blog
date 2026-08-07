@@ -20,9 +20,7 @@ interface AiSummaryFormProps {
   loading?: boolean;
 }
 
-/** 默认 System Prompt（后端兜底值，前端展示用） */
-const DEFAULT_SYSTEM_PROMPT =
-  "请用中文为以下文章生成一段200字以内的摘要，突出文章核心内容和要点。";
+/** 默认 System Prompt 见后端 summary.adapter.ts；留空时后端兜底。 */
 
 export function AiSummaryForm({ values, onChange, loading }: AiSummaryFormProps) {
   const enabledProfiles: AiProfile[] = useMemo(() => {
@@ -96,7 +94,7 @@ export function AiSummaryForm({ values, onChange, loading }: AiSummaryFormProps)
           language="text"
           value={values[KEY_AI_SUMMARY_SYSTEM_PROMPT] || ""}
           onValueChange={v => onChange(KEY_AI_SUMMARY_SYSTEM_PROMPT, v)}
-          description={`留空时使用默认值：${DEFAULT_SYSTEM_PROMPT}`}
+          description="建议按「# 角色 / # 任务 / # 输出格式 / # 约束」分段编写。留空使用默认提示词。"
           minRows={6}
         />
       </SettingsSection>

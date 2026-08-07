@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Switch } from "@heroui/react";
 import { FormInput } from "@/components/ui/form-input";
 import { FormSelect, FormSelectItem } from "@/components/ui/form-select";
 import { FormCodeEditor } from "@/components/ui/form-code-editor";
@@ -12,7 +14,9 @@ import {
   KEY_AI_CHAT_WELCOME_MESSAGE,
   KEY_AI_CHAT_SUGGESTED_QUESTIONS,
   KEY_AI_CHAT_SYSTEM_PROMPT,
+  KEY_AI_CHAT_ENABLED_TOOLS,
 } from "@/lib/settings/setting-keys";
+import { aiToolsApi } from "@/lib/api/ai-tools";
 import type { AiProfile } from "@/lib/settings/ai-profile";
 
 interface AiChatFormProps {
@@ -21,9 +25,7 @@ interface AiChatFormProps {
   loading?: boolean;
 }
 
-/** Default System Prompt (backend fallback, shown in UI) */
-const DEFAULT_SYSTEM_PROMPT =
-  "你是博客站的 AI 助手，可以搜索和阅读博客文章来回答用户问题。请用中文回答。";
+/** Default System Prompt 见后端 chat.service.ts；留空时后端兜底。 */
 
 export function AiChatForm({ values, onChange, loading }: AiChatFormProps) {
   const chatProfiles: AiProfile[] = useMemo(() => {
@@ -41,6 +43,32 @@ export function AiChatForm({ values, onChange, loading }: AiChatFormProps) {
   }, [values[KEY_AI_PROFILES]]);
 
   const selectedProfileId = values[KEY_AI_CHAT_PROFILE_ID] || "";
+
+  // AI 工具列表
+  const { data: tools, isLoading: toolsLoading } = useQuery({
+    queryKey: ["ai-tools"],
+    queryFn: () => aiToolsApi.list(),
+    staleTime: 1000 * 60 * 10,
+  });
+
+  // 已启用的工具：空=全部（对话默认全开）；"[]"=不用；'[ids]'=指定
+  const enabledToolIds: string[] = useMemo(() => {
+    const raw = values[KEY_AI_CHAT_ENABLED_TOOLS];
+    if (!raw?.trim()) return tools?.map((t) => t.name) ?? [];
+    try {
+      const ids = JSON.parse(raw);
+      return Array.isArray(ids) ? ids.filter((i) => typeof i === "string") : [];
+    } catch {
+      return tools?.map((t) => t.name) ?? [];
+    }
+  }, [values[KEY_AI_CHAT_ENABLED_TOOLS], tools]);
+
+  const toggleTool = (name: string) => {
+    const current = new Set(enabledToolIds);
+    if (current.has(name)) current.delete(name);
+    else current.add(name);
+    onChange(KEY_AI_CHAT_ENABLED_TOOLS, JSON.stringify(Array.from(current)));
+  };
 
   if (loading) {
     return (
@@ -110,9 +138,44 @@ export function AiChatForm({ values, onChange, loading }: AiChatFormProps) {
           language="text"
           value={values[KEY_AI_CHAT_SYSTEM_PROMPT] || ""}
           onValueChange={v => onChange(KEY_AI_CHAT_SYSTEM_PROMPT, v)}
-          description={`留空时使用默认值：${DEFAULT_SYSTEM_PROMPT}`}
+          description="建议按「# 角色 / # 任务 / # 输出格式 / # 约束」分段编写。留空使用默认提示词。"
           minRows={6}
         />
+      </SettingsSection>
+
+      {/* 启用工具 */}
+      <SettingsSection
+        collapsible
+        title="启用工具"
+        description="AI 对话可调用的工具。留空=全部启用；取消勾选的不会被调用。工具管理见「AI 工具」页面。"
+      >
+        {toolsLoading ? (
+          <div className="flex items-center justify-center py-6">
+            <Spinner />
+          </div>
+        ) : (tools ?? []).length === 0 ? (
+          <p className="text-sm text-muted-foreground py-2">暂无已注册工具。</p>
+        ) : (
+          <div className="space-y-1">
+            {(tools ?? []).map((tool) => (
+              <div
+                key={tool.name}
+                className="flex items-start justify-between gap-3 py-1.5 border-b border-border/40 last:border-0"
+              >
+                <div className="min-w-0">
+                  <code className="text-xs font-mono text-primary">{tool.name}</code>
+                  <p className="text-xs text-muted-foreground mt-0.5">{tool.description}</p>
+                </div>
+                <Switch
+                  size="sm"
+                  isSelected={enabledToolIds.includes(tool.name)}
+                  onValueChange={() => toggleTool(tool.name)}
+                  aria-label={`启用 ${tool.name}`}
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </SettingsSection>
     </div>
   );

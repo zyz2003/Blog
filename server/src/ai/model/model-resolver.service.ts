@@ -13,18 +13,21 @@ export class ModelResolver {
    * Resolve a LanguageModel from the configured AI profiles.
    *
    * Resolution order:
-   * 1. Exact match by profileId (if provided)
-   * 2. Fallback to ai_default_profile_id setting
-   * 3. Fallback to first enabled profile
+   * 1. Exact match by profileId (if provided), else ai_default_profile_id
+   * 2. If purpose given: first enabled profile whose purposes include it
+   * 3. Fallback to first enabled profile (any purpose)
    *
    * Throws if no enabled profile is found.
    */
-  resolve(profileId?: string): LanguageModel {
+  resolve(profileId?: string, purpose?: string): LanguageModel {
     const profiles = resolveProfiles(this.settings);
     const defaultId = this.settings.get('ai_default_profile_id');
 
     const profile =
       profiles.find((p) => p.id === (profileId ?? defaultId) && p.enabled) ||
+      (purpose
+        ? profiles.find((p) => p.enabled && p.purposes.includes(purpose))
+        : undefined) ||
       profiles.find((p) => p.enabled);
 
     if (!profile) throw new DomainError('未配置可用的 AI 模型');

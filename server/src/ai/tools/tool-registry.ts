@@ -13,13 +13,18 @@ import type { ToolSet } from 'ai';
 import { articleTools } from './article-tools';
 import { toAiSdkTools } from './tool-bridge';
 import type { ToolDef, ToolContext } from './tool-def';
+import { ExternalToolService } from './external/external-tool.service';
+import { McpClientManager } from './external/mcp-client-manager';
 
 @Injectable()
 export class ToolRegistry {
   private readonly logger = new Logger(ToolRegistry.name);
   private tools: Map<string, ToolDef> = new Map();
 
-  constructor() {
+  constructor(
+    private externalToolService: ExternalToolService,
+    private mcpClientManager: McpClientManager,
+  ) {
     // 注册内置工具
     for (const tool of articleTools) {
       this.tools.set(tool.name, tool);
@@ -27,7 +32,33 @@ export class ToolRegistry {
     this.logger.log(`Registered ${this.tools.size} built-in tools`);
   }
 
-  /** 注册一个外部工具（预留 MCP 式接口） */
+  /** 内置 + HTTP 外部工具的 ToolDef（MCP 是 ToolSet，单独合并） */
+  private getBuiltinAndHttpDefs(): ToolDef[] {
+    const seen = new Set<string>();
+    const result: ToolDef[] = [];
+    for (const t of this.tools.values()) {
+      if (!seen.has(t.name)) {
+        seen.add(t.name);
+        result.push(t);
+      }
+    }
+    for (const t of this.externalToolService.getAllToolDefs()) {
+      if (!seen.has(t.name)) {
+        seen.add(t.name);
+        result.push(t);
+      } else {
+        this.logger.warn(`External tool "${t.name}" name collides, skipped`);
+      }
+    }
+    return result;
+  }
+
+  /** MCP 工具 ToolSet（已命名空间 mcp_，由 @ai-sdk/mcp 产出） */
+  private getMcpToolSet(): ToolSet {
+    return this.mcpClientManager.getToolSet();
+  }
+
+  /** 注册一个外部工具（运行时动态注册，一般走 ExternalToolService 从设置加载） */
   registerTool(tool: ToolDef): void {
     this.tools.set(tool.name, tool);
     this.logger.log(`Tool registered: ${tool.name}`);
@@ -39,12 +70,21 @@ export class ToolRegistry {
     this.logger.log(`Tool unregistered: ${name}`);
   }
 
-  /** 列出所有已注册工具的元信息（给 UI 用） */
+  /** 列出所有工具的元信息（给 UI 用）：内置 + HTTP + MCP */
   listTools(): { name: string; description: string }[] {
-    return Array.from(this.tools.values()).map((t) => ({
+    const defs = this.getBuiltinAndHttpDefs().map((t) => ({
       name: t.name,
       description: t.description,
     }));
+    return [...defs, ...this.mcpClientManager.getToolMeta()];
+  }
+
+  /** 列出所有工具的 ID（给 resolveEnabledToolIds 用） */
+  listToolIds(): string[] {
+    return [
+      ...this.getBuiltinAndHttpDefs().map((t) => t.name),
+      ...Object.keys(this.getMcpToolSet()),
+    ];
   }
 
   /**
@@ -54,15 +94,47 @@ export class ToolRegistry {
    */
   getTools(toolIds: string[] | undefined, ctx?: ToolContext): ToolSet {
     if (!toolIds || toolIds.length === 0 || !ctx) return {};
-    const selected = Array.from(this.tools.values()).filter((t) =>
+    const selected = this.getBuiltinAndHttpDefs().filter((t) =>
       toolIds.includes(t.name),
     );
-    if (selected.length === 0) return {};
-    return toAiSdkTools(selected, ctx);
+    const baseToolSet = selected.length ? toAiSdkTools(selected, ctx) : {};
+    // 合并启用的 MCP 工具（ToolSet 级）
+    const mcpToolSet: ToolSet = {};
+    for (const [name, tool] of Object.entries(this.getMcpToolSet())) {
+      if (toolIds.includes(name)) mcpToolSet[name] = tool;
+    }
+    return { ...baseToolSet, ...mcpToolSet };
   }
 
-  /** 获取所有工具的 ToolSet */
+  /** 获取所有工具的 ToolSet（内置 + HTTP + MCP） */
   getAllTools(ctx: ToolContext): ToolSet {
-    return toAiSdkTools(Array.from(this.tools.values()), ctx);
+    return {
+      ...toAiSdkTools(this.getBuiltinAndHttpDefs(), ctx),
+      ...this.getMcpToolSet(),
+    };
+  }
+}
+
+/**
+ * 解析"启用工具 ID 列表"设置项。
+ * - `""`/undefined/非法 -> emptyMeansAll ? allToolIds : []（默认值：对话全开/写作全关）
+ * - `"[]"` -> []（显式不用任何工具）
+ * - `'["x"]'` -> 过滤到已知 id
+ */
+export function resolveEnabledToolIds(
+  raw: string | undefined,
+  allToolIds: string[],
+  emptyMeansAll: boolean,
+): string[] {
+  const fallback = emptyMeansAll ? allToolIds : [];
+  if (!raw || !raw.trim()) return fallback;
+  try {
+    const ids = JSON.parse(raw);
+    if (!Array.isArray(ids)) return fallback;
+    return ids.filter(
+      (id): id is string => typeof id === 'string' && allToolIds.includes(id),
+    );
+  } catch {
+    return fallback;
   }
 }

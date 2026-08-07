@@ -363,4 +363,7 @@ export const DEFAULT_SETTINGS: Array<{ key: string; value: string; comment: stri
   { key: "ai_writing_temperature", value: "0.7", comment: "AI 写作温度（0=严谨, 1=创意）" },
   { key: "ai_chat_enabled_tools", value: "", comment: "AI 对话启用的工具 ID 列表（JSON 数组，留空=全部内置工具）" },
   { key: "ai_writing_enabled_tools", value: "", comment: "AI 写作启用的工具 ID 列表（JSON 数组，留空=不启用）" },
+  { key: "ai_writing_enabled_blocks", value: "", comment: "AI 写作可用的自定义块 ID 列表（JSON 数组，留空=默认全部）" },
+  { key: "ai_external_tools", value: "", comment: "外部 HTTP 工具配置（JSON 数组，每项含 name/url/method/inputs 等）" },
+  { key: "ai_mcp_servers", value: "", comment: "MCP 服务器配置（JSON 数组，每项含 name/transport/url/enabled）" },
 ];

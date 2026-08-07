@@ -254,16 +254,24 @@ export class SettingsService implements OnModuleInit {
 
       let changed = false;
       for (const profile of incoming) {
-        if (profile.api_key && profile.api_key.startsWith('*')) {
-          const existingProfile = existing.find(
-            (p: any) => String(p.id) === String(profile.id),
-          );
-          if (existingProfile?.api_key) {
-            profile.api_key = existingProfile.api_key;
-            delete profile.api_key_masked;
-            delete profile.has_api_key;
-            changed = true;
-          }
+        // 前端拿到的 profile 经 maskAIProfiles 脱敏：api_key 被移除，
+        // 只剩 has_api_key + api_key_masked。保存时回传的 api_key 为空/缺省。
+        // 用真实 key 恢复：incoming 无真实 key（缺省/空/星号掩码）时取已存的。
+        const incomingKey: string | undefined = profile.api_key;
+        const isMaskedOrMissing =
+          !incomingKey ||
+          incomingKey.trim() === '' ||
+          incomingKey.startsWith('*');
+        if (!isMaskedOrMissing) continue; // 用户输入了新 key，原样保留
+
+        const existingProfile = existing.find(
+          (p: any) => String(p.id) === String(profile.id),
+        );
+        if (existingProfile?.api_key) {
+          profile.api_key = existingProfile.api_key;
+          delete profile.api_key_masked;
+          delete profile.has_api_key;
+          changed = true;
         }
       }
 

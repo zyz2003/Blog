@@ -29,6 +29,9 @@ import { ChatService } from './chat.service';
 import { ChatHistoryService } from './chat-history.service';
 import { SettingsService } from '../settings/settings.service';
 import { DomainError } from './domain-error';
+import { ToolRegistry } from './tools/tool-registry';
+import { ExternalToolService } from './tools/external/external-tool.service';
+import { McpClientManager } from './tools/external/mcp-client-manager';
 
 @Controller('ai')
 export class AiChatController {
@@ -38,7 +41,47 @@ export class AiChatController {
     private readonly chatService: ChatService,
     private readonly chatHistory: ChatHistoryService,
     private readonly settings: SettingsService,
+    private readonly toolRegistry: ToolRegistry,
+    private readonly externalToolService: ExternalToolService,
+    private readonly mcpClientManager: McpClientManager,
   ) {}
+
+  /**
+   * GET /api/ai/tools - 返回已注册的 AI 工具列表（给后台开关 UI 用）。
+   */
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @Get('tools')
+  listTools() {
+    return this.toolRegistry.listTools();
+  }
+
+  /**
+   * POST /api/ai/tools/http/test - 测试一个 HTTP 工具配置（用示例输入执行一次）。
+   * body: { config: HttpToolConfig, input: Record<string, unknown> }
+   */
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @Post('tools/http/test')
+  async testHttpTool(
+    @Body() body: { config?: Record<string, unknown>; input?: Record<string, unknown> },
+  ) {
+    if (!body.config) {
+      return { error: 'config is required' };
+    }
+    return this.externalToolService.testHttpTool(body.config, body.input ?? {});
+  }
+
+  /**
+   * POST /api/ai/tools/mcp/test - 测试一个 MCP 服务器配置（连接 + 列出工具）。
+   * body: { config: McpServerConfig }
+   */
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @Post('tools/mcp/test')
+  async testMcpTool(@Body() body: { config?: Record<string, unknown> }) {
+    if (!body.config) {
+      return { error: 'config is required' };
+    }
+    return this.mcpClientManager.testConnection(body.config);
+  }
 
   /**
    * POST /api/ai/chat — stream a chat response.

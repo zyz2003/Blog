@@ -6,30 +6,67 @@
  *
  * SSE 格式：data: "chunk"\n\n ... data: [DONE]\n\n
  */
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { streamText } from 'ai';
 import type { Response } from 'express';
 import { ModelResolver } from '../model/model-resolver.service';
 import { SettingsService } from '../../settings/settings.service';
-import { ToolRegistry } from '../tools/tool-registry';
+import { DRIZZLE } from '../../database/database.module';
+import {
+  ToolRegistry,
+  resolveEnabledToolIds,
+} from '../tools/tool-registry';
+import type { ToolContext, ServiceIdentifier } from '../tools/tool-def';
 import { DomainError } from '../domain-error';
+import { resolveEnabledBlockIds, buildBlockSyntaxGuide } from './block-registry';
 
-const DEFAULT_SYSTEM_PROMPT =
-  '你是一个专业的博客写作助手。请用中文写作，风格清晰简洁，适合技术博客。输出的内容使用 HTML 格式（段落用 <p> 标签，代码用 <pre><code> 标签）。不要输出 ```html 代码块标记，直接输出 HTML 内容。';
+const DEFAULT_SYSTEM_PROMPT = `# 角色
+你是本博客的 AI 写作助手，擅长撰写技术博客文章。
+
+# 任务
+根据用户指令撰写、续写或改写博客正文。
+
+# 输出格式
+- 直接输出 Markdown 正文，不要输出任何说明性文字、前后缀或解释
+- 标题用 #，代码用 \`\`\`语言 围栏代码块，行内代码用 \`code\`
+- 强调用 **加粗** 或 *斜体*，列表用 - 或 1.，引用用 >，链接用 [文本](url)，图片用 ![alt](url)
+
+# 约束
+- 用中文写作，风格清晰简洁，适合技术博客
+- 只输出正文内容，不要重复用户的指令或原文`;
 
 @Injectable()
 export class AiWritingService {
   private readonly logger = new Logger(AiWritingService.name);
+  private readonly toolCtx: ToolContext;
 
   constructor(
     private readonly modelResolver: ModelResolver,
     private readonly settings: SettingsService,
     private readonly toolRegistry: ToolRegistry,
-  ) {}
+    @Inject(DRIZZLE) private db: unknown,
+    private moduleRef: ModuleRef,
+  ) {
+    this.toolCtx = {
+      db: this.db,
+      settings: this.settings,
+      getService: <T>(token: ServiceIdentifier) =>
+        this.moduleRef.get<T>(token as any, { strict: false }),
+    };
+  }
 
   private getOptions() {
-    const systemPrompt =
+    const basePrompt =
       this.settings.get('ai_writing_system_prompt') || DEFAULT_SYSTEM_PROMPT;
+    // 追加启用的自定义块语法指南（教 AI 使用提示框/折叠/Mermaid 等）
+    const enabledBlockIds = resolveEnabledBlockIds(
+      this.settings.get('ai_writing_enabled_blocks'),
+    );
+    const blockGuide = buildBlockSyntaxGuide(enabledBlockIds);
+    const systemPrompt = blockGuide
+      ? `${basePrompt}\n\n${blockGuide}`
+      : basePrompt;
     const maxTokens = parseInt(
       this.settings.get('ai_writing_max_tokens') || '2000',
       10,
@@ -39,18 +76,6 @@ export class AiWritingService {
     );
     const profileId = this.settings.get('ai_writing_profile_id') || undefined;
     return { systemPrompt, maxTokens, temperature, profileId };
-  }
-
-  /** 从设置读取启用的工具 ID 列表 */
-  private getEnabledToolIds(): string[] | undefined {
-    const raw = this.settings.get('ai_writing_enabled_tools');
-    if (!raw) return undefined;
-    try {
-      const ids = JSON.parse(raw);
-      return Array.isArray(ids) ? ids : undefined;
-    } catch {
-      return undefined;
-    }
   }
 
   /**
@@ -64,8 +89,13 @@ export class AiWritingService {
     temperature: number,
     profileId?: string,
   ): Promise<void> {
-    const model = this.modelResolver.resolve(profileId);
-    const enabledTools = this.getEnabledToolIds();
+    const model = this.modelResolver.resolve(profileId, 'writing');
+    // 写作：空 = 不用工具（默认关闭）；显式 '[ids]' 才启用
+    const enabledToolIds = resolveEnabledToolIds(
+      this.settings.get('ai_writing_enabled_tools'),
+      this.toolRegistry.listToolIds(),
+      false,
+    );
 
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
@@ -79,7 +109,7 @@ export class AiWritingService {
         prompt: userPrompt,
         maxOutputTokens: maxTokens,
         temperature,
-        tools: this.toolRegistry.getTools(enabledTools),
+        tools: this.toolRegistry.getTools(enabledToolIds, this.toolCtx),
       });
 
       for await (const chunk of result.textStream) {
