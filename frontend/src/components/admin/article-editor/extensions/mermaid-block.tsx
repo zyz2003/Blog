@@ -171,14 +171,17 @@ function MermaidBlockView({ node, updateAttributes, selected }: NodeViewProps) {
 
   const { zoomEnabled, toggleZoom } = useMermaidZoom(svgContainerRef);
 
-  // 渲染 Mermaid 图表
+  // 渲染 Mermaid 图表（400ms debounce：流式增量渲染时节点被反复销毁重建，
+  // 定时器总在触发前被 cleanup 清除 -> mermaid.render 不会对半截代码触发 -> 零报错。
+  // 流式结束后节点稳定，400ms 后渲染图表。手动编辑时也避免每次按键重渲染。）
   useEffect(() => {
     if (!hasCode) return;
 
     const currentId = ++renderIdRef.current;
     let cancelled = false;
+    setRenderState({ svg: "", error: "", loading: true });
 
-    (async () => {
+    const timer = setTimeout(async () => {
       try {
         const mermaid = await getMermaid();
         const id = `mermaid-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
@@ -195,10 +198,11 @@ function MermaidBlockView({ node, updateAttributes, selected }: NodeViewProps) {
           });
         }
       }
-    })();
+    }, 400);
 
     return () => {
       cancelled = true;
+      clearTimeout(timer);
     };
   }, [code, hasCode]);
 
@@ -279,9 +283,13 @@ function MermaidBlockView({ node, updateAttributes, selected }: NodeViewProps) {
         >
           {renderState.loading && <div className="text-muted-foreground text-sm py-8">加载图表中...</div>}
           {renderState.error && (
-            <div className="text-danger text-sm py-4">
-              <div className="font-medium mb-1">Mermaid 渲染错误</div>
-              <div className="text-xs opacity-70">{renderState.error}</div>
+            <div className="py-2">
+              <div className="text-xs text-muted-foreground mb-2">
+                ⚠️ 图表渲染失败，显示源码（可编辑后重试）：
+              </div>
+              <pre className="text-xs bg-muted/40 rounded p-2 overflow-auto max-h-64 whitespace-pre-wrap break-all">
+                <code>{code}</code>
+              </pre>
             </div>
           )}
           {!renderState.loading && !renderState.error && renderState.svg && (

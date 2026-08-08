@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Switch } from "@heroui/react";
 import { FormInput } from "@/components/ui/form-input";
@@ -22,6 +22,37 @@ import { aiWritingApi, type AiBlock } from "@/lib/api/ai-writing";
 import { aiToolsApi } from "@/lib/api/ai-tools";
 import type { AiProfile } from "@/lib/settings/ai-profile";
 
+/** 默认系统提示词（与后端 ai-writing.service.ts 保持一致，外显给用户查看） */
+const DEFAULT_SYSTEM_PROMPT = `# 角色
+你是本博客的技术写作助手，擅长撰写结构清晰、逻辑严谨的技术博客文章。
+
+# 任务
+根据用户指令撰写、续写或改写博客正文。
+
+# 结构要求
+- 文章必须有清晰层次：引言（概述背景与问题）-> 主体分段论述 -> 结尾总结
+- 每个主题用 ## 标题分隔，主题内应有：观点 -> 论据/示例 -> 小结
+- 段落间自然过渡，不要突兀跳转
+- 长文用多章节结构，短文至少有引言和主体
+
+# 格式规范（严格遵守）
+- 标题：# 后必须有空格（写 \`# 标题\` 不写 \`#标题\`），标题层级：# 文章标题 / ## 章节 / ### 子节
+- 标题、代码块、表格、列表前后必须留一个空行
+- 代码：用 \`\`\`语言 围栏代码块（如 \`\`\`python），行内代码用 \`code\`
+- 列表：统一用 - 或 1.，不要混用；列表项之间不要空行
+- 表格：标准 Markdown 语法，表头分隔行必须有 |---|，单元格不留空（填 - 或 N/A）
+- 强调：**加粗**、*斜体*，不要嵌套
+- 引用：> 后加空格
+- 链接：[文本](url)，图片：![alt](url)
+- 水平线：用 ---（不要用 * * *）
+- Mermaid：节点标签含特殊字符（()[]:+空格）时用引号包裹，如 A["标签"]
+
+# 禁止事项
+- 禁止输出对话性文字（"好的"、"以下是"、"我来为您写"等）
+- 禁止重复用户的指令或原文
+- 禁止在正文前后添加解释、说明或注释
+- 禁止使用 HTML 标签（用 Markdown 语法替代）`;
+
 interface AiWritingFormProps {
   values: Record<string, string>;
   onChange: (key: string, value: string) => void;
@@ -29,6 +60,7 @@ interface AiWritingFormProps {
 }
 
 export function AiWritingForm({ values, onChange, loading }: AiWritingFormProps) {
+  const [showDefaultPrompt, setShowDefaultPrompt] = useState(false);
   // 所有启用的模型
   const allEnabledProfiles: AiProfile[] = useMemo(() => {
     try {
@@ -180,12 +212,27 @@ export function AiWritingForm({ values, onChange, loading }: AiWritingFormProps)
       >
         <FormTextarea
           label="系统提示词"
-          placeholder="# 角色 / # 任务 / # 输出格式 / # 约束（分段编写）"
+          placeholder="# 角色 / # 任务 / # 输出规范 / # 禁止事项（分段编写）"
           value={values[KEY_AI_WRITING_SYSTEM_PROMPT] ?? ""}
           onValueChange={(v) => onChange(KEY_AI_WRITING_SYSTEM_PROMPT, v)}
-          description="建议按「# 角色 / # 任务 / # 输出格式 / # 约束」分段编写。留空使用默认提示词。"
+          description="留空使用下方默认提示词。可按 # 角色 / # 任务 / # 结构要求 / # 输出规范 / # 禁止事项 分段自定义。"
           minRows={6}
         />
+        {/* 默认提示词外显（可折叠预览） */}
+        <div className="rounded-lg border border-border/40 bg-muted/20 p-3">
+          <button
+            type="button"
+            onClick={() => setShowDefaultPrompt((v) => !v)}
+            className="flex items-center gap-1.5 text-xs font-medium text-primary hover:bg-primary/10 px-2 py-1 rounded"
+          >
+            {showDefaultPrompt ? "▼" : "▶"} 查看默认提示词（留空时使用）
+          </button>
+          {showDefaultPrompt && (
+            <pre className="mt-2 text-xs text-muted-foreground bg-background/60 rounded p-3 overflow-auto max-h-96 whitespace-pre-wrap break-all">
+              {DEFAULT_SYSTEM_PROMPT}
+            </pre>
+          )}
+        </div>
         <SettingsFieldGroup cols={2}>
           <FormInput
             label="最大 Token"

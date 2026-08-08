@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { FormInput } from "@/components/ui/form-input";
 import { FormSelect, FormSelectItem } from "@/components/ui/form-select";
 import { FormCodeEditor } from "@/components/ui/form-code-editor";
@@ -20,9 +20,22 @@ interface AiSummaryFormProps {
   loading?: boolean;
 }
 
-/** 默认 System Prompt 见后端 summary.adapter.ts；留空时后端兜底。 */
+/** 默认系统提示词（与后端 summary.adapter.ts 保持一致，外显给用户查看） */
+const DEFAULT_SYSTEM_PROMPT = `# 角色
+你是本博客的 AI 摘要助手。
+
+# 任务
+为给定文章生成摘要。
+
+# 输出格式
+- 用中文输出一段摘要，200 字以内
+
+# 约束
+- 突出文章核心内容和要点
+- 不要输出正文以外的任何内容`;
 
 export function AiSummaryForm({ values, onChange, loading }: AiSummaryFormProps) {
+  const [showDefaultPrompt, setShowDefaultPrompt] = useState(false);
   const enabledProfiles: AiProfile[] = useMemo(() => {
     try {
       const raw = values[KEY_AI_PROFILES];
@@ -94,9 +107,23 @@ export function AiSummaryForm({ values, onChange, loading }: AiSummaryFormProps)
           language="text"
           value={values[KEY_AI_SUMMARY_SYSTEM_PROMPT] || ""}
           onValueChange={v => onChange(KEY_AI_SUMMARY_SYSTEM_PROMPT, v)}
-          description="建议按「# 角色 / # 任务 / # 输出格式 / # 约束」分段编写。留空使用默认提示词。"
+          description="留空使用下方默认提示词。可按 # 角色 / # 任务 / # 输出格式 / # 约束 分段自定义。"
           minRows={6}
         />
+        <div className="rounded-lg border border-border/40 bg-muted/20 p-3">
+          <button
+            type="button"
+            onClick={() => setShowDefaultPrompt((v) => !v)}
+            className="flex items-center gap-1.5 text-xs font-medium text-primary hover:bg-primary/10 px-2 py-1 rounded"
+          >
+            {showDefaultPrompt ? "▼" : "▶"} 查看默认提示词（留空时使用）
+          </button>
+          {showDefaultPrompt && (
+            <pre className="mt-2 text-xs text-muted-foreground bg-background/60 rounded p-3 overflow-auto max-h-96 whitespace-pre-wrap break-all">
+              {DEFAULT_SYSTEM_PROMPT}
+            </pre>
+          )}
+        </div>
       </SettingsSection>
     </div>
   );

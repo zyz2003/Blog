@@ -359,7 +359,7 @@ export const DEFAULT_SETTINGS: Array<{ key: string; value: string; comment: stri
   { key: "sidebar.weather.rectangle", value: "112.6534116,27.96920845", comment: "默认/固定位置坐标，格式：经度,纬度" },
   { key: "ai_writing_profile_id", value: "", comment: "AI 写作使用的模型 Profile ID（留空用默认模型）" },
   { key: "ai_writing_system_prompt", value: "", comment: "AI 写作系统提示词（留空用默认）" },
-  { key: "ai_writing_max_tokens", value: "2000", comment: "AI 写作单次生成最大 token 数" },
+  { key: "ai_writing_max_tokens", value: "", comment: "AI 写作单次生成最大 token 数（留空=不限制，用模型默认最大值；推理模型建议不限制或设大些）" },
   { key: "ai_writing_temperature", value: "0.7", comment: "AI 写作温度（0=严谨, 1=创意）" },
   { key: "ai_chat_enabled_tools", value: "", comment: "AI 对话启用的工具 ID 列表（JSON 数组，留空=全部内置工具）" },
   { key: "ai_writing_enabled_tools", value: "", comment: "AI 写作启用的工具 ID 列表（JSON 数组，留空=不启用）" },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Switch } from "@heroui/react";
 import { FormInput } from "@/components/ui/form-input";
@@ -25,9 +25,24 @@ interface AiChatFormProps {
   loading?: boolean;
 }
 
-/** Default System Prompt 见后端 chat.service.ts；留空时后端兜底。 */
+/** 默认系统提示词（与后端 chat.service.ts 保持一致，外显给用户查看） */
+const DEFAULT_SYSTEM_PROMPT = `# 角色
+你是本博客的 AI 助手，可以搜索和阅读博客文章来回答用户问题。
+
+# 任务
+回答用户关于博客内容的问题，必要时推荐相关文章。
+
+# 输出格式
+- 用中文回答
+- 推荐文章时侧重推荐理由，不要在回答中重复列出文章链接（卡片已展示）
+
+# 约束
+- 推荐文章时精选最相关的 2-3 篇，避免取过多候选
+- 对最终推荐的文章调用 get_article 获取详情
+- 用户指定分类或语言（如 Java、Python）时，优先用 get_articles_by_category 查找；分类名可用 list_categories 确认`;
 
 export function AiChatForm({ values, onChange, loading }: AiChatFormProps) {
+  const [showDefaultPrompt, setShowDefaultPrompt] = useState(false);
   const chatProfiles: AiProfile[] = useMemo(() => {
     try {
       const raw = values[KEY_AI_PROFILES];
@@ -138,9 +153,23 @@ export function AiChatForm({ values, onChange, loading }: AiChatFormProps) {
           language="text"
           value={values[KEY_AI_CHAT_SYSTEM_PROMPT] || ""}
           onValueChange={v => onChange(KEY_AI_CHAT_SYSTEM_PROMPT, v)}
-          description="建议按「# 角色 / # 任务 / # 输出格式 / # 约束」分段编写。留空使用默认提示词。"
+          description="留空使用下方默认提示词。可按 # 角色 / # 任务 / # 输出格式 / # 约束 分段自定义。"
           minRows={6}
         />
+        <div className="rounded-lg border border-border/40 bg-muted/20 p-3">
+          <button
+            type="button"
+            onClick={() => setShowDefaultPrompt((v) => !v)}
+            className="flex items-center gap-1.5 text-xs font-medium text-primary hover:bg-primary/10 px-2 py-1 rounded"
+          >
+            {showDefaultPrompt ? "▼" : "▶"} 查看默认提示词（留空时使用）
+          </button>
+          {showDefaultPrompt && (
+            <pre className="mt-2 text-xs text-muted-foreground bg-background/60 rounded p-3 overflow-auto max-h-96 whitespace-pre-wrap break-all">
+              {DEFAULT_SYSTEM_PROMPT}
+            </pre>
+          )}
+        </div>
       </SettingsSection>
 
       {/* 启用工具 */}

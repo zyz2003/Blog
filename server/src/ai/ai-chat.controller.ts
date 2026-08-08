@@ -178,19 +178,15 @@ export class AiChatController {
         /* ignore */
       }
     }
-    if (!api_key) {
-      return {
-        code: 200,
-        data: { success: false, latencyMs: 0, message: '未找到模型配置或未配置 API Key，请先保存' },
-        message: 'ok',
-      };
-    }
 
     const start = Date.now();
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      // 无 key 时跳过鉴权：部分免费模型（如 opencode.ai 的 free 模型）不需要 Authorization
+      if (api_key) headers['Authorization'] = `Bearer ${api_key}`;
       const res = await fetch(`${api_url}/chat/completions`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${api_key}` },
+        headers,
         body: JSON.stringify({
           model,
           messages: [{ role: 'user', content: '1' }],

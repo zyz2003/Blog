@@ -22,19 +22,34 @@ import { DomainError } from '../domain-error';
 import { resolveEnabledBlockIds, buildBlockSyntaxGuide } from './block-registry';
 
 const DEFAULT_SYSTEM_PROMPT = `# 角色
-你是本博客的 AI 写作助手，擅长撰写技术博客文章。
+你是本博客的技术写作助手，擅长撰写结构清晰、逻辑严谨的技术博客文章。
 
 # 任务
 根据用户指令撰写、续写或改写博客正文。
 
-# 输出格式
-- 直接输出 Markdown 正文，不要输出任何说明性文字、前后缀或解释
-- 标题用 #，代码用 \`\`\`语言 围栏代码块，行内代码用 \`code\`
-- 强调用 **加粗** 或 *斜体*，列表用 - 或 1.，引用用 >，链接用 [文本](url)，图片用 ![alt](url)
+# 结构要求
+- 文章必须有清晰层次：引言（概述背景与问题）→ 主体分段论述 → 结尾总结
+- 每个主题用 ## 标题分隔，主题内应有：观点 → 论据/示例 → 小结
+- 段落间自然过渡，不要突兀跳转
+- 长文用多章节结构，短文至少有引言和主体
 
-# 约束
-- 用中文写作，风格清晰简洁，适合技术博客
-- 只输出正文内容，不要重复用户的指令或原文`;
+# 格式规范（严格遵守）
+- 标题：# 后必须有空格（写 \`# 标题\` 不写 \`#标题\`），标题层级：# 文章标题 / ## 章节 / ### 子节
+- 标题、代码块、表格、列表前后必须留一个空行
+- 代码：用 \`\`\`语言 围栏代码块（如 \`\`\`python），行内代码用 \`code\`
+- 列表：统一用 - 或 1.，不要混用；列表项之间不要空行
+- 表格：标准 Markdown 语法，表头分隔行必须有 |---|，单元格不留空（填 - 或 N/A）
+- 强调：**加粗**、*斜体*，不要嵌套
+- 引用：> 后加空格
+- 链接：[文本](url)，图片：![alt](url)
+- 水平线：用 ---（不要用 * * *）
+- Mermaid：节点标签含特殊字符（()[]:+空格）时用引号包裹，如 A["标签"]
+
+# 禁止事项
+- 禁止输出对话性文字（"好的"、"以下是"、"我来为您写"等）
+- 禁止重复用户的指令或原文
+- 禁止在正文前后添加解释、说明或注释
+- 禁止使用 HTML 标签（用 Markdown 语法替代）`;
 
 @Injectable()
 export class AiWritingService {
@@ -67,10 +82,10 @@ export class AiWritingService {
     const systemPrompt = blockGuide
       ? `${basePrompt}\n\n${blockGuide}`
       : basePrompt;
-    const maxTokens = parseInt(
-      this.settings.get('ai_writing_max_tokens') || '2000',
-      10,
-    );
+    const maxTokensRaw = this.settings.get('ai_writing_max_tokens');
+    const maxTokens = maxTokensRaw?.trim()
+      ? parseInt(maxTokensRaw, 10) || undefined
+      : undefined;
     const temperature = parseFloat(
       this.settings.get('ai_writing_temperature') || '0.7',
     );
@@ -107,7 +122,7 @@ export class AiWritingService {
         model,
         system: systemPrompt,
         prompt: userPrompt,
-        maxOutputTokens: maxTokens,
+        ...(maxTokens ? { maxOutputTokens: maxTokens } : {}),
         temperature,
         tools: this.toolRegistry.getTools(enabledToolIds, this.toolCtx),
       });

@@ -35,7 +35,9 @@ export class ModelResolver {
     const provider = createOpenAICompatible({
       name: profile.provider, // REQUIRED in AI SDK 7
       baseURL: profile.api_url,
-      apiKey: profile.api_key,
+      // api_key 为空时省略：部分免费模型（如 opencode.ai free 模型）无需鉴权，
+      // 传空字符串会发空 Bearer 头可能被拒
+      ...(profile.api_key ? { apiKey: profile.api_key } : {}),
       // 默认不关闭思考模式：让模型原生返回 reasoning，前端自适应展示。
       // profile.disable_thinking=true 时注入 thinking:disabled（对智谱等支持的模型生效，
       // 不支持的模型忽略该字段无害）。

@@ -195,9 +195,8 @@ export function AiModelsForm({ values, onChange, loading }: AiModelsFormProps) {
                 {profile.purposes.summary && <Badge variant="secondary" size="sm">摘要</Badge>}
                 {profile.purposes.chat && <Badge variant="secondary" size="sm">对话</Badge>}
                 {profile.purposes.writing && <Badge variant="secondary" size="sm">写作</Badge>}
-                {hasApiKey
-                  ? <Badge variant="success" size="sm">Key 已配置</Badge>
-                  : <Badge variant="destructive" size="sm">未配置 Key</Badge>}
+                {testStatus[profile.id]?.status === "success" && <Badge variant="success" size="sm">✓ 连接正常</Badge>}
+                {testStatus[profile.id]?.status === "fail" && <Badge variant="destructive" size="sm">✗ 连接失败</Badge>}
                 {testStatus[profile.id]?.hasReasoning && <Badge variant="secondary" size="sm">思考</Badge>}
               </>
             }
@@ -277,10 +276,10 @@ export function AiModelsForm({ values, onChange, loading }: AiModelsFormProps) {
             <FormInput
               label="API Key"
               type="password"
-              placeholder={hasApiKey ? "已配置（如需修改请重新输入）" : "请输入 API Key"}
+              placeholder={hasApiKey ? "已配置（如需修改请重新输入）" : "留空=无需鉴权（免费模型）"}
               value={profile.api_key}
               onValueChange={v => updateProfile(profile.id, { api_key: v })}
-              description="用于鉴权的密钥，保存后不会明文回显"
+              description="部分免费模型无需 Key。需要鉴权的模型未填 Key 时测试连接会返回 401。"
             />
 
             {/* 启用与用途 */}
@@ -354,7 +353,7 @@ export function AiModelsForm({ values, onChange, loading }: AiModelsFormProps) {
               <button
                 type="button"
                 onClick={() => handleTest(profile)}
-                disabled={!hasApiKey || testStatus[profile.id]?.status === "testing"}
+                disabled={testStatus[profile.id]?.status === "testing"}
                 className="text-xs text-primary hover:text-primary/80 font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {testStatus[profile.id]?.status === "testing" ? "测试中..." : "测试连接"}

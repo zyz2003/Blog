@@ -86,8 +86,8 @@ export const AI_BLOCKS: AiBlock[] = [
   {
     id: "mermaid",
     label: "Mermaid 图",
-    syntax: "```mermaid 换行 图代码 换行 ```（支持 flowchart/sequence/class/state 等）",
-    example: "```mermaid\ngraph TD\nA-->B\nB-->C\n```",
+    syntax: '```mermaid 换行 图代码 换行 ```（节点文字含特殊字符如 ()[]: + 时用引号包裹：A["标签(特殊)"]；不要用 <br> 换行）',
+    example: '```mermaid\ngraph TD\nA["开始节点"] --> B["处理(步骤)"]\nB --> C["结束"]\n```',
     streamable: false,
   },
 ];
